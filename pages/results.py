@@ -51,7 +51,20 @@ def render():
     """Render the Results tab content."""
     # Apply Results tab theme based on configuration
     load_css(TAB_THEMES.get('Results', 'genomic_purple'))
-    st.markdown(f'<h2>{UI_TEXT["heading_analysis_results"]}</h2>', unsafe_allow_html=True)
+    
+    # Modern header for results page
+    st.markdown("""
+    <div style='text-align: center; margin-bottom: 2rem;'>
+        <h2 style='margin: 0; font-size: 2rem; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                   font-weight: 700;'>
+            📊 Analysis Results & Visualizations
+        </h2>
+        <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 1rem;'>
+            Comprehensive Non-B DNA motif detection results with publication-quality visualizations
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Deterministic Results Page: Only render, never compute
     # If results are missing, show info and stop
@@ -64,32 +77,78 @@ def render():
     if st.session_state.get('performance_metrics'):
         metrics = st.session_state.performance_metrics
         st.markdown(f"""
-        <div class='progress-panel progress-panel--metrics'>
-            <h3 class='progress-panel__title'>Performance Metrics</h3>
-            <div class='stats-grid stats-grid--wide'>
-                <div class='stat-card'>
-                    <h2 class='stat-card__value'>{metrics['total_time']:.2f}s</h2>
-                    <p class='stat-card__label'>Processing Time</p>
+        <div style='background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); 
+                    padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem;
+                    border: 1px solid #e9d5ff; box-shadow: 0 4px 16px rgba(168, 85, 247, 0.1);'>
+            <h3 style='margin: 0 0 1.2rem 0; color: #7c3aed; font-size: 1.3rem; font-weight: 600;'>
+                ⚡ Performance Metrics
+            </h3>
+            <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;'>
+                <div style='background: white; padding: 1rem; border-radius: 12px; text-align: center;
+                            border: 1px solid #e9d5ff; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.08);'>
+                    <div style='font-size: 1.8rem; font-weight: 700; 
+                                background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                                -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
+                        {metrics['total_time']:.2f}s
+                    </div>
+                    <div style='color: #64748b; font-size: 0.85rem; margin-top: 0.3rem; font-weight: 500;'>
+                        Processing Time
+                    </div>
                 </div>
-                <div class='stat-card'>
-                    <h2 class='stat-card__value'>{metrics['total_bp']:,}</h2>
-                    <p class='stat-card__label'>Base Pairs</p>
+                <div style='background: white; padding: 1rem; border-radius: 12px; text-align: center;
+                            border: 1px solid #e9d5ff; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.08);'>
+                    <div style='font-size: 1.8rem; font-weight: 700; 
+                                background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                                -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
+                        {metrics['total_bp']:,}
+                    </div>
+                    <div style='color: #64748b; font-size: 0.85rem; margin-top: 0.3rem; font-weight: 500;'>
+                        Base Pairs
+                    </div>
                 </div>
-                <div class='stat-card'>
-                    <h2 class='stat-card__value'>{metrics['speed']:,.0f}</h2>
-                    <p class='stat-card__label'>bp/second</p>
+                <div style='background: white; padding: 1rem; border-radius: 12px; text-align: center;
+                            border: 1px solid #e9d5ff; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.08);'>
+                    <div style='font-size: 1.8rem; font-weight: 700; 
+                                background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                                -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
+                        {metrics['speed']:,.0f}
+                    </div>
+                    <div style='color: #64748b; font-size: 0.85rem; margin-top: 0.3rem; font-weight: 500;'>
+                        bp/second
+                    </div>
                 </div>
-                <div class='stat-card'>
-                    <h2 class='stat-card__value'>{metrics.get('detector_count', 9)}</h2>
-                    <p class='stat-card__label'>Detector Processes</p>
+                <div style='background: white; padding: 1rem; border-radius: 12px; text-align: center;
+                            border: 1px solid #e9d5ff; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.08);'>
+                    <div style='font-size: 1.8rem; font-weight: 700; 
+                                background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                                -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
+                        {metrics.get('detector_count', 9)}
+                    </div>
+                    <div style='color: #64748b; font-size: 0.85rem; margin-top: 0.3rem; font-weight: 500;'>
+                        Detector Processes
+                    </div>
                 </div>
-                <div class='stat-card'>
-                    <h2 class='stat-card__value'>{metrics['sequences']}</h2>
-                    <p class='stat-card__label'>Sequences</p>
+                <div style='background: white; padding: 1rem; border-radius: 12px; text-align: center;
+                            border: 1px solid #e9d5ff; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.08);'>
+                    <div style='font-size: 1.8rem; font-weight: 700; 
+                                background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                                -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
+                        {metrics['sequences']}
+                    </div>
+                    <div style='color: #64748b; font-size: 0.85rem; margin-top: 0.3rem; font-weight: 500;'>
+                        Sequences
+                    </div>
                 </div>
-                <div class='stat-card'>
-                    <h2 class='stat-card__value'>{metrics['total_motifs']}</h2>
-                    <p class='stat-card__label'>Total Motifs</p>
+                <div style='background: white; padding: 1rem; border-radius: 12px; text-align: center;
+                            border: 1px solid #e9d5ff; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.08);'>
+                    <div style='font-size: 1.8rem; font-weight: 700; 
+                                background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                                -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
+                        {metrics['total_motifs']}
+                    </div>
+                    <div style='color: #64748b; font-size: 0.85rem; margin-top: 0.3rem; font-weight: 500;'>
+                        Total Motifs
+                    </div>
                 </div>
             </div>
         </div>
