@@ -558,7 +558,7 @@ def render():
             st.session_state.analysis_status = "Error"
         else:
             # ============================================================
-            # JOB ID GENERATION: Create unique ID immediately
+            # JOB ID GENERATION: Create unique ID for internal tracking
             # ============================================================
             # Generate job ID at the start of analysis (or reuse if already exists)
             # This prevents overwriting existing job IDs on multiple button clicks
@@ -567,24 +567,6 @@ def render():
                 st.session_state.current_job_id = job_id
             else:
                 job_id = st.session_state.current_job_id
-            
-            # Display Job ID prominently to user
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-                        color: white; padding: 1.5rem; border-radius: 12px; margin: 1rem 0;
-                        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); text-align: center;'>
-                <div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>
-                    Your Job ID
-                </div>
-                <div style='font-size: 2rem; font-weight: 700; letter-spacing: 0.1em; 
-                           font-family: "Courier New", monospace;'>
-                    {job_id}
-                </div>
-                <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem;'>
-                    Save this ID to retrieve your results later
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
             
             # Sequence length limit has been removed - the system now uses automatic chunking
             # (see NonBFinder.py CHUNK_THRESHOLD=10,000 bp) to handle sequences of any size
