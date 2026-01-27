@@ -176,14 +176,38 @@ def render():
     """Render the Upload & Analyze tab content."""
     # Apply Upload tab theme based on configuration
     load_css(TAB_THEMES.get('Upload & Analyze', 'nature_green'))
-    st.markdown(f"<h2>{UI_TEXT['upload_title']}</h2>", unsafe_allow_html=True)
+    
+    # Modern header for upload page
+    st.markdown("""
+    <div style='text-align: center; margin-bottom: 2rem;'>
+        <h2 style='margin: 0; font-size: 2rem; background: linear-gradient(135deg, #10b981, #059669);
+                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                   font-weight: 700;'>
+            📤 Upload & Analyze Sequences
+        </h2>
+        <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 1rem;'>
+            Upload your DNA sequences and configure analysis parameters
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
     # ----- TWO-COLUMN LAYOUT: Left for Upload, Right for Analysis -----
     col1, col2 = st.columns([1, 1])
     
     with col1:
         # LEFT COLUMN: Sequence Upload and Motif Analysis
-        st.markdown(f"### {UI_TEXT['section_sequence_upload']}")
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
+                    padding: 1rem; border-radius: 12px; margin-bottom: 1rem;
+                    border-left: 4px solid #10b981; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);'>
+            <h3 style='margin: 0; color: #065f46; font-size: 1.2rem; font-weight: 600;'>
+                🧬 Sequence Input
+            </h3>
+            <p style='margin: 0.5rem 0 0 0; color: #047857; font-size: 0.9rem;'>
+                Choose your input method and upload your sequences
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # ----- Input Method -----
         input_method = st.radio(UI_TEXT['upload_input_method_prompt'],
@@ -421,7 +445,18 @@ def render():
     
     with col2:
         # RIGHT COLUMN: Analysis & Run
-        st.markdown(f"### {UI_TEXT['heading_analysis_run']}")
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); 
+                    padding: 1rem; border-radius: 12px; margin-bottom: 1rem;
+                    border-left: 4px solid #3b82f6; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);'>
+            <h3 style='margin: 0; color: #1e3a8a; font-size: 1.2rem; font-weight: 600;'>
+                ⚙️ Analysis Configuration
+            </h3>
+            <p style='margin: 0.5rem 0 0 0; color: #1e40af; font-size: 0.9rem;'>
+                Configure motif detection parameters and run analysis
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Quick Options Section
         st.markdown(f"##### {UI_TEXT['analysis_quick_options_title']}")
