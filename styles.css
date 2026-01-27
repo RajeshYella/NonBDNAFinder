@@ -198,6 +198,7 @@ h1, h2, h3, h4, h5, h6 {
 h1 { 
     font-size: var(--font-h1) !important; 
     font-weight: var(--font-weight-extrabold) !important;
+    color: #6366f1; /* Fallback for accessibility */
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -207,6 +208,7 @@ h1 {
 
 h2 { 
     font-size: var(--font-h2) !important; 
+    color: #7c3aed; /* Fallback for accessibility */
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
