@@ -28,6 +28,19 @@ def render():
     # Apply Download tab theme based on configuration
     load_css(TAB_THEMES.get('Download', 'clinical_teal'))
     
+    st.markdown("""
+    <div style='text-align: center; margin-bottom: 2rem;'>
+        <h2 style='margin: 0; font-size: 2rem; background: linear-gradient(135deg, #0ea5e9, #0284c7);
+                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                   font-weight: 700;'>
+            💾 Download & Export Results
+        </h2>
+        <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 1rem;'>
+            Export your analysis in multiple formats for publication and further analysis
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
     if not st.session_state.results:
         st.info(UI_TEXT['download_no_results'])
     else:
@@ -80,16 +93,19 @@ def render():
             st.warning(f"⚠️ Some motifs had invalid class/subclass data and were normalized: {e}")
         
         # Individual file downloads as main option
-        st.markdown("### 📥 Download Results")
+        st.markdown("### 📥 Export Options")
         st.markdown("""
-        <div style='background: #f0f9ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;
-                    border-left: 4px solid #0ea5e9;'>
-            <p style='color: #0c4a6e; margin: 0;'>
-                💡 <strong>Download your results</strong> in different file formats
+        <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+                    padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem;
+                    border-left: 4px solid #0ea5e9; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);'>
+            <p style='color: #0c4a6e; margin: 0; font-size: 0.95rem;'>
+                💡 <strong>Quick Export:</strong> Choose your preferred format below. All exports include complete motif data.
             </p>
         </div>
         """, unsafe_allow_html=True)
         
+        # Enhanced download section with better visual hierarchy
+        st.markdown("#### Standard Formats")
         col1, col2, col3, col4, col5 = st.columns(5)
         
         with col1:
@@ -175,12 +191,14 @@ def render():
         
         # Add Distribution & Statistics Tables Download Section
         st.markdown("---")
-        st.markdown("### 📊 Download Distribution & Statistics Tables")
+        st.markdown("### 📊 Statistical Analysis Tables")
         st.markdown("""
-        <div style='background: #f0fdf4; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;
-                    border-left: 4px solid #22c55e;'>
-            <p style='color: #14532d; margin: 0;'>
-                📈 <strong>Download detailed distribution and density statistics</strong> for publication and analysis
+        <div style='background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
+                    padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem;
+                    border-left: 4px solid #22c55e; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);'>
+            <p style='color: #14532d; margin: 0; font-size: 0.95rem;'>
+                📈 <strong>Advanced Analytics:</strong> Detailed distribution and density statistics 
+                for publication-quality analysis and reporting
             </p>
         </div>
         """, unsafe_allow_html=True)
