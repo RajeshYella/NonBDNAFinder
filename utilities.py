@@ -7816,6 +7816,9 @@ def export_to_pdf(motifs: List[Dict[str, Any]],
     Raises:
         Exception: If PDF generation fails
     """
+    # Ensure matplotlib is loaded for PDF generation
+    plt, _, _, PdfPages = _ensure_matplotlib()
+    
     # Create in-memory buffer for PDF
     pdf_buffer = io.BytesIO()
     

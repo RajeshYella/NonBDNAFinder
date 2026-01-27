@@ -116,7 +116,7 @@ st.markdown("""
     <h1 style='margin: 0; font-size: 2.5rem; background: linear-gradient(135deg, #4A90E2, #764ba2);
                -webkit-background-clip: text; -webkit-text-fill-color: transparent;
                font-weight: 800; letter-spacing: -0.02em;'>
-        🧬 NonBDNAFinder
+        NonBDNAFinder
     </h1>
     <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 1rem;'>
         Advanced Non-B DNA Motif Detection & Analysis Platform
@@ -124,10 +124,8 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ---- TABS WITH ICONS ----
-tab_icons = ["🏠", "📤", "📊", "💾", "📚"]
-tab_labels = [f"{icon} {label}" for icon, label in zip(tab_icons, PAGES.keys())]
-tabs = st.tabs(tab_labels)
+# ---- TABS WITHOUT ICONS ----
+tabs = st.tabs(list(PAGES.keys()))
 tab_pages = dict(zip(PAGES.keys(), tabs))
 
 # Render each page in its respective tab

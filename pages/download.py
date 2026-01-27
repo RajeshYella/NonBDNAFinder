@@ -33,7 +33,7 @@ def render():
         <h2 style='margin: 0; font-size: 2rem; background: linear-gradient(135deg, #0ea5e9, #0284c7);
                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
                    font-weight: 700;'>
-            💾 Download & Export Results
+            Download & Export Results
         </h2>
         <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 1rem;'>
             Export your analysis in multiple formats for publication and further analysis
@@ -61,8 +61,8 @@ def render():
                     </div>
                     <div style='text-align: right;'>
                         <div style='font-size: 0.85rem; opacity: 0.9;'>
-                            💾 Results saved<br/>
-                            🔍 Retrieve anytime with this ID
+                            Results saved<br/>
+                            Retrieve anytime with this ID
                         </div>
                     </div>
                 </div>
@@ -90,16 +90,16 @@ def render():
         try:
             all_motifs = validate_export_data(all_motifs, auto_normalize=True, strict=False)
         except Exception as e:
-            st.warning(f"⚠️ Some motifs had invalid class/subclass data and were normalized: {e}")
+            st.warning(f"Some motifs had invalid class/subclass data and were normalized: {e}")
         
         # Individual file downloads as main option
-        st.markdown("### 📥 Export Options")
+        st.markdown("### Export Options")
         st.markdown("""
         <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
                     padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem;
                     border-left: 4px solid #0ea5e9; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);'>
             <p style='color: #0c4a6e; margin: 0; font-size: 0.95rem;'>
-                💡 <strong>Quick Export:</strong> Choose your preferred format below. All exports include complete motif data.
+                <strong>Quick Export:</strong> Choose your preferred format below. All exports include complete motif data.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -113,7 +113,7 @@ def render():
             if all_motifs:
                 csv_data = export_to_csv(all_motifs, non_overlapping_only=False)
                 st.download_button(
-                    "📋 CSV (All Motifs)", 
+                    "CSV (All Motifs)", 
                     data=csv_data.encode('utf-8'), 
                     file_name=f"{safe_filename}_all_motifs.csv", 
                     mime="text/csv",
@@ -128,7 +128,7 @@ def render():
                 try:
                     excel_bytes = generate_excel_bytes(all_motifs, simple_format=True)
                     st.download_button(
-                        "📊 Excel (2 tabs)", 
+                        "Excel (2 tabs)", 
                         data=excel_bytes, 
                         file_name=f"{safe_filename}_results.xlsx", 
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -144,7 +144,7 @@ def render():
             if all_motifs:
                 json_data = export_to_json(all_motifs, pretty=True)
                 st.download_button(
-                    "📄 JSON", 
+                    "JSON", 
                     data=json_data.encode('utf-8'), 
                     file_name=f"{safe_filename}_results.json", 
                     mime="application/json",
@@ -158,7 +158,7 @@ def render():
             if all_motifs and st.session_state.names:
                 bed_data = export_to_bed(all_motifs, st.session_state.names[0])
                 st.download_button(
-                    "🧬 BED", 
+                    "BED", 
                     data=bed_data.encode('utf-8'), 
                     file_name=f"{safe_filename}_results.bed", 
                     mime="text/plain",
@@ -176,7 +176,7 @@ def render():
                     if sequence_length > 0:
                         pdf_data = export_to_pdf(all_motifs, sequence_length, primary_sequence_name)
                         st.download_button(
-                            "📄 PDF (Visualizations)",
+                            "PDF (Visualizations)",
                             data=pdf_data,
                             file_name=f"{safe_filename}_visualizations.pdf",
                             mime="application/pdf",
@@ -191,13 +191,13 @@ def render():
         
         # Add Distribution & Statistics Tables Download Section
         st.markdown("---")
-        st.markdown("### 📊 Statistical Analysis Tables")
+        st.markdown("### Statistical Analysis Tables")
         st.markdown("""
         <div style='background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
                     padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem;
                     border-left: 4px solid #22c55e; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);'>
             <p style='color: #14532d; margin: 0; font-size: 0.95rem;'>
-                📈 <strong>Advanced Analytics:</strong> Detailed distribution and density statistics 
+                <strong>Advanced Analytics:</strong> Detailed distribution and density statistics 
                 for publication-quality analysis and reporting
             </p>
         </div>
@@ -280,7 +280,7 @@ def render():
                     # Class-level CSV
                     class_csv = distribution_df.to_csv(index=False)
                     st.download_button(
-                        "📊 Class Statistics (CSV)",
+                        "Class Statistics (CSV)",
                         data=class_csv.encode('utf-8'),
                         file_name=f"{safe_filename}_class_statistics.csv",
                         mime="text/csv",
@@ -292,7 +292,7 @@ def render():
                     # Subclass-level CSV
                     subclass_csv = subclass_df.to_csv(index=False)
                     st.download_button(
-                        "📊 Subclass Statistics (CSV)",
+                        "Subclass Statistics (CSV)",
                         data=subclass_csv.encode('utf-8'),
                         file_name=f"{safe_filename}_subclass_statistics.csv",
                         mime="text/csv",
@@ -310,7 +310,7 @@ def render():
                         
                         output.seek(0)
                         st.download_button(
-                            "📊 All Statistics (Excel)",
+                            "All Statistics (Excel)",
                             data=output.getvalue(),
                             file_name=f"{safe_filename}_all_statistics.xlsx",
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

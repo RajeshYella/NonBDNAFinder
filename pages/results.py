@@ -15,7 +15,6 @@ from ui.css import load_css
 from utilities import (
     get_basic_stats, 
     export_results_to_dataframe, 
-    CORE_OUTPUT_COLUMNS,
     optimize_dataframe_memory,
     calculate_genomic_density, 
     calculate_positional_density,
@@ -58,7 +57,7 @@ def render():
         <h2 style='margin: 0; font-size: 2rem; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
                    font-weight: 700;'>
-            📊 Analysis Results & Visualizations
+            Analysis Results & Visualizations
         </h2>
         <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 1rem;'>
             Comprehensive Non-B DNA motif detection results with publication-quality visualizations
@@ -70,7 +69,7 @@ def render():
     # If results are missing, show info and stop
     if not st.session_state.results:
         st.info(UI_TEXT['status_no_results'])
-        st.info("💡 Run analysis first in the 'Upload & Analyze' tab")
+        st.info("Run analysis first in the 'Upload & Analyze' tab")
         st.stop()  # Explicit stop to prevent any further execution
     
     # Performance metrics display if available
@@ -81,7 +80,7 @@ def render():
                     padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem;
                     border: 1px solid #e9d5ff; box-shadow: 0 4px 16px rgba(168, 85, 247, 0.1);'>
             <h3 style='margin: 0 0 1.2rem 0; color: #7c3aed; font-size: 1.3rem; font-weight: 600;'>
-                ⚡ Performance Metrics
+                Performance Metrics
             </h3>
             <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;'>
                 <div style='background: white; padding: 1rem; border-radius: 12px; text-align: center;
@@ -248,72 +247,17 @@ def render():
         
         # Add info about hybrid/cluster motifs being shown separately
         if hybrid_cluster_count > 0:
-            st.info(f"ℹ️ {hybrid_cluster_count} Hybrid/Cluster motifs detected. View them in the 'Cluster/Hybrid' tab below.")
+            st.info(f"{hybrid_cluster_count} Hybrid/Cluster motifs detected. View them in the 'Dynamic Clusters' tab below.")
         
         # Show cached visualization summary if available
         viz_cache_key = f"seq_{seq_idx}"
         cached_viz = st.session_state.get('cached_visualizations', {}).get(viz_cache_key, {})
         if cached_viz.get('summary'):
             viz_summary = cached_viz['summary']
-            st.success(f"""✅ **Pre-generated Analysis Ready:** 
+            st.success(f"""**Pre-generated Analysis Ready:** 
             {viz_summary['unique_classes']} unique classes, 
             {viz_summary['unique_subclasses']} unique subclasses analyzed
             """)
-        
-        # Enhanced motif table with canonical core reporting schema
-        # Enhanced motif table with new columns and pagination for large datasets
-        st.markdown("### 📋 All Detected Motifs")
-        st.caption("**Core Reporting Schema** -- Publication-grade fields aligned with Nature/NAR/Genome Biology standards")
-        
-        # Info box explaining export-only advanced features
-        st.info("""
-        ℹ️ **Advanced Features:** All motif-specific details (ΔG components, dinucleotide counts, structural features, etc.) 
-        are retained internally and available via exports (CSV/Excel/JSON). This view shows only publication-relevant fields 
-        for clarity and interpretability.
-        """)
-        
-        # Display only CORE_OUTPUT_COLUMNS (no column selection UI)
-        # All advanced features remain available in exports
-        display_columns = [col for col in CORE_OUTPUT_COLUMNS if col in df.columns]
-        
-        # Pagination for large datasets (improves performance)
-        ROWS_PER_PAGE = 100
-        total_rows = len(df)
-        
-        if total_rows > ROWS_PER_PAGE:
-            # Add pagination controls
-            col_pag1, col_pag2, col_pag3 = st.columns([2, 3, 2])
-            with col_pag2:
-                max_pages = (total_rows + ROWS_PER_PAGE - 1) // ROWS_PER_PAGE
-                page_num = st.number_input(
-                    f"Page (showing {ROWS_PER_PAGE} rows per page)",
-                    min_value=1,
-                    max_value=max_pages,
-                    value=1,
-                    step=1,
-                    help=f"Total: {total_rows} motifs across {max_pages} pages"
-                )
-                start_idx = (page_num - 1) * ROWS_PER_PAGE
-                end_idx = min(start_idx + ROWS_PER_PAGE, total_rows)
-                
-                st.caption(f"Showing motifs {start_idx + 1} to {end_idx} of {total_rows}")
-            
-            # Slice dataframe for current page
-            df_page = df.iloc[start_idx:end_idx]
-        else:
-            df_page = df
-        
-        if display_columns:
-            # Display core schema columns only
-            filtered_df = df_page[display_columns].copy()
-            # Replace underscores with spaces in column names for display
-            filtered_df.columns = [col.replace('_', ' ') for col in filtered_df.columns]
-            st.dataframe(filtered_df, use_container_width=True, height=360)
-        else:
-            # Fallback: display full dataframe if no core columns available
-            display_df = df_page.copy()
-            display_df.columns = [col.replace('_', ' ') for col in display_df.columns]
-            st.dataframe(display_df, use_container_width=True, height=360)
         
         # NATURE-READY VISUALIZATION SUITE
         st.markdown(f'<h3>{UI_TEXT["heading_results_viz"]}</h3>', unsafe_allow_html=True)
@@ -321,25 +265,24 @@ def render():
         # Scientific Transparency Badge
         st.info(TRANSPARENCY_NOTE)
         
-        # Create simplified visualization tabs based on Figure Panel layout
+        # Create simplified visualization tabs: "All Motifs" and "Dynamic Clusters"
         viz_tabs = st.tabs([
-            "📊 Figure 1: Global Landscape", 
-            "🔗 Figure 2: Clustering & Co-occurrence",
-            "📏 Figure 3: Structural Constraints (Optional)"
+            "All Motifs", 
+            "Dynamic Clusters"
         ])
         
         # Check if clusters exist
         has_clusters = any(m.get('Class') == 'Non-B_DNA_Clusters' for m in filtered_motifs)
         
         # =================================================================
-        # FIGURE 1: Global Non-B DNA Landscape
+        # ALL MOTIFS TAB: Global Non-B DNA Landscape & Structural Constraints
         # =================================================================
         with viz_tabs[0]:
-            st.markdown("#### Figure 1: Global Non-B DNA Landscape")
-            st.caption("*Purpose: What structures exist, and where?*")
+            st.markdown("#### Global Non-B DNA Landscape")
+            st.caption("*Purpose: What structures exist, where are they located, and what are their physical constraints?*")
             
             # Panel A: Motif Composition (nested donut + bar plots)
-            st.markdown("##### Panel A: Motif Composition (Class → Subclass)")
+            st.markdown("##### Motif Composition (Class → Subclass)")
             
             # Nested pie chart for hierarchical view
             try:
@@ -379,7 +322,7 @@ def render():
                     st.error(f"Error generating subclass bar plot: {e}")
             
             # Panel B: Genome-Scale Localization (size-dependent: Manhattan OR Linear)
-            st.markdown("##### Panel B: Genome-Scale Localization")
+            st.markdown("##### Genome-Scale Localization")
             try:
                 if sequence_length > 50000:
                     # Large sequences: Manhattan plot
@@ -403,7 +346,7 @@ def render():
                 st.error(f"Error generating localization plot: {e}")
             
             # Panel C: Genome Coverage (compact bar chart)
-            st.markdown("##### Panel C: Genome Coverage (% per motif class)")
+            st.markdown("##### Genome Coverage (% per motif class)")
             try:
                 # Calculate or retrieve density metrics
                 viz_cache_key = f"seq_{seq_idx}"
@@ -424,33 +367,50 @@ def render():
                 )
                 st.pyplot(fig_density)
                 plt.close(fig_density)
-                
-                # Compact density table
-                density_data = []
-                for class_name in sorted([k for k in genomic_density.keys() if k != 'Overall']):
-                    density_data.append({
-                        'Motif Class': class_name.replace('_', ' '),
-                        'Coverage (%)': f"{genomic_density.get(class_name, 0):.3f}",
-                        'Motifs/kb': f"{positional_density_kbp.get(class_name, 0):.2f}"
-                    })
-                
-                if density_data:
-                    density_df = pd.DataFrame(density_data)
-                    st.dataframe(density_df, use_container_width=True, height=200)
                     
             except Exception as e:
                 st.error(f"Error calculating density metrics: {e}")
+            
+            # Structural Constraints Section
+            st.markdown("---")
+            st.markdown("##### Structural Constraints")
+            st.caption("*Purpose: What are the physical constraints shaping each motif class?*")
+            
+            # Length Distribution by Class (KDE)
+            st.markdown("**Length Distributions by Class**")
+            try:
+                fig_length = plot_motif_length_kde(
+                    filtered_motifs,
+                    by_class=True,
+                    title=f"Length Distribution (KDE) - {sequence_name}"
+                )
+                st.pyplot(fig_length)
+                plt.close(fig_length)
+            except Exception as e:
+                st.error(f"Error generating length KDE: {e}")
+            
+            # Score distribution
+            st.markdown("**Score Distribution by Class**")
+            try:
+                fig_score = plot_score_distribution(
+                    filtered_motifs, by_class=True,
+                    title="Score Distribution (1-3 Scale)"
+                )
+                st.pyplot(fig_score)
+                plt.close(fig_score)
+            except Exception as e:
+                st.error(f"Error generating score distribution: {e}")
         
         # =================================================================
-        # FIGURE 2: Structural Clustering & Co-Occurrence
+        # DYNAMIC CLUSTERS TAB: Structural Clustering & Co-Occurrence
         # =================================================================
         with viz_tabs[1]:
-            st.markdown("#### Figure 2: Structural Clustering & Co-Occurrence")
+            st.markdown("#### Structural Clustering & Co-Occurrence")
             st.caption("*Purpose: Which structures co-localize and form regulatory hotspots?*")
             
-            # Panel D: Cluster Size Distribution (conditional on cluster existence)
+            # Cluster Size Distribution (conditional on cluster existence)
             if has_clusters:
-                st.markdown("##### Panel D: Cluster Size Distribution")
+                st.markdown("##### Cluster Size Distribution")
                 try:
                     fig_cluster = plot_cluster_size_distribution(
                         filtered_motifs,
@@ -461,10 +421,10 @@ def render():
                 except Exception as e:
                     st.error(f"Error generating cluster plot: {e}")
             else:
-                st.info("**Panel D**: No clusters detected (requires multiple motifs in close proximity)")
+                st.info("No clusters detected (requires multiple motifs in close proximity)")
             
-            # Panel E: Motif Co-occurrence Matrix (always shown)
-            st.markdown("##### Panel E: Motif Co-occurrence Matrix")
+            # Motif Co-occurrence Matrix (always shown)
+            st.markdown("##### Motif Co-occurrence Matrix")
             st.caption("*Shows which motif classes tend to appear together (overlapping or within 1bp)*")
             try:
                 fig_cooccur = plot_motif_cooccurrence_matrix(
@@ -475,47 +435,3 @@ def render():
                 plt.close(fig_cooccur)
             except Exception as e:
                 st.error(f"Error generating co-occurrence matrix: {e}")
-        
-        # =================================================================
-        # FIGURE 3: Structural Constraints (Optional/Toggle)
-        # =================================================================
-        with viz_tabs[2]:
-            st.markdown("#### Figure 3: Structural Constraints")
-            st.caption("*Purpose: What are the physical constraints shaping each motif class?*")
-            st.info("📌 **Optional Figure**: Toggle to include in main report or move to supplementary materials.")
-            
-            # User toggle for including this figure
-            show_fig3 = st.checkbox(
-                "Include Figure 3 in main report", 
-                value=True,
-                help="Enable to show structural constraint analysis in main figures"
-            )
-            
-            if show_fig3:
-                # Panel F: Length Distribution by Class (KDE only - no histogram redundancy)
-                st.markdown("##### Panel F: Length Distributions by Class")
-                try:
-                    fig_length = plot_motif_length_kde(
-                        filtered_motifs,
-                        by_class=True,
-                        title=f"Length Distribution (KDE) - {sequence_name}"
-                    )
-                    st.pyplot(fig_length)
-                    plt.close(fig_length)
-                except Exception as e:
-                    st.error(f"Error generating length KDE: {e}")
-                
-                # Optional: Score distribution
-                st.markdown("**Additional: Score Distribution by Class**")
-                try:
-                    fig_score = plot_score_distribution(
-                        filtered_motifs, by_class=True,
-                        title="Score Distribution (1-3 Scale)"
-                    )
-                    st.pyplot(fig_score)
-                    plt.close(fig_score)
-                except Exception as e:
-                    st.error(f"Error generating score distribution: {e}")
-            else:
-                st.info("✓ Figure 3 hidden from main report (available in supplementary exports)")
-                st.caption(SUPPLEMENTARY_NOTE)
