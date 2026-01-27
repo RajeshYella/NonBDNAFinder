@@ -109,8 +109,25 @@ for k, v in {
     if k not in st.session_state:
         st.session_state[k] = v
 
-# ---- TABS ----
-tabs = st.tabs(list(PAGES.keys()))
+# ---- APPLICATION HEADER ----
+st.markdown("""
+<div style='text-align: center; padding: 1.5rem 0 1rem 0; margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;'>
+    <h1 style='margin: 0; font-size: 2.5rem; background: linear-gradient(135deg, #4A90E2, #764ba2);
+               -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+               font-weight: 800; letter-spacing: -0.02em;'>
+        🧬 NonBDNAFinder
+    </h1>
+    <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 1rem;'>
+        Advanced Non-B DNA Motif Detection & Analysis Platform
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+# ---- TABS WITH ICONS ----
+tab_icons = ["🏠", "📤", "📊", "💾", "📚"]
+tab_labels = [f"{icon} {label}" for icon, label in zip(tab_icons, PAGES.keys())]
+tabs = st.tabs(tab_labels)
 tab_pages = dict(zip(PAGES.keys(), tabs))
 
 # Render each page in its respective tab
