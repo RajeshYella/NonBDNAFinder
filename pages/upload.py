@@ -88,7 +88,7 @@ def render_sequence_stats_card(idx: int, name: str, length: int, gc_pct: float, 
     # Truncate long sequence names
     display_name = name[:60] + ('...' if len(name) > 60 else '')
     # Determine GC balance indicator using configurable thresholds
-    gc_balance = '✓' if GC_BALANCE_MIN <= gc_pct <= GC_BALANCE_MAX else '⚠'
+    gc_balance = 'OK' if GC_BALANCE_MIN <= gc_pct <= GC_BALANCE_MAX else '!'
     
     return f"""
     <div style='background: linear-gradient({gradient_colors}); 
@@ -183,7 +183,7 @@ def render():
         <h2 style='margin: 0; font-size: 2rem; background: linear-gradient(135deg, #10b981, #059669);
                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
                    font-weight: 700;'>
-            📤 Upload & Analyze Sequences
+            Upload & Analyze Sequences
         </h2>
         <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 1rem;'>
             Upload your DNA sequences and configure analysis parameters
@@ -201,7 +201,7 @@ def render():
                     padding: 1rem; border-radius: 12px; margin-bottom: 1rem;
                     border-left: 4px solid #10b981; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);'>
             <h3 style='margin: 0; color: #065f46; font-size: 1.2rem; font-weight: 600;'>
-                🧬 Sequence Input
+                Sequence Input
             </h3>
             <p style='margin: 0.5rem 0 0 0; color: #047857; font-size: 0.9rem;'>
                 Choose your input method and upload your sequences
@@ -254,7 +254,7 @@ def render():
                     
                     # Show preview of first few sequences using popover for better UX
                     with st.popover(UI_TEXT['upload_preview_button'], use_container_width=True):
-                        st.markdown("### 📊 Sequence Preview & Validation")
+                        st.markdown("### Sequence Preview & Validation")
                         for idx, prev in enumerate(preview_info['previews'], 1):
                             # Use pre-calculated stats from preview (calculated from full sequence)
                             card_html = render_sequence_stats_card(
@@ -267,7 +267,7 @@ def render():
                             st.markdown(card_html, unsafe_allow_html=True)
                         
                         if preview_info['num_sequences'] > 3:
-                            st.info(f"📌 Showing 3 of {preview_info['num_sequences']} sequences. All sequences will be analyzed.")
+                            st.info(f"Showing 3 of {preview_info['num_sequences']} sequences. All sequences will be analyzed.")
                     
                     # Now parse all sequences using chunked parsing for memory efficiency
                     seqs, names = [], []
@@ -413,8 +413,8 @@ def render():
 
         # Compact sequence validation indicator using popover for cleaner UI
         if st.session_state.get('seqs'):
-            with st.popover("✅ Success: Validation Summary", use_container_width=True):
-                st.markdown("### 📊 Loaded Sequences Summary")
+            with st.popover("Success: Validation Summary", use_container_width=True):
+                st.markdown("### Loaded Sequences Summary")
                 
                 # Cache sequence stats with validation key to handle sequence changes
                 cache_key = f"stats_cache_{len(st.session_state.seqs)}"
@@ -441,7 +441,7 @@ def render():
                     st.markdown(card_html, unsafe_allow_html=True)
                 
                 if len(st.session_state.seqs) > 3:
-                    st.info(f"📌 Showing 3 of {len(st.session_state.seqs)} loaded sequences. All are validated and ready for analysis.")
+                    st.info(f"Showing 3 of {len(st.session_state.seqs)} loaded sequences. All are validated and ready for analysis.")
     
     with col2:
         # RIGHT COLUMN: Analysis & Run
@@ -450,7 +450,7 @@ def render():
                     padding: 1rem; border-radius: 12px; margin-bottom: 1rem;
                     border-left: 4px solid #3b82f6; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);'>
             <h3 style='margin: 0; color: #1e3a8a; font-size: 1.2rem; font-weight: 600;'>
-                ⚙️ Analysis Configuration
+                Analysis Configuration
             </h3>
             <p style='margin: 0.5rem 0 0 0; color: #1e40af; font-size: 0.9rem;'>
                 Configure motif detection parameters and run analysis
@@ -517,7 +517,7 @@ def render():
                             color: white; padding: 12px; 
                             border-radius: 12px; text-align: center; font-weight: 600;
                             font-size: 1.1rem;'>
-                    ✅ Analysis Complete - View results in 'Results' tab
+                    Analysis Complete - View results in 'Results' tab
                 </div>
                 """, unsafe_allow_html=True)
                 run_button = False
@@ -538,7 +538,7 @@ def render():
         
         with col_reset:
             # Reset button to allow re-running analysis
-            if st.button("🔄 Reset", use_container_width=True, help="Clear analysis results and reset for new run"):
+            if st.button("Reset", use_container_width=True, help="Clear analysis results and reset for new run"):
                 st.session_state.analysis_done = False
                 st.session_state.results = []
                 st.session_state.performance_metrics = None
@@ -781,11 +781,11 @@ def render():
                                 chunk_counter['total'] = total
                                 if show_chunk_progress:
                                     # Ephemeral progress (replaces previous)
-                                    chunk_progress_placeholder.info(f"⚡ Parallel scanner processing chunks: {current}/{total} ({(current / total) * 100:.1f}%)")
+                                    chunk_progress_placeholder.info(f"Parallel scanner processing chunks: {current}/{total} ({(current / total) * 100:.1f}%)")
                             
                             # Run parallel scanner with progress callback
                             # Use ephemeral status (replaces previous message)
-                            status_placeholder.info(f"⚡ Using parallel scanner for {len(seq):,} bp sequence (est. chunks: ~{len(seq)//50000 + 1})")
+                            status_placeholder.info(f"Using parallel scanner for {len(seq):,} bp sequence (est. chunks: ~{len(seq)//50000 + 1})")
                             
                             scanner = ParallelScanner(seq, hs_db=None)
                             
@@ -799,14 +799,14 @@ def render():
                             
                             # Clear chunk progress and show ephemeral success (replaces previous message)
                             if show_chunk_progress:
-                                chunk_progress_placeholder.success(f"✅ Parallel chunks complete: {len(results)} motifs from {chunk_counter['total']} chunks")
+                                chunk_progress_placeholder.success(f"Parallel chunks complete: {len(results)} motifs from {chunk_counter['total']} chunks")
                             
                             # Ephemeral success message (replaces previous)
-                            status_placeholder.success(f"✅ Parallel scanner completed: {len(results)} motifs detected")
+                            status_placeholder.success(f"Parallel scanner completed: {len(results)} motifs detected")
                             
                         except Exception as e:
                             # Fallback to standard scanner on error (ephemeral warning)
-                            status_placeholder.warning(f"⚠️ Parallel scanner failed, falling back to standard: {e}")
+                            status_placeholder.warning(f"Parallel scanner failed, falling back to standard: {e}")
                             results = analyze_sequence(seq, name)
                     else:
                         # Use standard consolidated NBDScanner analysis
@@ -836,10 +836,10 @@ def render():
                     
                     # Update progress display (no timing - pure progress tracking)
                     with progress_placeholder.container():
-                        pbar.progress(progress, text=f"🧬 Analyzed {i+1}/{len(st.session_state.seqs)} sequences ({actual_percentage:.1f}%)")
+                        pbar.progress(progress, text=f"Analyzed {i+1}/{len(st.session_state.seqs)} sequences ({actual_percentage:.1f}%)")
                     
                     # Ephemeral success (replaces previous) - no per-sequence timing shown
-                    status_placeholder.success(f"✅ {name}: {len(seq):,} bp | {len(results)} motifs detected")
+                    status_placeholder.success(f"{name}: {len(seq):,} bp | {len(results)} motifs detected")
                 
                 # ============================================================
                 # MULTI-FASTA STABILITY: Results stored once atomically
@@ -863,7 +863,7 @@ def render():
                 # RIGOROUS VALIDATION & QUALITY CHECKS
                 # ============================================================
                 # Ephemeral info message (replaces previous)
-                status_placeholder.info("🔍 Validating results for consistency and quality...")
+                status_placeholder.info("Validating results for consistency and quality...")
                 
                 validation_issues = []
                 
@@ -918,14 +918,14 @@ def render():
                 
                 # Display validation results (ephemeral - replaces previous)
                 if validation_issues:
-                    warning_msg = f"⚠️ Validation found {len(validation_issues)} potential issues:\n"
+                    warning_msg = f"Validation found {len(validation_issues)} potential issues:\n"
                     for issue in validation_issues[:5]:  # Show first 5
                         warning_msg += f"\n• {issue}"
                     if len(validation_issues) > 5:
                         warning_msg += f"\n• ... and {len(validation_issues) - 5} more"
                     status_placeholder.warning(warning_msg)
                 else:
-                    status_placeholder.success("✅ Validation passed: No consistency issues found")
+                    status_placeholder.success("Validation passed: No consistency issues found")
                 
                 # ============================================================
                 # MULTI-FASTA STABILITY: Aggregate statistics computed once
@@ -956,7 +956,7 @@ def render():
                 # PRE-GENERATE ALL VISUALIZATIONS FOR CLASSES AND SUBCLASSES
                 # ============================================================
                 # Ephemeral info (replaces previous)
-                status_placeholder.info("📊 Generating comprehensive visualizations for all classes and subclasses...")
+                status_placeholder.info("Generating comprehensive visualizations for all classes and subclasses...")
                 
                 # Cache all visualizations for each sequence
                 st.session_state.cached_visualizations = {}
@@ -1022,7 +1022,7 @@ def render():
                 logger.debug(f"Triggered garbage collection after generating {total_viz_count} visualizations")
                 
                 # Ephemeral success with scientific time format
-                status_placeholder.success(f"✅ All visualizations prepared: {total_viz_count} components in {format_time_compact(viz_total_time)}")
+                status_placeholder.success(f"All visualizations prepared: {total_viz_count} components in {format_time_compact(viz_total_time)}")
                 
                 # Store performance metrics with enhanced details
                 st.session_state.performance_metrics = {
@@ -1053,7 +1053,7 @@ def render():
                 # Show final success message with enhanced performance metrics using scientific time format
                 timer_placeholder.markdown(f"""
                 <div class='progress-panel progress-panel--success'>
-                    <h3 class='progress-panel__title'>✅ Analysis Complete!</h3>
+                    <h3 class='progress-panel__title'>Analysis Complete!</h3>
                     <p class='progress-panel__subtitle'>All detectors, validations, and visualizations completed successfully</p>
                     <div class='stats-grid stats-grid--wide'>
                         <div class='stat-card'>
@@ -1094,22 +1094,22 @@ def render():
                 
                 # Show comprehensive completion summary with scientific time format
                 # GOLD STANDARD: Final time display after everything is done
-                completion_msg = f"""✅ **Analysis Complete!** All processing stages finished successfully:
+                completion_msg = f"""**Analysis Complete!** All processing stages finished successfully:
                 
 **Detection & Analysis:**
-- 🧬 {len(DETECTOR_PROCESSES)} detector processes completed
-- 📊 {sum(len(r) for r in all_results)} total motifs detected across {len(st.session_state.seqs)} sequences
-- ⏱️ Analysis completed in {format_time_scientific(total_time)} ({overall_speed:,.0f} bp/s)
+- {len(DETECTOR_PROCESSES)} detector processes completed
+- {sum(len(r) for r in all_results)} total motifs detected across {len(st.session_state.seqs)} sequences
+- Analysis completed in {format_time_scientific(total_time)} ({overall_speed:,.0f} bp/s)
 
 **Quality Validation:**
-- ✅ Data consistency checks: {'PASSED' if len(validation_issues) == 0 else f'{len(validation_issues)} issues found'}
-- ✅ Non-redundancy validation: Complete
-- ✅ Position validation: Complete
+- Data consistency checks: {'PASSED' if len(validation_issues) == 0 else f'{len(validation_issues)} issues found'}
+- Non-redundancy validation: Complete
+- Position validation: Complete
 
 **Visualization Generation:**
-- 📈 {total_viz_count} visualization components pre-generated
-- 🎯 Class-level and subclass-level analysis ready
-- ⏱️ Visualizations prepared in {format_time_scientific(viz_total_time)}
+- {total_viz_count} visualization components pre-generated
+- Class-level and subclass-level analysis ready
+- Visualizations prepared in {format_time_scientific(viz_total_time)}
 
 **View detailed results in the 'Results' tab.**
 """
@@ -1132,7 +1132,7 @@ def render():
                     st.session_state.current_job_id = job_id
                 
                 save_status_placeholder = st.empty()
-                save_status_placeholder.info(f"💾 Saving results for Job ID: {job_id}...")
+                save_status_placeholder.info(f"Saving results for Job ID: {job_id}...")
                 
                 # Prepare metadata
                 job_metadata = {
@@ -1153,10 +1153,10 @@ def render():
                 )
                 
                 if save_success:
-                    save_status_placeholder.success(f"✅ Results saved successfully! Job ID: **{job_id}**")
+                    save_status_placeholder.success(f"Results saved successfully! Job ID: **{job_id}**")
                 else:
                     save_status_placeholder.warning(
-                        "⚠️ Results could not be saved to disk, but are available in this session. "
+                        "Results could not be saved to disk, but are available in this session. "
                         "Download your results now from the Download tab."
                     )
                 

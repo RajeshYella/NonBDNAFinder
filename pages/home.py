@@ -193,7 +193,7 @@ def render():
         <h2 style='color: {colors['text']}; font-size: 2rem; margin: 0 0 2rem 0; text-align: center; 
                    font-weight: 700; background: linear-gradient(135deg, {colors['primary']}, {colors['secondary']});
                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
-            🚀 Key Features & Capabilities
+            Key Features & Capabilities
         </h2>
         <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;'>
             <div style='background: {colors['white']}; padding: 1.8rem; border-radius: 16px; 
@@ -202,7 +202,6 @@ def render():
                 <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
                             background: linear-gradient(135deg, {colors['primary']}20, transparent);
                             border-radius: 0 16px 0 100%;'></div>
-                <div style='font-size: 2rem; margin-bottom: 1rem;'>⚡</div>
                 <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
                     High Performance
                 </h3>
@@ -217,7 +216,6 @@ def render():
                 <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
                             background: linear-gradient(135deg, {colors['secondary']}20, transparent);
                             border-radius: 0 16px 0 100%;'></div>
-                <div style='font-size: 2rem; margin-bottom: 1rem;'>📊</div>
                 <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
                     Publication Quality
                 </h3>
@@ -232,7 +230,6 @@ def render():
                 <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
                             background: linear-gradient(135deg, {colors['primary']}20, transparent);
                             border-radius: 0 16px 0 100%;'></div>
-                <div style='font-size: 2rem; margin-bottom: 1rem;'>🔬</div>
                 <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
                     Scientifically Validated
                 </h3>
@@ -247,7 +244,6 @@ def render():
                 <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
                             background: linear-gradient(135deg, {colors['secondary']}20, transparent);
                             border-radius: 0 16px 0 100%;'></div>
-                <div style='font-size: 2rem; margin-bottom: 1rem;'>📈</div>
                 <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
                     Statistical Analysis
                 </h3>
@@ -262,7 +258,6 @@ def render():
                 <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
                             background: linear-gradient(135deg, {colors['primary']}20, transparent);
                             border-radius: 0 16px 0 100%;'></div>
-                <div style='font-size: 2rem; margin-bottom: 1rem;'>💾</div>
                 <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
                     Multiple Export Formats
                 </h3>
@@ -277,7 +272,6 @@ def render():
                 <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
                             background: linear-gradient(135deg, {colors['secondary']}20, transparent);
                             border-radius: 0 16px 0 100%;'></div>
-                <div style='font-size: 2rem; margin-bottom: 1rem;'>🧬</div>
                 <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
                     Comprehensive Coverage
                 </h3>
@@ -318,7 +312,7 @@ def render():
     <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
                 box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; margin-top: 2rem;'>
         <h2 style='color: {colors['primary']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
-            🔍 Retrieve Previous Results
+            Retrieve Previous Results
         </h2>
         <p style='color: {colors['neutral_700']}; font-size: 1rem; line-height: 1.6; margin-bottom: 1rem;'>
             Enter your Job ID to retrieve previously completed analyses. Results are stored securely and 
@@ -366,7 +360,7 @@ def render():
                     st.session_state.analysis_done = True
                     
                     # Display success message
-                    st.success(f"✅ Job {lookup_job_id} loaded successfully!")
+                    st.success(f"Job {lookup_job_id} loaded successfully!")
                     
                     # Display job summary
                     st.markdown(f"""
@@ -381,4 +375,4 @@ def render():
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    st.info("📥 View results in the **Results** tab or download from the **Download** tab")
+                    st.info("View results in the **Results** tab or download from the **Download** tab")
