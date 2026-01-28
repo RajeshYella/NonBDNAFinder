@@ -1,5 +1,9 @@
 /* styles.css - Compact, Bold, and Vibrant Typography for Tabs and Headings */
 
+/* NOTE: !important declarations are required throughout this file to override
+   Streamlit's inline styles and default styling. While not ideal, this is necessary
+   for custom styling in Streamlit applications. */
+
 /* ═══════════════════════════════════════════════════════════════
    STREAMLIT TAB STYLING - COMPACT, BOLD, AND VIBRANT
    ═══════════════════════════════════════════════════════════════ */
@@ -72,11 +76,11 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
     font-size: 3rem !important;
     font-weight: 900 !important;
+    color: #667eea;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 /* H2 - Section Headers */

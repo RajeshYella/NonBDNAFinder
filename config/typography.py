@@ -29,10 +29,11 @@ FONT_CONFIG = {
     
     # Font weights (100-900, where 400 is normal and 700 is bold)
     # UPDATED: Heavier weights for bold and vibrant appearance
-    'light_weight': 400,       # Light weight (previously 300, now heavier)
-    'normal_weight': 600,      # Normal weight (previously 400, now bolder)
-    'medium_weight': 700,      # Medium weight (previously 500, now bold)
-    'semibold_weight': 800,    # Semibold weight (previously 600, now extra bold)
-    'bold_weight': 900,        # Bold weight (previously 700, now maximum)
-    'extrabold_weight': 900,   # Extra bold weight (maximum for emphasis)
+    # Note: These are intentionally set higher than typical CSS defaults for emphasis
+    'light_weight': 400,       # Base weight (heavier than CSS light for better readability)
+    'normal_weight': 600,      # Enhanced normal (actually semibold for prominence)
+    'medium_weight': 700,      # Medium becomes bold for impact
+    'semibold_weight': 800,    # Semibold is extra bold for hierarchy
+    'bold_weight': 900,        # Bold is maximum weight for emphasis
+    'extrabold_weight': 900,   # Extra bold matches maximum (900 is CSS max)
 }
