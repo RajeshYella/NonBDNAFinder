@@ -480,10 +480,6 @@ def render():
             key="analysis_mode_radio"
         )
         
-        # Update session state when selection changes
-        if analysis_mode != st.session_state.analysis_mode:
-            st.session_state.analysis_mode = analysis_mode
-        
         # Display configuration based on selected mode with visual feedback
         if analysis_mode == "Motif Level":
             st.info("""
@@ -495,7 +491,7 @@ def render():
         else:
             st.info("""
             **Submotif Level Analysis**: Detailed subclass-level analysis.
-            - 23+ specialized subclasses
+            - 24 specialized subclasses across 11 classes
             - Comprehensive structural characterization
             - Recommended for focused analysis (<100kb)
             """)
@@ -526,7 +522,7 @@ def render():
         if analysis_mode == "Motif Level":
             st.caption("All 9 primary motif classes are detected automatically")
         else:
-            st.caption("All 11 motif classes with 23+ subclasses are detected automatically")
+            st.caption("All 11 motif classes with 24 subclasses are detected automatically")
     
     # ----- FULL-WIDTH STICKY RUN BUTTON -----
     st.markdown("---")
