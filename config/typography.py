@@ -18,19 +18,21 @@ FONT_CONFIG = {
     
     # Font sizes (in rem units, where 1rem ≈ 16px in most browsers)
     # Enhanced sizes for modern, bold, research-quality appearance
-    'h1_size': '2.75rem',     # Main page headers - bold, impactful
-    'h2_size': '2.0rem',      # Section headers - clear hierarchy
-    'h3_size': '1.5rem',      # Subsection headers - organized structure
-    'h4_size': '1.25rem',     # Small headers - subtle distinction
+    # UPDATED: Larger and bolder for more vibrant and impactful display
+    'h1_size': '3.0rem',      # Main page headers - bold, impactful, enlarged
+    'h2_size': '2.25rem',     # Section headers - clear hierarchy, prominent
+    'h3_size': '1.75rem',     # Subsection headers - organized structure, visible
+    'h4_size': '1.35rem',     # Small headers - subtle distinction, readable
     'body_size': '1.0rem',    # Body text, paragraphs - optimal readability
     'small_size': '0.9rem',   # Small text, notes - clear but compact
     'caption_size': '0.8rem', # Captions, footnotes - supporting information
     
     # Font weights (100-900, where 400 is normal and 700 is bold)
-    'light_weight': 300,
-    'normal_weight': 400,
-    'medium_weight': 500,
-    'semibold_weight': 600,
-    'bold_weight': 700,
-    'extrabold_weight': 800,
+    # UPDATED: Heavier weights for bold and vibrant appearance
+    'light_weight': 400,       # Light weight (previously 300, now heavier)
+    'normal_weight': 600,      # Normal weight (previously 400, now bolder)
+    'medium_weight': 700,      # Medium weight (previously 500, now bold)
+    'semibold_weight': 800,    # Semibold weight (previously 600, now extra bold)
+    'bold_weight': 900,        # Bold weight (previously 700, now maximum)
+    'extrabold_weight': 900,   # Extra bold weight (maximum for emphasis)
 }
