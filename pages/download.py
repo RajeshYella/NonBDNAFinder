@@ -44,31 +44,6 @@ def render():
     if not st.session_state.results:
         st.info(UI_TEXT['download_no_results'])
     else:
-        # Display current Job ID prominently
-        current_job_id = st.session_state.get('current_job_id')
-        if current_job_id:
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); 
-                        color: white; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;
-                        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);'>
-                <div style='display: flex; justify-content: space-between; align-items: center;'>
-                    <div>
-                        <div style='font-size: 0.85rem; opacity: 0.9;'>Job ID for this analysis:</div>
-                        <div style='font-size: 1.5rem; font-weight: 700; letter-spacing: 0.1em; 
-                                   font-family: "Courier New", monospace; margin-top: 0.3rem;'>
-                            {current_job_id}
-                        </div>
-                    </div>
-                    <div style='text-align: right;'>
-                        <div style='font-size: 0.85rem; opacity: 0.9;'>
-                            Results saved<br/>
-                            Retrieve anytime with this ID
-                        </div>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
         primary_sequence_name = st.session_state.names[0] if st.session_state.names else "Unknown Sequence"
         analysis_time = st.session_state.get('analysis_time', 0)
         

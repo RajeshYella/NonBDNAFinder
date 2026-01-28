@@ -45,41 +45,41 @@
    Variables are injected dynamically by Python from FONT_CONFIG, COLOR_THEMES, etc.
    ============================================ */
 :root {
-    /* ===== Theme Colors (set dynamically) ===== */
-    --primary-color: #4A90E2;
-    --secondary-color: #6AA5F2;
-    --accent-color: #AFCBFF;
-    --bg-light: #F7FAFC;
-    --bg-card: #E8F0FF;
-    --text-color: #1E252F;
-    --tab-bg: #EDF2F7;
-    --tab-active: #4A90E2;
-    --shadow-color: rgba(74, 144, 226, 0.15);
+    /* ===== Theme Colors - VIBRANT & COLORFUL ===== */
+    --primary-color: #6366f1;
+    --secondary-color: #8b5cf6;
+    --accent-color: #f472b6;
+    --bg-light: #faf5ff;
+    --bg-card: #f3e8ff;
+    --text-color: #1e1b4b;
+    --tab-bg: #ede9fe;
+    --tab-active: #7c3aed;
+    --shadow-color: rgba(124, 58, 237, 0.25);
     
     /* ===== RGB Values for Dynamic Opacity ===== */
-    --primary-rgb: 74, 144, 226;
-    --secondary-rgb: 106, 165, 242;
+    --primary-rgb: 99, 102, 241;
+    --secondary-rgb: 139, 92, 246;
     
     /* ===== Typography (set dynamically from FONT_CONFIG) ===== */
     --font-primary: 'Inter', 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
     --font-monospace: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     
-    /* Font Sizes (rem units) */
-    --font-h1: 2.5rem;
-    --font-h2: 1.6rem;
-    --font-h3: 1.25rem;
-    --font-h4: 1.1rem;
-    --font-body: 0.95rem;
-    --font-small: 0.85rem;
-    --font-caption: 0.75rem;
+    /* Font Sizes (rem units) - LARGER for better readability */
+    --font-h1: 2.75rem;
+    --font-h2: 1.8rem;
+    --font-h3: 1.4rem;
+    --font-h4: 1.2rem;
+    --font-body: 1rem;
+    --font-small: 0.9rem;
+    --font-caption: 0.8rem;
     
-    /* Font Weights */
-    --font-weight-light: 300;
-    --font-weight-normal: 400;
-    --font-weight-medium: 500;
-    --font-weight-semibold: 600;
-    --font-weight-bold: 700;
-    --font-weight-extrabold: 800;
+    /* Font Weights - THICKER/BOLDER */
+    --font-weight-light: 400;
+    --font-weight-normal: 500;
+    --font-weight-medium: 600;
+    --font-weight-semibold: 700;
+    --font-weight-bold: 800;
+    --font-weight-extrabold: 900;
     
     /* ===== Border Radius ===== */
     --border-radius-sm: 8px;
@@ -107,12 +107,12 @@
 }
 
 /* ============================================
-   ELEGANT BACKGROUND - Soothing Light Theme
+   ELEGANT BACKGROUND - Vibrant Colorful Theme
    ============================================ */
 body, [data-testid="stAppViewContainer"], .main {
     background: 
         var(--dna-pattern),
-        linear-gradient(180deg, var(--bg-light) 0%, #EEF2FF 100%) !important;
+        linear-gradient(135deg, #faf5ff 0%, #f0e7ff 25%, #e8f4ff 50%, #f0fdf4 75%, #fef3c7 100%) !important;
     font-family: var(--font-primary) !important;
     color: var(--text-color) !important;
 }
@@ -125,12 +125,12 @@ body, [data-testid="stAppViewContainer"], .main {
     display: flex !important;
     width: 100% !important;
     justify-content: stretch !important;
-    gap: 4px !important;
+    gap: 6px !important;
     border-bottom: none !important;
-    background: var(--tab-bg) !important;
-    box-shadow: 0 3px 18px var(--shadow-color), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-    margin-bottom: 1em;
-    padding: 6px 8px !important;
+    background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 50%, #e0e7ff 100%) !important;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    margin-bottom: 1.2em;
+    padding: 8px 10px !important;
     border-radius: var(--border-radius-lg) !important;
     animation: fade-in 0.5s ease-out;
 }
@@ -139,12 +139,12 @@ body, [data-testid="stAppViewContainer"], .main {
 .stTabs [data-baseweb="tab"] {
     flex: 1 1 0 !important;
     min-width: 0 !important;
-    font-size: 0.95rem !important;
-    font-weight: 500 !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
     font-family: var(--font-primary) !important;
-    padding: 8px 12px !important;
+    padding: 10px 14px !important;
     text-align: center !important;
-    color: #334155 !important;
+    color: #4c1d95 !important;
     background: transparent !important;
     border: none !important;
     border-radius: var(--border-radius-pill) !important;
@@ -157,18 +157,18 @@ body, [data-testid="stAppViewContainer"], .main {
     text-overflow: ellipsis;
 }
 
-/* Tab hover state - subtle highlight */
+/* Tab hover state - colorful highlight */
 .stTabs [data-baseweb="tab"]:hover {
-    color: var(--primary-color) !important;
-    background: rgba(255, 255, 255, 0.7) !important;
+    color: #7c3aed !important;
+    background: rgba(255, 255, 255, 0.8) !important;
 }
 
 /* Active tab - Pill-shaped with VIBRANT gradient fill and stronger elevation */
 .stTabs [aria-selected="true"] {
     color: #FFFFFF !important;
-    font-weight: 600 !important;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
-    box-shadow: 0 6px 20px var(--shadow-color), 0 3px 8px rgba(0, 0, 0, 0.15) !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%) !important;
+    box-shadow: 0 6px 24px rgba(139, 92, 246, 0.4), 0 3px 10px rgba(0, 0, 0, 0.15) !important;
     transform: translateY(-2px);
 }
 
@@ -182,14 +182,14 @@ body, [data-testid="stAppViewContainer"], .main {
 }
 
 /* ============================================
-   HEADINGS: Professional Scientific Typography
+   HEADINGS: Bold & Colorful Typography
    Using centralized font configuration
    ============================================ */
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-primary) !important;
     color: var(--text-color) !important;
-    font-weight: var(--font-weight-semibold) !important;
-    letter-spacing: -0.01em;
+    font-weight: var(--font-weight-bold) !important;
+    letter-spacing: -0.02em;
     margin-top: var(--spacing-md);
     margin-bottom: var(--spacing-sm);
     animation: fade-in 0.3s ease-out;
@@ -197,37 +197,45 @@ h1, h2, h3, h4, h5, h6 {
 
 h1 { 
     font-size: var(--font-h1) !important; 
-    font-weight: var(--font-weight-bold) !important;
-    color: var(--primary-color) !important;
-    letter-spacing: -0.02em;
+    font-weight: var(--font-weight-extrabold) !important;
+    color: #6366f1; /* Fallback for accessibility */
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.03em;
 }
 
 h2 { 
     font-size: var(--font-h2) !important; 
-    color: var(--primary-color) !important; 
-    font-weight: var(--font-weight-semibold) !important;
-    border-bottom: 2px solid var(--bg-card) !important;
+    color: #7c3aed; /* Fallback for accessibility */
+    background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: var(--font-weight-bold) !important;
+    border-bottom: 3px solid var(--accent-color) !important;
     padding-bottom: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
 }
 
 h3 { 
     font-size: var(--font-h3) !important; 
-    color: var(--secondary-color) !important; 
-    font-weight: var(--font-weight-semibold) !important;
+    color: #7c3aed !important; 
+    font-weight: var(--font-weight-bold) !important;
 }
 
 h4 { 
     font-size: var(--font-h4) !important; 
-    color: var(--text-color) !important; 
+    color: #6366f1 !important; 
     font-weight: var(--font-weight-semibold) !important;
 }
 
-/* Body text: Enhanced readability for scientific content */
+/* Body text: Enhanced readability with bolder weight */
 .stMarkdown, .markdown-text-container, .stText, p, span, label {
     font-size: var(--font-body) !important;
     font-family: var(--font-primary) !important;
-    line-height: 1.6 !important;
+    line-height: 1.7 !important;
     color: var(--text-color) !important;
     margin-bottom: var(--spacing-sm) !important;
     font-weight: var(--font-weight-normal);
@@ -237,14 +245,16 @@ h4 {
 /* Small text */
 small, .caption, [data-testid="stCaptionContainer"] {
     font-size: var(--font-small) !important;
-    color: #64748B !important;
+    color: #6b21a8 !important;
+    font-weight: 500 !important;
 }
 
 /* Caption text */
 .caption, [data-testid="stCaptionContainer"] {
-    color: #64748B !important;
+    color: #7c3aed !important;
     font-size: var(--font-caption) !important;
     font-style: italic;
+    font-weight: 500 !important;
 }
 
 /* Input fields: Clean design with soft borders */
@@ -267,84 +277,85 @@ input:focus, .stTextInput>div>div>input:focus {
 }
 
 /* ============================================
-   BUTTONS: VIBRANT gradient with stronger shadow
+   BUTTONS: Extra VIBRANT gradient with colorful shadow
    Using centralized button styles from UI_COMPONENT_STYLES
    ============================================ */
 .stButton>button {
     font-size: var(--font-body) !important;
     font-family: var(--font-primary) !important;
-    padding: 0.5em 1.2em !important;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+    padding: 0.6em 1.4em !important;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%) !important;
     color: #FFFFFF !important;
     border-radius: var(--border-radius-md) !important;
     border: none !important;
-    font-weight: var(--font-weight-medium) !important;
-    box-shadow: 0 6px 20px var(--shadow-color);
+    font-weight: var(--font-weight-bold) !important;
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
     transition: var(--transition-normal);
     letter-spacing: 0.02em;
 }
 
 .stButton>button:hover {
-    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%) !important;
-    box-shadow: 0 8px 28px var(--shadow-color);
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #6366f1 100%) !important;
+    box-shadow: 0 8px 28px rgba(236, 72, 153, 0.4);
     transform: translateY(-3px);
 }
 
 .stButton>button:active {
     transform: translateY(0);
-    box-shadow: 0 3px 12px var(--shadow-color);
+    box-shadow: 0 3px 12px rgba(139, 92, 246, 0.3);
 }
 
 /* ============================================
-   DATAFRAMES: Clean design with VIBRANT shadows
+   DATAFRAMES: Colorful design with VIBRANT shadows
    ============================================ */
 .stDataFrame, .stTable {
-    font-size: 0.92rem !important;
+    font-size: 0.95rem !important;
     font-family: var(--font-primary) !important;
     line-height: 1.6 !important;
     border-radius: var(--border-radius-md) !important;
     overflow: hidden;
-    box-shadow: 0 4px 16px var(--shadow-color) !important;
-    border: 1px solid var(--bg-card) !important;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2) !important;
+    border: 2px solid #e9d5ff !important;
     animation: fade-in 0.4s ease-out;
 }
 .stDataFrame thead tr th {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%) !important;
     color: white !important;
-    font-weight: 600 !important;
-    padding: 0.8rem !important;
-    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    padding: 0.9rem !important;
+    font-size: 0.92rem !important;
     letter-spacing: 0.01em;
     text-transform: uppercase;
-    border-bottom: 2px solid var(--primary-color) !important;
+    border-bottom: 3px solid #7c3aed !important;
 }
 .stDataFrame tbody tr {
     transition: var(--transition-normal);
-    border-bottom: 1px solid var(--bg-card) !important;
+    border-bottom: 1px solid #f3e8ff !important;
 }
 .stDataFrame tbody tr:hover {
-    background: #F7FAFC !important;
+    background: #faf5ff !important;
 }
 .stDataFrame tbody tr td {
-    padding: 0.7rem !important;
+    padding: 0.8rem !important;
     color: var(--text-color) !important;
+    font-weight: 500 !important;
 }
 
-/* Highlight alternate rows */
+/* Highlight alternate rows with colorful tint */
 .stDataFrame tbody tr:nth-child(odd) {
-    background: rgba(238, 242, 255, 0.5) !important;
+    background: rgba(243, 232, 255, 0.5) !important;
 }
 
 /* Tab content - Clean content card section with VIBRANT shadow */
 .stTabs [data-baseweb="tab-panel"] {
-    padding-top: 1rem !important;
-    padding-left: 0.8rem !important;
-    padding-right: 0.8rem !important;
-    padding-bottom: 1rem !important;
+    padding-top: 1.2rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-bottom: 1.2rem !important;
     animation: fade-in 0.3s ease-out;
     background: #FFFFFF !important;
     border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg) !important;
-    box-shadow: 0 6px 24px var(--shadow-color) !important;
+    box-shadow: 0 6px 28px rgba(139, 92, 246, 0.2) !important;
     margin-top: -8px;
 }
 
@@ -353,16 +364,17 @@ input:focus, .stTextInput>div>div>input:focus {
    ============================================ */
 .analysis-summary-card, .glassmorphism-card, .content-card {
     margin: 0.8rem 0 !important;
-    padding: 1rem !important;
+    padding: 1.2rem !important;
     background: #FFFFFF !important;
     border-radius: var(--border-radius-lg) !important;
-    box-shadow: 0 4px 20px var(--shadow-color) !important;
-    border: 1px solid #E5E7EB !important;
+    box-shadow: 0 4px 24px rgba(139, 92, 246, 0.15) !important;
+    border: 2px solid #e9d5ff !important;
     animation: fade-in 0.4s ease-out;
     transition: var(--transition-normal);
 }
 .analysis-summary-card:hover, .glassmorphism-card:hover, .content-card:hover {
-    box-shadow: 0 8px 32px var(--shadow-color) !important;
+    box-shadow: 0 8px 36px rgba(139, 92, 246, 0.25) !important;
+    border-color: #d8b4fe !important;
 }
 
 /* Select boxes and multiselect: Clean dropdown design */

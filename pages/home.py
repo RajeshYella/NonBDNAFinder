@@ -5,7 +5,6 @@ from config.typography import FONT_CONFIG
 from config.themes import TAB_THEMES
 from config.colors import SEMANTIC_COLORS
 from ui.css import load_css, get_page_colors
-from job_manager import load_job_results, job_exists, get_job_summary
 
 
 def render():
@@ -306,73 +305,4 @@ def render():
     </div>
     """, unsafe_allow_html=True)
     
-    # ========== JOB LOOKUP SECTION ==========
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
-                box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; margin-top: 2rem;'>
-        <h2 style='color: {colors['primary']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
-            Retrieve Previous Results
-        </h2>
-        <p style='color: {colors['neutral_700']}; font-size: 1rem; line-height: 1.6; margin-bottom: 1rem;'>
-            Enter your Job ID to retrieve previously completed analyses. Results are stored securely and 
-            accessible only via your unique Job ID.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Job ID input
-    col_input, col_button = st.columns([3, 1])
-    with col_input:
-        lookup_job_id = st.text_input(
-            "Job ID",
-            placeholder="Enter 10-character Job ID (e.g., a1b2c3d4e5)",
-            help="Job ID was provided when you submitted your analysis",
-            label_visibility="collapsed"
-        )
-    
-    with col_button:
-        lookup_button = st.button("Load Results", type="primary", use_container_width=True)
-    
-    # Handle job lookup
-    if lookup_button and lookup_job_id:
-        lookup_job_id = lookup_job_id.strip()
-        
-        if not lookup_job_id:
-            st.error("Please enter a Job ID")
-        elif not job_exists(lookup_job_id):
-            st.error(f"Job ID '{lookup_job_id}' not found. Please check your ID and try again.")
-        else:
-            # Load the job
-            with st.spinner(f"Loading job {lookup_job_id}..."):
-                loaded_data = load_job_results(lookup_job_id)
-                
-                if loaded_data is None:
-                    st.error("Failed to load job results. Please try again.")
-                else:
-                    results, sequences, names, metadata = loaded_data
-                    
-                    # Store in session state
-                    st.session_state.results = results
-                    st.session_state.seqs = sequences
-                    st.session_state.names = names
-                    st.session_state.current_job_id = lookup_job_id
-                    st.session_state.analysis_done = True
-                    
-                    # Display success message
-                    st.success(f"Job {lookup_job_id} loaded successfully!")
-                    
-                    # Display job summary
-                    st.markdown(f"""
-                    <div style='background: {colors['neutral_50']}; padding: 1rem; border-radius: 8px; 
-                                border-left: 4px solid {colors['primary']}; margin: 1rem 0;'>
-                        <b>Job Summary:</b><br>
-                        <b>Job ID:</b> {metadata.get('job_id', 'N/A')}<br>
-                        <b>Completed:</b> {metadata.get('timestamp', 'N/A')}<br>
-                        <b>Sequences:</b> {metadata.get('num_sequences', 0)}<br>
-                        <b>Total Motifs:</b> {metadata.get('total_motifs', 0)}<br>
-                        <b>Total Base Pairs:</b> {metadata.get('total_bp', 0):,}
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    st.info("View results in the **Results** tab or download from the **Download** tab")
+
