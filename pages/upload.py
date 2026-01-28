@@ -17,6 +17,12 @@ from config.text import UI_TEXT
 from config.typography import FONT_CONFIG
 from config.themes import TAB_THEMES
 from config.analysis import ANALYSIS_CONFIG
+from config.motif_taxonomy import (
+    MOTIF_CLASSIFICATION,
+    VALID_CLASSES,
+    CLASS_TO_SUBCLASSES,
+    get_all_classes
+)
 
 # Import UI components
 from ui.css import load_css, get_page_colors
@@ -496,6 +502,102 @@ def render():
             - Recommended for focused analysis (<100kb)
             """)
         
+        # ============================================================
+        # CLASS/SUBCLASS SELECTION SECTION
+        # ============================================================
+        st.markdown("##### Select Motif Classes for Analysis")
+        
+        # Initialize session state for class/subclass selection if not present
+        if 'selected_classes' not in st.session_state:
+            st.session_state.selected_classes = list(VALID_CLASSES)  # Default: all classes
+        if 'selected_subclasses' not in st.session_state:
+            # Default: all subclasses
+            all_subclasses = []
+            for subclasses in CLASS_TO_SUBCLASSES.values():
+                all_subclasses.extend(subclasses)
+            st.session_state.selected_subclasses = all_subclasses
+        
+        # Get available class names (sorted for consistent display)
+        available_classes = sorted(list(VALID_CLASSES))
+        
+        # Add Select All / Deselect All buttons
+        col_select_all, col_deselect_all = st.columns(2)
+        with col_select_all:
+            if st.button("Select All Classes", use_container_width=True, key="select_all_classes"):
+                st.session_state.selected_classes = list(VALID_CLASSES)
+                # Also select all subclasses
+                all_subclasses = []
+                for subclasses in CLASS_TO_SUBCLASSES.values():
+                    all_subclasses.extend(subclasses)
+                st.session_state.selected_subclasses = all_subclasses
+                st.rerun()
+        
+        with col_deselect_all:
+            if st.button("Deselect All Classes", use_container_width=True, key="deselect_all_classes"):
+                st.session_state.selected_classes = []
+                st.session_state.selected_subclasses = []
+                st.rerun()
+        
+        # Multiselect for motif classes
+        selected_classes = st.multiselect(
+            "Choose motif classes to include in analysis:",
+            options=available_classes,
+            default=st.session_state.selected_classes,
+            help="Select which Non-B DNA motif classes to detect. Unselected classes will be excluded from analysis results.",
+            key="class_multiselect"
+        )
+        
+        # Store selected classes in session state
+        st.session_state.selected_classes = selected_classes
+        
+        # If Submotif Level is selected, show subclass selection
+        if analysis_mode == "Submotif Level" and selected_classes:
+            st.markdown("##### Select Specific Subclasses")
+            st.caption("Optionally narrow down to specific subclasses within selected classes")
+            
+            # Build available subclasses based on selected classes
+            available_subclasses = []
+            for cls in selected_classes:
+                if cls in CLASS_TO_SUBCLASSES:
+                    available_subclasses.extend(CLASS_TO_SUBCLASSES[cls])
+            
+            # Filter current subclass selection to only include valid options
+            current_subclass_selection = [
+                sub for sub in st.session_state.selected_subclasses
+                if sub in available_subclasses
+            ]
+            
+            # If no subclasses selected, default to all available
+            if not current_subclass_selection:
+                current_subclass_selection = available_subclasses
+            
+            # Subclass multiselect
+            selected_subclasses = st.multiselect(
+                "Choose specific subclasses to include:",
+                options=available_subclasses,
+                default=current_subclass_selection,
+                help="Select which subclasses to detect. All subclasses of selected classes are included by default.",
+                key="subclass_multiselect"
+            )
+            
+            # Store selected subclasses
+            st.session_state.selected_subclasses = selected_subclasses
+        else:
+            # For Motif Level, select all subclasses of selected classes
+            available_subclasses = []
+            for cls in selected_classes:
+                if cls in CLASS_TO_SUBCLASSES:
+                    available_subclasses.extend(CLASS_TO_SUBCLASSES[cls])
+            st.session_state.selected_subclasses = available_subclasses
+        
+        # Show summary of selection
+        if selected_classes:
+            num_classes = len(selected_classes)
+            num_subclasses = len(st.session_state.selected_subclasses)
+            st.success(f"**Selection Summary:** {num_classes} classes and {num_subclasses} subclasses selected for analysis")
+        else:
+            st.warning("**No classes selected.** Please select at least one motif class to run analysis.")
+        
         # Quick Options Section
         st.markdown(f"##### {UI_TEXT['analysis_quick_options_title']}")
         detailed_output = st.checkbox("Detailed Analysis", value=True, 
@@ -518,11 +620,11 @@ def render():
         nonoverlap = True
         overlap_option = "Remove overlaps within subclasses"
         
-        # Helper text based on analysis mode
+        # Helper text based on analysis mode - updated to reflect selection
         if analysis_mode == "Motif Level":
-            st.caption("All 9 primary motif classes are detected automatically")
+            st.caption(f"{len(selected_classes)} of 11 motif classes selected for detection")
         else:
-            st.caption("All 11 motif classes with 24 subclasses are detected automatically")
+            st.caption(f"{len(st.session_state.selected_subclasses)} of 24 subclasses selected for detection")
     
     # ----- FULL-WIDTH STICKY RUN BUTTON -----
     st.markdown("---")
@@ -531,8 +633,8 @@ def render():
     if "analysis_done" not in st.session_state:
         st.session_state.analysis_done = False
     
-    # Check if valid input is present
-    has_valid_input = bool(st.session_state.get('seqs'))
+    # Check if valid input is present (sequences AND at least one class selected)
+    has_valid_input = bool(st.session_state.get('seqs')) and bool(st.session_state.get('selected_classes'))
     
     # Create a full-width container for the run button
     run_button_container = st.container()
@@ -600,6 +702,9 @@ def render():
         if not st.session_state.seqs:
             st.error("Please upload or input sequences before running analysis.")
             st.session_state.analysis_status = "Error"
+        elif not st.session_state.get('selected_classes'):
+            st.error("Please select at least one motif class before running analysis.")
+            st.session_state.analysis_status = "Error"
         else:
             # ============================================================
             # JOB ID GENERATION: Create unique ID for internal tracking
@@ -620,6 +725,8 @@ def render():
             st.session_state.overlap_option_used = overlap_option
             st.session_state.nonoverlap_used = nonoverlap
             st.session_state.analysis_mode_used = analysis_mode  # Store selected analysis mode
+            st.session_state.selected_classes_used = list(st.session_state.selected_classes)  # Store selected classes
+            st.session_state.selected_subclasses_used = list(st.session_state.selected_subclasses)  # Store selected subclasses
             
             # Set analysis parameters based on user selections
             # nonoverlap is already set above based on user selection
@@ -841,6 +948,32 @@ def render():
                     
                     # Ensure all motifs have required fields
                     results = [ensure_subclass(motif) for motif in results]
+                    
+                    # ============================================================
+                    # FILTER RESULTS BASED ON SELECTED CLASSES/SUBCLASSES
+                    # ============================================================
+                    # Apply user's class/subclass selection to filter results
+                    selected_classes_set = set(st.session_state.selected_classes)
+                    selected_subclasses_set = set(st.session_state.selected_subclasses)
+                    
+                    # Filter motifs to only include selected classes and subclasses
+                    filtered_results = []
+                    for motif in results:
+                        motif_class = motif.get('Class', '')
+                        motif_subclass = motif.get('Subclass', '')
+                        
+                        # Include if class is selected AND (subclass is selected OR subclass matches selected class)
+                        if motif_class in selected_classes_set:
+                            # For Hybrid and Non-B_DNA_Clusters, include if parent class is selected
+                            if motif_class in ['Hybrid', 'Non-B_DNA_Clusters']:
+                                # Always include these if they were formed from selected classes
+                                component_classes = motif.get('Component_Classes', [])
+                                if not component_classes or any(c in selected_classes_set for c in component_classes):
+                                    filtered_results.append(motif)
+                            elif motif_subclass in selected_subclasses_set:
+                                filtered_results.append(motif)
+                    
+                    results = filtered_results
                     all_results.append(results)
                     
                     total_bp_processed += len(seq)

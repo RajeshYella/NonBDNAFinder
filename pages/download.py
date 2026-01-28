@@ -50,7 +50,22 @@ def render():
         # Sanitize sequence name for safe filenames
         safe_filename = re.sub(r'[^\w\-]', '_', primary_sequence_name)[:50].strip('_')
         
-
+        # Show selected class/subclass filter information
+        selected_classes_used = st.session_state.get('selected_classes_used', [])
+        selected_subclasses_used = st.session_state.get('selected_subclasses_used', [])
+        analysis_mode_used = st.session_state.get('analysis_mode_used', 'Motif Level')
+        
+        if selected_classes_used:
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); 
+                        padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem;
+                        border-left: 3px solid #ca8a04;'>
+                <p style='color: #713f12; margin: 0; font-size: 0.9rem;'>
+                    <strong>Data Filter:</strong> Exports contain only selected classes ({len(selected_classes_used)}) and subclasses ({len(selected_subclasses_used)}) 
+                    from {analysis_mode_used} analysis
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
         
         # Prepare motif data and validate
         all_motifs = []

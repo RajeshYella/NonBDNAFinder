@@ -155,6 +155,24 @@ def render():
     
     # Enhanced summary display
     st.markdown(f"### {UI_TEXT['heading_analysis_summary']}")
+    
+    # Show selected class/subclass filter information
+    selected_classes_used = st.session_state.get('selected_classes_used', [])
+    selected_subclasses_used = st.session_state.get('selected_subclasses_used', [])
+    analysis_mode_used = st.session_state.get('analysis_mode_used', 'Motif Level')
+    
+    if selected_classes_used:
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+                    padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem;
+                    border-left: 3px solid #0ea5e9;'>
+            <p style='color: #0c4a6e; margin: 0; font-size: 0.9rem;'>
+                <strong>Analysis Filter:</strong> {len(selected_classes_used)} classes / {len(selected_subclasses_used)} subclasses selected 
+                ({analysis_mode_used})
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
     st.dataframe(st.session_state.summary_df, use_container_width=True)
     
     # Sequence selection for detailed analysis using pills for better UX
