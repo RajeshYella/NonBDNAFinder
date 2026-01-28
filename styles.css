@@ -5,18 +5,36 @@
    for custom styling in Streamlit applications. */
 
 /* ═══════════════════════════════════════════════════════════════
+   HIDE SIDEBAR NAVIGATION
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Hide the auto-generated sidebar from multi-page apps */
+section[data-testid="stSidebar"] {
+    display: none !important;
+}
+
+/* Ensure main content uses full width when sidebar is hidden */
+.main .block-container {
+    max-width: 100% !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    STREAMLIT TAB STYLING - COMPACT, BOLD, AND VIBRANT
    ═══════════════════════════════════════════════════════════════ */
 
-/* Tab Container - Maximize Horizontal Space */
+/* Tab Container - Maximize Horizontal Space and Ensure Full Visibility */
 .stTabs [data-baseweb="tab-list"] {
     gap: 0 !important;
     width: 100% !important;
     display: flex !important;
     justify-content: space-evenly !important;
+    margin-top: 0.5rem !important;
+    overflow: visible !important;
 }
 
-/* Individual Tab Buttons - Compact and Bold */
+/* Individual Tab Buttons - Compact, Bold, and Fully Visible */
 .stTabs [data-baseweb="tab"] {
     height: 48px !important;
     padding: 8px 20px !important;
@@ -30,6 +48,9 @@
     flex: 1 1 0 !important;
     min-width: 0 !important;
     margin: 0 2px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
 }
 
 /* Tab Hover State - Vibrant Accent */
@@ -109,6 +130,12 @@ h4 {
 /* ═══════════════════════════════════════════════════════════════
    COMPACT SPACING FOR OVERALL LAYOUT
    ═══════════════════════════════════════════════════════════════ */
+
+/* Ensure tabs container is fully visible */
+.stTabs {
+    margin-top: 1rem !important;
+    overflow: visible !important;
+}
 
 /* Reduce Streamlit Default Padding */
 .block-container {
