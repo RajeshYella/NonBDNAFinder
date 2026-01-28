@@ -104,6 +104,9 @@ for k, v in {
     'summary_df': pd.DataFrame(),
     'analysis_status': "Ready",
     'selected_classes': [],  # Initialize empty list for motif class selection
+    'selected_subclasses': [],  # Initialize empty list for subclass selection
+    'selected_classes_used': [],  # Classes used in last analysis
+    'selected_subclasses_used': [],  # Subclasses used in last analysis
     'current_job_id': None  # Current job ID for result delivery
 }.items():
     if k not in st.session_state:
