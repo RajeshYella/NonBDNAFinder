@@ -138,3 +138,213 @@ h4 {
 .element-container {
     margin-bottom: 0.75rem !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DENSE MOTIF SELECTOR TABLE
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Compact data editor for motif selector */
+.motif-selector-table .stDataFrame {
+    max-height: 350px !important;
+    overflow-y: auto !important;
+}
+
+/* Dense table styling */
+.motif-selector-table td,
+.motif-selector-table th {
+    padding: 4px 8px !important;
+    font-size: 0.85rem !important;
+}
+
+/* Highlight rows by motif class - alternating group colors */
+.motif-selector-table tr:nth-child(even) {
+    background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INLINE TOGGLE BAR - Analysis Options
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Toggle bar container */
+.toggle-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin: 8px 0;
+}
+
+/* Individual toggle chip */
+.toggle-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+/* Toggle chip - enabled state */
+.toggle-chip--enabled {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+/* Toggle chip - disabled state */
+.toggle-chip--disabled {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+}
+
+/* Toggle chip hover */
+.toggle-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Toggle icon */
+.toggle-chip__icon {
+    font-size: 0.9rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HORIZONTAL METRICS STRIP - Analysis Complete Dashboard
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Horizontal metrics container */
+.metrics-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-radius: 12px;
+    margin: 16px 0;
+    justify-content: space-between;
+}
+
+/* Individual metric card - compact horizontal */
+.metric-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    min-width: 100px;
+    flex: 1;
+}
+
+/* Metric icon */
+.metric-card__icon {
+    font-size: 1.25rem;
+    margin-bottom: 4px;
+}
+
+/* Metric value */
+.metric-card__value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+}
+
+/* Metric label */
+.metric-card__label {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+    margin-top: 2px;
+}
+
+/* Success state for metrics strip */
+.metrics-strip--success {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    border: 2px solid #10b981;
+}
+
+/* Responsive: Stack on very small screens */
+@media (max-width: 600px) {
+    .metrics-strip {
+        flex-direction: column;
+    }
+    .metric-card {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PROGRESS PANEL STYLING
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Progress panel base */
+.progress-panel {
+    padding: 20px;
+    border-radius: 12px;
+    margin: 16px 0;
+}
+
+/* Progress panel title */
+.progress-panel__title {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 8px !important;
+    color: white !important;
+}
+
+/* Progress panel subtitle */
+.progress-panel__subtitle {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin-bottom: 16px;
+}
+
+/* Success state */
+.progress-panel--success {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    color: white;
+    border: 2px solid #10b981;
+}
+
+/* Stats grid - wide layout for dashboard */
+.stats-grid--wide {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* Stat card in grid */
+.stats-grid .stat-card {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* Stat card value */
+.stat-card__value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+}
+
+/* Stat card label */
+.stat-card__label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 4px;
+}

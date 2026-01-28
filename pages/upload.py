@@ -21,7 +21,9 @@ from config.motif_taxonomy import (
     MOTIF_CLASSIFICATION,
     VALID_CLASSES,
     CLASS_TO_SUBCLASSES,
-    get_all_classes
+    get_all_classes,
+    build_motif_selector_data,
+    get_enabled_from_selector_data
 )
 
 # Import UI components
@@ -474,112 +476,189 @@ def render():
     )
     
     # ============================================================
-    # CLASS/SUBCLASS SELECTION SECTION
+    # DENSE MOTIF & SUBMOTIF SELECTOR (TABLE-BASED)
+    # ============================================================
+    # Uses st.data_editor for a dense, scrollable table.
+    # All motifs enabled by default - users only deselect what they don't want.
     # ============================================================
     
-    # Initialize session state for class/subclass selection if not present
+    # Initialize session state for motif selector data
+    if 'motif_selector_data' not in st.session_state:
+        # Build initial table data with all motifs enabled
+        st.session_state.motif_selector_data = build_motif_selector_data()
+    
+    # Initialize selected classes/subclasses for backward compatibility
     if 'selected_classes' not in st.session_state:
-        st.session_state.selected_classes = list(VALID_CLASSES)  # Default: all classes
+        st.session_state.selected_classes = list(VALID_CLASSES)
     if 'selected_subclasses' not in st.session_state:
-        # Default: all subclasses
         all_subclasses = []
         for subclasses in CLASS_TO_SUBCLASSES.values():
             all_subclasses.extend(subclasses)
         st.session_state.selected_subclasses = all_subclasses
     
-    # Get available class names (sorted for consistent display)
-    available_classes = sorted(list(VALID_CLASSES))
+    # Create DataFrame for the data editor
+    selector_df = pd.DataFrame(st.session_state.motif_selector_data)
     
-    # Add Select All / Deselect All buttons in a row
-    col_select_all, col_deselect_all = st.columns(2)
-    with col_select_all:
-        if st.button("Select All Classes", use_container_width=True, key="select_all_classes"):
+    # Select All / Deselect All buttons in compact row
+    col_sel_all, col_desel_all, col_spacer = st.columns([1, 1, 2])
+    with col_sel_all:
+        if st.button("✓ Select All", use_container_width=True, key="select_all_motifs"):
+            for row in st.session_state.motif_selector_data:
+                row['Enabled'] = True
             st.session_state.selected_classes = list(VALID_CLASSES)
-            # Also select all subclasses
             all_subclasses = []
             for subclasses in CLASS_TO_SUBCLASSES.values():
                 all_subclasses.extend(subclasses)
             st.session_state.selected_subclasses = all_subclasses
             st.rerun()
     
-    with col_deselect_all:
-        if st.button("Deselect All Classes", use_container_width=True, key="deselect_all_classes"):
+    with col_desel_all:
+        if st.button("✗ Deselect All", use_container_width=True, key="deselect_all_motifs"):
+            for row in st.session_state.motif_selector_data:
+                row['Enabled'] = False
             st.session_state.selected_classes = []
             st.session_state.selected_subclasses = []
             st.rerun()
     
-    # Multiselect for motif classes
-    selected_classes = st.multiselect(
-        "Motif Classes:",
-        options=available_classes,
-        default=st.session_state.selected_classes,
-        help="Select which Non-B DNA motif classes to detect.",
-        key="class_multiselect"
+    # Dense table-based motif selector using st.data_editor
+    st.markdown("""
+    <div style='font-size: 0.85rem; color: #64748b; margin-bottom: 8px;'>
+        <strong>Motif & Submotif Selector</strong> — All enabled by default. Uncheck to exclude.
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Configure column display
+    column_config = {
+        "Enabled": st.column_config.CheckboxColumn(
+            "✓",
+            help="Enable/disable this submotif",
+            default=True,
+            width="small"
+        ),
+        "Motif Class": st.column_config.TextColumn(
+            "Motif Class",
+            help="Parent motif class",
+            width="medium",
+            disabled=True
+        ),
+        "Submotif": st.column_config.TextColumn(
+            "Submotif",
+            help="Specific submotif type",
+            width="large",
+            disabled=True
+        )
+    }
+    
+    # Render the dense motif selector table
+    edited_df = st.data_editor(
+        selector_df,
+        column_config=column_config,
+        use_container_width=True,
+        hide_index=True,
+        num_rows="fixed",
+        height=280,  # Compact height for dense display
+        key="motif_selector_editor"
     )
     
-    # Store selected classes in session state
-    st.session_state.selected_classes = selected_classes
+    # Update session state from edited data
+    st.session_state.motif_selector_data = edited_df.to_dict('records')
     
-    # If Submotif Level is selected, show subclass selection
-    if analysis_mode == "Submotif Level" and selected_classes:
-        # Build available subclasses based on selected classes
-        available_subclasses = []
-        for cls in selected_classes:
-            if cls in CLASS_TO_SUBCLASSES:
-                available_subclasses.extend(CLASS_TO_SUBCLASSES[cls])
-        
-        # Filter current subclass selection to only include valid options
-        current_subclass_selection = [
-            sub for sub in st.session_state.selected_subclasses
-            if sub in available_subclasses
-        ]
-        
-        # If no subclasses selected, default to all available
-        if not current_subclass_selection:
-            current_subclass_selection = available_subclasses
-        
-        # Subclass multiselect
-        selected_subclasses = st.multiselect(
-            "Subclasses:",
-            options=available_subclasses,
-            default=current_subclass_selection,
-            help="Select which subclasses to detect.",
-            key="subclass_multiselect"
-        )
-        
-        # Store selected subclasses
-        st.session_state.selected_subclasses = selected_subclasses
-    else:
-        # For Motif Level, select all subclasses of selected classes
-        available_subclasses = []
-        for cls in selected_classes:
-            if cls in CLASS_TO_SUBCLASSES:
-                available_subclasses.extend(CLASS_TO_SUBCLASSES[cls])
-        st.session_state.selected_subclasses = available_subclasses
+    # Extract enabled classes and subclasses from the table
+    enabled_classes, enabled_subclasses = get_enabled_from_selector_data(
+        st.session_state.motif_selector_data
+    )
+    st.session_state.selected_classes = enabled_classes
+    st.session_state.selected_subclasses = enabled_subclasses
     
     # Show compact summary of selection
-    if selected_classes:
-        num_classes = len(selected_classes)
-        num_subclasses = len(st.session_state.selected_subclasses)
-        st.success(f"{num_classes} classes, {num_subclasses} subclasses selected")
+    num_enabled = sum(1 for row in st.session_state.motif_selector_data if row.get('Enabled', False))
+    total_submotifs = len(st.session_state.motif_selector_data)
+    
+    if enabled_classes:
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+                    padding: 8px 12px; border-radius: 6px; margin: 8px 0;
+                    display: inline-flex; align-items: center; gap: 8px;'>
+            <span style='font-size: 1.1rem;'>✓</span>
+            <span style='font-weight: 600; color: #065f46;'>
+                {len(enabled_classes)} classes, {num_enabled}/{total_submotifs} submotifs enabled
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        st.warning("Please select at least one motif class.")
+        st.warning("⚠️ Please enable at least one submotif to run analysis.")
     
-    # Quick Options Section - horizontal checkboxes
-    col_opt1, col_opt2 = st.columns(2)
-    with col_opt1:
-        detailed_output = st.checkbox("Detailed Analysis", value=True, 
-                                    help=UI_TEXT['tooltip_detailed_analysis'])
-        show_chunk_progress = st.checkbox("Chunk Progress", value=False,
-                                         help=UI_TEXT['tooltip_chunk_progress'])
-    with col_opt2:
-        quality_check = st.checkbox("Quality Validation", value=True, 
-                                   help=UI_TEXT['tooltip_quality_validation'])
-        use_parallel_scanner = st.checkbox("Parallel Scanner", value=True,
-                                          help=UI_TEXT['tooltip_parallel_scanner'])
+    # ============================================================
+    # INLINE TOGGLE BAR - Analysis Options
+    # ============================================================
+    # Compact single-row toggle chips instead of vertical checkboxes
+    # ============================================================
     
-    show_memory_usage = st.checkbox("Show Memory Usage", value=False,
-                                    help="Display real-time memory usage during analysis")
+    st.markdown("""
+    <div style='font-size: 0.85rem; color: #64748b; margin: 12px 0 8px 0;'>
+        <strong>Analysis Options</strong>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Initialize toggle states in session state
+    if 'toggle_detailed' not in st.session_state:
+        st.session_state.toggle_detailed = True
+    if 'toggle_validation' not in st.session_state:
+        st.session_state.toggle_validation = True
+    if 'toggle_parallel' not in st.session_state:
+        st.session_state.toggle_parallel = True
+    if 'toggle_chunk_progress' not in st.session_state:
+        st.session_state.toggle_chunk_progress = False
+    if 'toggle_memory' not in st.session_state:
+        st.session_state.toggle_memory = False
+    
+    # Render toggle bar using columns for compact horizontal layout
+    tog_cols = st.columns(5)
+    
+    with tog_cols[0]:
+        detailed_output = st.checkbox(
+            "📊 Detailed",
+            value=st.session_state.toggle_detailed,
+            help=UI_TEXT['tooltip_detailed_analysis'],
+            key="chk_detailed"
+        )
+        st.session_state.toggle_detailed = detailed_output
+    
+    with tog_cols[1]:
+        quality_check = st.checkbox(
+            "✅ Validation",
+            value=st.session_state.toggle_validation,
+            help=UI_TEXT['tooltip_quality_validation'],
+            key="chk_validation"
+        )
+        st.session_state.toggle_validation = quality_check
+    
+    with tog_cols[2]:
+        use_parallel_scanner = st.checkbox(
+            "⚡ Parallel",
+            value=st.session_state.toggle_parallel,
+            help=UI_TEXT['tooltip_parallel_scanner'],
+            key="chk_parallel"
+        )
+        st.session_state.toggle_parallel = use_parallel_scanner
+    
+    with tog_cols[3]:
+        show_chunk_progress = st.checkbox(
+            "📦 Chunks",
+            value=st.session_state.toggle_chunk_progress,
+            help=UI_TEXT['tooltip_chunk_progress'],
+            key="chk_chunks"
+        )
+        st.session_state.toggle_chunk_progress = show_chunk_progress
+    
+    with tog_cols[4]:
+        show_memory_usage = st.checkbox(
+            "💾 Memory",
+            value=st.session_state.toggle_memory,
+            help="Display real-time memory usage during analysis",
+            key="chk_memory"
+        )
+        st.session_state.toggle_memory = show_memory_usage
     
     # Hardcoded default overlap handling
     nonoverlap = True
@@ -1169,44 +1248,43 @@ def render():
                 status_placeholder.empty()
                 detailed_progress_placeholder.empty()
                 
-                # Show final success message with enhanced performance metrics using scientific time format
+                # ============================================================
+                # HORIZONTAL METRICS STRIP - Analysis Complete Dashboard
+                # ============================================================
+                # Dashboard-style horizontal metrics bar for professional look
+                # ============================================================
+                
                 timer_placeholder.markdown(f"""
-                <div class='progress-panel progress-panel--success'>
-                    <h3 class='progress-panel__title'>Analysis Complete!</h3>
-                    <p class='progress-panel__subtitle'>All detectors, validations, and visualizations completed successfully</p>
-                    <div class='stats-grid stats-grid--wide'>
-                        <div class='stat-card'>
-                            <h2 class='stat-card__value'>{format_time_scientific(total_time)}</h2>
-                            <p class='stat-card__label'>Analysis Time</p>
-                        </div>
-                        <div class='stat-card'>
-                            <h2 class='stat-card__value'>{format_time_scientific(viz_total_time)}</h2>
-                            <p class='stat-card__label'>Visualization Time</p>
-                        </div>
-                        <div class='stat-card'>
-                            <h2 class='stat-card__value'>{total_bp_processed:,}</h2>
-                            <p class='stat-card__label'>Base Pairs</p>
-                        </div>
-                        <div class='stat-card'>
-                            <h2 class='stat-card__value'>{overall_speed:,.0f}</h2>
-                            <p class='stat-card__label'>bp/second</p>
-                        </div>
-                        <div class='stat-card'>
-                            <h2 class='stat-card__value'>{len(DETECTOR_PROCESSES)}</h2>
-                            <p class='stat-card__label'>Detectors</p>
-                        </div>
-                        <div class='stat-card'>
-                            <h2 class='stat-card__value'>{sum(len(r) for r in all_results)}</h2>
-                            <p class='stat-card__label'>Motifs Found</p>
-                        </div>
-                        <div class='stat-card'>
-                            <h2 class='stat-card__value'>{total_viz_count}</h2>
-                            <p class='stat-card__label'>Viz Components</p>
-                        </div>
-                        <div class='stat-card'>
-                            <h2 class='stat-card__value'>{len(validation_issues)}</h2>
-                            <p class='stat-card__label'>Validation Issues</p>
-                        </div>
+                <div class='metrics-strip metrics-strip--success'>
+                    <div class='metric-card'>
+                        <span class='metric-card__icon'>⏱️</span>
+                        <span class='metric-card__value'>{format_time_scientific(total_time)}</span>
+                        <span class='metric-card__label'>Analysis</span>
+                    </div>
+                    <div class='metric-card'>
+                        <span class='metric-card__icon'>🎨</span>
+                        <span class='metric-card__value'>{format_time_scientific(viz_total_time)}</span>
+                        <span class='metric-card__label'>Viz Time</span>
+                    </div>
+                    <div class='metric-card'>
+                        <span class='metric-card__icon'>🧬</span>
+                        <span class='metric-card__value'>{total_bp_processed:,}</span>
+                        <span class='metric-card__label'>Base Pairs</span>
+                    </div>
+                    <div class='metric-card'>
+                        <span class='metric-card__icon'>⚡</span>
+                        <span class='metric-card__value'>{overall_speed:,.0f}</span>
+                        <span class='metric-card__label'>bp/sec</span>
+                    </div>
+                    <div class='metric-card'>
+                        <span class='metric-card__icon'>🧪</span>
+                        <span class='metric-card__value'>{sum(len(r) for r in all_results)}</span>
+                        <span class='metric-card__label'>Motifs</span>
+                    </div>
+                    <div class='metric-card'>
+                        <span class='metric-card__icon'>⚠️</span>
+                        <span class='metric-card__value'>{len(validation_issues)}</span>
+                        <span class='metric-card__label'>Issues</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)

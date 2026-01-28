@@ -338,6 +338,71 @@ def is_valid_pairing(class_name: str, subclass_name: str) -> bool:
     return subclass_name in CLASS_TO_SUBCLASSES[class_name]
 
 
+def build_motif_selector_data(enabled_subclasses: Set[str] = None) -> List[Dict[str, any]]:
+    """
+    Build motif selector table data for st.data_editor.
+    
+    Creates a flat list of rows where each row represents a submotif,
+    grouped by their parent motif class. All rows are enabled by default.
+    
+    Args:
+        enabled_subclasses: Optional set of subclass names to enable.
+                           If None, all subclasses are enabled by default.
+    
+    Returns:
+        List of dicts with keys: 'Enabled', 'Motif Class', 'Submotif'
+        
+    Example:
+        >>> data = build_motif_selector_data()
+        >>> df = pd.DataFrame(data)
+        >>> edited_df = st.data_editor(df, ...)
+    """
+    rows = []
+    
+    # Sort by class ID for consistent ordering
+    for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
+        entry = MOTIF_CLASSIFICATION[class_id]
+        motif_class = entry['class']
+        subclasses = entry['subclasses']
+        
+        for subclass in subclasses:
+            # Default: all enabled, or check if in enabled_subclasses set
+            if enabled_subclasses is None:
+                is_enabled = True
+            else:
+                is_enabled = subclass in enabled_subclasses
+            
+            rows.append({
+                'Enabled': is_enabled,
+                'Motif Class': motif_class,
+                'Submotif': subclass
+            })
+    
+    return rows
+
+
+def get_enabled_from_selector_data(selector_data: List[Dict[str, any]]) -> tuple:
+    """
+    Extract enabled classes and subclasses from selector table data.
+    
+    Args:
+        selector_data: List of dicts from st.data_editor with 'Enabled', 
+                      'Motif Class', and 'Submotif' keys
+    
+    Returns:
+        Tuple of (enabled_classes: List[str], enabled_subclasses: List[str])
+    """
+    enabled_classes = set()
+    enabled_subclasses = []
+    
+    for row in selector_data:
+        if row.get('Enabled', False):
+            enabled_classes.add(row.get('Motif Class', ''))
+            enabled_subclasses.append(row.get('Submotif', ''))
+    
+    return list(enabled_classes), enabled_subclasses
+
+
 # =============================================================================
 # MODULE METADATA
 # =============================================================================
@@ -356,4 +421,6 @@ __all__ = [
     'is_valid_class',
     'is_valid_subclass',
     'is_valid_pairing',
+    'build_motif_selector_data',
+    'get_enabled_from_selector_data',
 ]
