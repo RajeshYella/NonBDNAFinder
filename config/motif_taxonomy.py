@@ -29,7 +29,7 @@ USAGE:
     >>> print(MOTIF_CLASSIFICATION[6]['subclasses'])  # G-Quadruplex subclasses
 """
 
-from typing import Dict, List, Set, FrozenSet
+from typing import Dict, List, Set, FrozenSet, Any, Optional, Tuple
 
 # =============================================================================
 # CANONICAL MOTIF CLASSIFICATION TAXONOMY
@@ -338,7 +338,7 @@ def is_valid_pairing(class_name: str, subclass_name: str) -> bool:
     return subclass_name in CLASS_TO_SUBCLASSES[class_name]
 
 
-def build_motif_selector_data(enabled_subclasses: Set[str] = None) -> List[Dict[str, any]]:
+def build_motif_selector_data(enabled_subclasses: Optional[Set[str]] = None) -> List[Dict[str, Any]]:
     """
     Build motif selector table data for st.data_editor.
     
@@ -381,7 +381,7 @@ def build_motif_selector_data(enabled_subclasses: Set[str] = None) -> List[Dict[
     return rows
 
 
-def get_enabled_from_selector_data(selector_data: List[Dict[str, any]]) -> tuple:
+def get_enabled_from_selector_data(selector_data: List[Dict[str, Any]]) -> Tuple[List[str], List[str]]:
     """
     Extract enabled classes and subclasses from selector table data.
     
@@ -397,8 +397,13 @@ def get_enabled_from_selector_data(selector_data: List[Dict[str, any]]) -> tuple
     
     for row in selector_data:
         if row.get('Enabled', False):
-            enabled_classes.add(row.get('Motif Class', ''))
-            enabled_subclasses.append(row.get('Submotif', ''))
+            motif_class = row.get('Motif Class', '')
+            submotif = row.get('Submotif', '')
+            # Only add non-empty values
+            if motif_class:
+                enabled_classes.add(motif_class)
+            if submotif:
+                enabled_subclasses.append(submotif)
     
     return list(enabled_classes), enabled_subclasses
 

@@ -141,6 +141,8 @@ h4 {
 
 /* ═══════════════════════════════════════════════════════════════
    DENSE MOTIF SELECTOR TABLE
+   NOTE: Uses Streamlit internal class names which may change between versions.
+   Tested with Streamlit >= 1.28.0. Update selectors if styling breaks after upgrade.
    ═══════════════════════════════════════════════════════════════ */
 
 /* Compact data editor for motif selector */
@@ -274,8 +276,8 @@ h4 {
     border: 2px solid #10b981;
 }
 
-/* Responsive: Stack on very small screens */
-@media (max-width: 600px) {
+/* Responsive: Stack on very small screens (mobile portrait) */
+@media (max-width: 480px) {
     .metrics-strip {
         flex-direction: column;
     }
