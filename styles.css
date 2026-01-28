@@ -1,25 +1,122 @@
-/* styles.css - Updated styles to ensure compact and bold typography with vibrant colors */
+/* styles.css - Compact, Bold, and Vibrant Typography for Tabs and Headings */
 
-/* Tab and Heading Padding Reduction */
-tab, h1, h2, h3 {
-    padding: 5px 10px;  /* Reduced padding */
+/* NOTE: !important declarations are required throughout this file to override
+   Streamlit's inline styles and default styling. While not ideal, this is necessary
+   for custom styling in Streamlit applications. */
+
+/* ═══════════════════════════════════════════════════════════════
+   STREAMLIT TAB STYLING - COMPACT, BOLD, AND VIBRANT
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Tab Container - Maximize Horizontal Space */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-evenly !important;
 }
 
-/* Font Size and Weight Increase for Headings */
+/* Individual Tab Buttons - Compact and Bold */
+.stTabs [data-baseweb="tab"] {
+    height: 48px !important;
+    padding: 8px 20px !important;
+    background-color: #f0f4f8 !important;
+    border: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.01em !important;
+    transition: all 0.25s ease !important;
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    margin: 0 2px !important;
+}
+
+/* Tab Hover State - Vibrant Accent */
+.stTabs [data-baseweb="tab"]:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+}
+
+/* Active Tab - Bold Gradient Background */
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+    background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%) !important;
+    color: #1a202c !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 16px rgba(0, 201, 255, 0.5) !important;
+    border-bottom: 4px solid #00A3CC !important;
+}
+
+/* Tab Panel - Minimal Top Padding for Compactness */
+.stTabs [data-baseweb="tab-panel"] {
+    padding-top: 1rem !important;
+}
+
+/* Tab Underline - Remove Default */
+.stTabs [data-baseweb="tab-highlight"] {
+    display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HEADING STYLING - BOLD, ENLARGED, AND VIBRANT
+   ═══════════════════════════════════════════════════════════════ */
+
+/* All Headings - Base Styles */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.2 !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.75rem !important;
+}
+
+/* H1 - Largest and Most Prominent */
 h1 {
-    font-size: 2.5em;  /* Increased size */
-    font-weight: bold;  /* Increased weight */
-}
-h2 {
-    font-size: 2em;
-    font-weight: bold;
-}
-h3 {
-    font-size: 1.75em;
-    font-weight: bold;
+    font-size: 3rem !important;
+    font-weight: 900 !important;
+    color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-/* Vibrant Gradients for Tab Backgrounds */
-tab {
-    background: linear-gradient(90deg, rgba(255,0,150,1) 0%, rgba(0,204,255,1) 100%); /* Vibrant gradient background */
+/* H2 - Section Headers */
+h2 {
+    font-size: 2.25rem !important;
+    font-weight: 800 !important;
+    color: #2d3748 !important;
+    border-left: 6px solid #00C9FF;
+    padding-left: 1rem !important;
+}
+
+/* H3 - Subsection Headers */
+h3 {
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    color: #2d3748 !important;
+}
+
+/* H4 - Smaller Headers */
+h4 {
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
+    color: #4a5568 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPACT SPACING FOR OVERALL LAYOUT
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Reduce Streamlit Default Padding */
+.block-container {
+    padding-top: 2rem !important;
+    padding-bottom: 1rem !important;
+}
+
+/* Compact Element Spacing */
+.element-container {
+    margin-bottom: 0.75rem !important;
 }
