@@ -197,135 +197,178 @@ def render():
     </div>
     """, unsafe_allow_html=True)
 
-    # ----- TWO-COLUMN LAYOUT: Left for Upload, Right for Analysis -----
-    col1, col2 = st.columns([1, 1])
+    # ----- SINGLE COLUMN LAYOUT: Compact and clean -----
+    # Section 1: Sequence Input
+    st.markdown("""
+    <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
+                padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
+                border-left: 4px solid #10b981;'>
+        <h4 style='margin: 0; color: #065f46; font-size: 1rem; font-weight: 600;'>
+            Sequence Input
+        </h4>
+    </div>
+    """, unsafe_allow_html=True)
     
-    with col1:
-        # LEFT COLUMN: Sequence Upload and Motif Analysis
-        st.markdown("""
-        <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
-                    padding: 1rem; border-radius: 12px; margin-bottom: 1rem;
-                    border-left: 4px solid #10b981; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);'>
-            <h3 style='margin: 0; color: #065f46; font-size: 1.2rem; font-weight: 600;'>
-                Sequence Input
-            </h3>
-            <p style='margin: 0.5rem 0 0 0; color: #047857; font-size: 0.9rem;'>
-                Choose your input method and upload your sequences
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # ----- Input Method -----
-        input_method = st.radio(UI_TEXT['upload_input_method_prompt'],
-                                [UI_TEXT['upload_method_file'], UI_TEXT['upload_method_paste'], 
-                                 UI_TEXT['upload_method_example'], UI_TEXT['upload_method_ncbi']],
-                                horizontal=True,
-                                label_visibility="collapsed",
-                                key="upload_method")
+    # ----- Input Method -----
+    input_method = st.radio(UI_TEXT['upload_input_method_prompt'],
+                            [UI_TEXT['upload_method_file'], UI_TEXT['upload_method_paste'], 
+                             UI_TEXT['upload_method_example'], UI_TEXT['upload_method_ncbi']],
+                            horizontal=True,
+                            label_visibility="collapsed",
+                            key="upload_method")
 
-        seqs, names = [], []
+    seqs, names = [], []
 
-        if input_method == UI_TEXT['upload_method_file']:
-            fasta_file = st.file_uploader(UI_TEXT['upload_file_prompt'], 
-                                         type=["fa", "fasta", "txt", "fna"],
-                                         label_visibility="visible",
-                                         help=UI_TEXT['upload_file_help'])
-            if fasta_file:
-                # Compact file card after upload
-                file_size_mb = fasta_file.size / (1024 * 1024)
+    if input_method == UI_TEXT['upload_method_file']:
+        fasta_file = st.file_uploader(UI_TEXT['upload_file_prompt'], 
+                                     type=["fa", "fasta", "txt", "fna"],
+                                     label_visibility="visible",
+                                     help=UI_TEXT['upload_file_help'])
+        if fasta_file:
+            # Compact file card after upload
+            file_size_mb = fasta_file.size / (1024 * 1024)
+            
+            # Memory-efficient processing with progress indicator
+            with st.spinner(f"{UI_TEXT['upload_processing']} {fasta_file.name}..."):
+                # Get preview first (lightweight operation)
+                preview_info = get_file_preview(fasta_file, max_sequences=3)
                 
-                # Memory-efficient processing with progress indicator
-                with st.spinner(f"{UI_TEXT['upload_processing']} {fasta_file.name}..."):
-                    # Get preview first (lightweight operation)
-                    preview_info = get_file_preview(fasta_file, max_sequences=3)
-                    
-                    # Compact File Card
-                    st.markdown(f"""
-                    <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
-                                border-radius: 12px; padding: 12px; margin: 8px 0; color: white; 
-                                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
-                        <div style='display: flex; justify-content: space-between; align-items: center;'>
-                            <div>
-                                <div style='font-weight: 600; font-size: 0.95rem;'>File: {fasta_file.name}</div>
-                                <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
-                                    {preview_info['num_sequences']} sequences | {preview_info['total_bp']:,} bp | {file_size_mb:.2f} MB
-                                </div>
-                            </div>
-                            <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
-                                {UI_TEXT['label_valid']}
+                # Compact File Card
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
+                            border-radius: 12px; padding: 12px; margin: 8px 0; color: white; 
+                            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
+                    <div style='display: flex; justify-content: space-between; align-items: center;'>
+                        <div>
+                            <div style='font-weight: 600; font-size: 0.95rem;'>File: {fasta_file.name}</div>
+                            <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
+                                {preview_info['num_sequences']} sequences | {preview_info['total_bp']:,} bp | {file_size_mb:.2f} MB
                             </div>
                         </div>
+                        <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
+                            {UI_TEXT['label_valid']}
+                        </div>
                     </div>
-                    """, unsafe_allow_html=True)
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Show preview of first few sequences inline (compact)
+                st.markdown("**Sequence Preview:**")
+                for idx, prev in enumerate(preview_info['previews'], 1):
+                    # Use pre-calculated stats from preview (calculated from full sequence)
+                    card_html = render_sequence_stats_card(
+                        idx=idx,
+                        name=prev['name'],
+                        length=prev['length'],
+                        gc_pct=prev['gc_percent'],
+                        at_pct=prev['at_percent']
+                    )
+                    st.markdown(card_html, unsafe_allow_html=True)
+                
+                if preview_info['num_sequences'] > 3:
+                    st.info(f"Showing 3 of {preview_info['num_sequences']} sequences. All sequences will be analyzed.")
+                
+                # Now parse all sequences using chunked parsing for memory efficiency
+                seqs, names = [], []
+                has_large_sequences = False
+                
+                if preview_info['num_sequences'] > 10:
+                    # Show progress bar for files with many sequences
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
                     
-                    # Show preview of first few sequences using popover for better UX
-                    with st.popover(UI_TEXT['upload_preview_button'], use_container_width=True):
-                        st.markdown("### Sequence Preview & Validation")
-                        for idx, prev in enumerate(preview_info['previews'], 1):
-                            # Use pre-calculated stats from preview (calculated from full sequence)
-                            card_html = render_sequence_stats_card(
-                                idx=idx,
-                                name=prev['name'],
-                                length=prev['length'],
-                                gc_pct=prev['gc_percent'],
-                                at_pct=prev['at_percent']
-                            )
-                            st.markdown(card_html, unsafe_allow_html=True)
+                    for idx, (name, seq) in enumerate(parse_fasta_chunked(fasta_file)):
+                        names.append(name)
+                        seqs.append(seq)
                         
-                        if preview_info['num_sequences'] > 3:
-                            st.info(f"Showing 3 of {preview_info['num_sequences']} sequences. All sequences will be analyzed.")
-                    
-                    # Now parse all sequences using chunked parsing for memory efficiency
-                    seqs, names = [], []
-                    has_large_sequences = False
-                    
-                    if preview_info['num_sequences'] > 10:
-                        # Show progress bar for files with many sequences
-                        progress_bar = st.progress(0)
-                        status_text = st.empty()
+                        # Track if we have very large sequences
+                        if len(seq) > 10_000_000:
+                            has_large_sequences = True
                         
-                        for idx, (name, seq) in enumerate(parse_fasta_chunked(fasta_file)):
-                            names.append(name)
-                            seqs.append(seq)
-                            
-                            # Track if we have very large sequences
-                            if len(seq) > 10_000_000:
-                                has_large_sequences = True
-                            
-                            # Update progress
-                            progress = (idx + 1) / preview_info['num_sequences']
-                            progress_bar.progress(progress)
-                            display_name = name[:50] + ('...' if len(name) > 50 else '')
-                            status_text.text(f"Loading {idx + 1}/{preview_info['num_sequences']}: {display_name}")
+                        # Update progress
+                        progress = (idx + 1) / preview_info['num_sequences']
+                        progress_bar.progress(progress)
+                        display_name = name[:50] + ('...' if len(name) > 50 else '')
+                        status_text.text(f"Loading {idx + 1}/{preview_info['num_sequences']}: {display_name}")
+                    
+                    progress_bar.empty()
+                    status_text.empty()
+                else:
+                    # Fast path for small files
+                    for name, seq in parse_fasta_chunked(fasta_file):
+                        names.append(name)
+                        seqs.append(seq)
                         
-                        progress_bar.empty()
-                        status_text.empty()
-                    else:
-                        # Fast path for small files
-                        for name, seq in parse_fasta_chunked(fasta_file):
-                            names.append(name)
-                            seqs.append(seq)
-                            
-                            # Track if we have very large sequences
-                            if len(seq) > 10_000_000:
-                                has_large_sequences = True
-                    
-                    # Force garbage collection after loading all sequences if we had large ones
-                    if has_large_sequences:
-                        gc.collect()
-                    
-                    if not seqs:
-                        st.warning(UI_TEXT['upload_no_sequences'])
+                        # Track if we have very large sequences
+                        if len(seq) > 10_000_000:
+                            has_large_sequences = True
+                
+                # Force garbage collection after loading all sequences if we had large ones
+                if has_large_sequences:
+                    gc.collect()
+                
+                if not seqs:
+                    st.warning(UI_TEXT['upload_no_sequences'])
 
-        elif input_method == UI_TEXT['upload_method_paste']:
-            seq_input = st.text_area(UI_TEXT['upload_paste_prompt'], 
-                                    height=150, 
-                                    placeholder=UI_TEXT['upload_paste_placeholder'],
-                                    help=UI_TEXT['upload_paste_help'])
-            if seq_input:
+    elif input_method == UI_TEXT['upload_method_paste']:
+        seq_input = st.text_area(UI_TEXT['upload_paste_prompt'], 
+                                height=150, 
+                                placeholder=UI_TEXT['upload_paste_placeholder'],
+                                help=UI_TEXT['upload_paste_help'])
+        if seq_input:
+            seqs, names = [], []
+            cur_seq, cur_name = "", ""
+            for line in seq_input.splitlines():
+                if line.startswith(">"):
+                    if cur_seq:
+                        seqs.append(cur_seq)
+                        names.append(cur_name if cur_name else f"Seq{len(seqs)}")
+                    cur_name = line.strip().lstrip(">")
+                    cur_seq = ""
+                else:
+                    cur_seq += line.strip()
+            if cur_seq:
+                seqs.append(cur_seq)
+                names.append(cur_name if cur_name else f"Seq{len(seqs)}")
+            if seqs:
+                # Compact validation card
+                total_bp = sum(len(s) for s in seqs)
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
+                            border-radius: 12px; padding: 12px; margin: 8px 0; color: white;
+                            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
+                    <div style='display: flex; justify-content: space-between; align-items: center;'>
+                        <div>
+                            <div style='font-weight: 600; font-size: 0.95rem;'>Pasted Sequences</div>
+                            <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
+                                {len(seqs)} sequences | {total_bp:,} bp
+                            </div>
+                        </div>
+                        <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
+                            Valid
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.warning(UI_TEXT['analysis_no_sequences_warning'])
+
+    elif input_method == "Example Data":
+        ex_type = st.radio("Example Type:", 
+                         ["Single Example", "Multi-FASTA Example"], 
+                         horizontal=True,
+                         help="Load example sequences for testing")
+        if ex_type == "Single Example":
+            if st.button("Load Single Example", use_container_width=True):
+                parsed_fasta = parse_fasta(EXAMPLE_FASTA)
+                seqs = list(parsed_fasta.values())
+                names = list(parsed_fasta.keys())
+                st.success(UI_TEXT['upload_example_single_success'])
+        else:
+            if st.button("Load Multi-FASTA Example", use_container_width=True):
                 seqs, names = [], []
                 cur_seq, cur_name = "", ""
-                for line in seq_input.splitlines():
+                for line in EXAMPLE_MULTI_FASTA.splitlines():
                     if line.startswith(">"):
                         if cur_seq:
                             seqs.append(cur_seq)
@@ -337,296 +380,212 @@ def render():
                 if cur_seq:
                     seqs.append(cur_seq)
                     names.append(cur_name if cur_name else f"Seq{len(seqs)}")
-                if seqs:
-                    # Compact validation card
-                    total_bp = sum(len(s) for s in seqs)
-                    st.markdown(f"""
-                    <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
-                                border-radius: 12px; padding: 12px; margin: 8px 0; color: white;
-                                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
-                        <div style='display: flex; justify-content: space-between; align-items: center;'>
-                            <div>
-                                <div style='font-weight: 600; font-size: 0.95rem;'>Pasted: Pasted Sequences</div>
-                                <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
-                                    {len(seqs)} sequences | {total_bp:,} bp
-                                </div>
-                            </div>
-                            <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
-                                Valid Valid
-                            </div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.warning(UI_TEXT['analysis_no_sequences_warning'])
+                st.success(UI_TEXT['upload_example_multi_success'].format(count=len(seqs)))
 
-        elif input_method == "Example Data":
-            ex_type = st.radio("Example Type:", 
-                             ["Single Example", "Multi-FASTA Example"], 
-                             horizontal=True,
-                             help="Load example sequences for testing")
-            if ex_type == "Single Example":
-                if st.button("Load Single Example", use_container_width=True):
-                    parsed_fasta = parse_fasta(EXAMPLE_FASTA)
-                    seqs = list(parsed_fasta.values())
-                    names = list(parsed_fasta.keys())
-                    st.success(UI_TEXT['upload_example_single_success'])
+    elif input_method == "NCBI Fetch":
+        db = st.radio("NCBI Database", ["nucleotide", "gene"], horizontal=True,
+                      help="Only nucleotide and gene databases are applicable for DNA motif analysis")
+        query = st.text_input("Enter query (accession, gene, etc.):", 
+                            help="e.g., NR_003287.2 or gene name")
+        retmax = st.number_input("Max Records", min_value=1, max_value=20, value=3)
+        if st.button("Fetch from NCBI", use_container_width=True):
+            if query:
+                with st.spinner("Contacting NCBI..."):
+                    try:
+                        handle = Entrez.efetch(db=db, id=query, rettype="fasta", retmode="text")
+                        records = list(SeqIO.parse(handle, "fasta"))
+                        handle.close()
+                        seqs = [str(rec.seq).upper().replace("U", "T") for rec in records]
+                        names = [rec.id for rec in records]
+                        if seqs:
+                            st.success(UI_TEXT['upload_ncbi_success'].format(count=len(seqs)))
+                    except Exception as e:
+                        st.error(UI_TEXT['upload_ncbi_error'].format(error=e))
             else:
-                if st.button("Load Multi-FASTA Example", use_container_width=True):
-                    seqs, names = [], []
-                    cur_seq, cur_name = "", ""
-                    for line in EXAMPLE_MULTI_FASTA.splitlines():
-                        if line.startswith(">"):
-                            if cur_seq:
-                                seqs.append(cur_seq)
-                                names.append(cur_name if cur_name else f"Seq{len(seqs)}")
-                            cur_name = line.strip().lstrip(">")
-                            cur_seq = ""
-                        else:
-                            cur_seq += line.strip()
-                    if cur_seq:
-                        seqs.append(cur_seq)
-                        names.append(cur_name if cur_name else f"Seq{len(seqs)}")
-                    st.success(UI_TEXT['upload_example_multi_success'].format(count=len(seqs)))
+                st.warning(UI_TEXT['upload_ncbi_empty_warning'])
 
-        elif input_method == "NCBI Fetch":
-            db = st.radio("NCBI Database", ["nucleotide", "gene"], horizontal=True,
-                          help="Only nucleotide and gene databases are applicable for DNA motif analysis")
-            query = st.text_input("Enter query (accession, gene, etc.):", 
-                                help="e.g., NR_003287.2 or gene name")
-            retmax = st.number_input("Max Records", min_value=1, max_value=20, value=3)
-            if st.button("Fetch from NCBI", use_container_width=True):
-                if query:
-                    with st.spinner("Contacting NCBI..."):
-                        try:
-                            handle = Entrez.efetch(db=db, id=query, rettype="fasta", retmode="text")
-                            records = list(SeqIO.parse(handle, "fasta"))
-                            handle.close()
-                            seqs = [str(rec.seq).upper().replace("U", "T") for rec in records]
-                            names = [rec.id for rec in records]
-                            if seqs:
-                                st.success(UI_TEXT['upload_ncbi_success'].format(count=len(seqs)))
-                        except Exception as e:
-                            st.error(UI_TEXT['upload_ncbi_error'].format(error=e))
-                else:
-                    st.warning(UI_TEXT['upload_ncbi_empty_warning'])
+    # Persist sequences to session state if any found from input
+    if seqs:
+        st.session_state.seqs = seqs
+        st.session_state.names = names
+        st.session_state.results = []
 
-        # Persist sequences to session state if any found from input
-        if seqs:
-            st.session_state.seqs = seqs
-            st.session_state.names = names
-            st.session_state.results = []
-
-        # Compact sequence validation indicator using popover for cleaner UI
-        if st.session_state.get('seqs'):
-            with st.popover("Success: Validation Summary", use_container_width=True):
-                st.markdown("### Loaded Sequences Summary")
-                
-                # Cache sequence stats with validation key to handle sequence changes
-                cache_key = f"stats_cache_{len(st.session_state.seqs)}"
-                if cache_key not in st.session_state:
-                    # Calculate stats for all sequences
-                    stats_list = []
-                    for seq in st.session_state.seqs:
-                        stats = get_basic_stats(seq)
-                        stats_list.append(stats)
-                    st.session_state[cache_key] = stats_list
-                
-                # Use cached stats
-                cached_stats = st.session_state[cache_key]
-                for i, stats in enumerate(cached_stats[:3]):
-                    # Use helper function with green gradient for validation success
-                    card_html = render_sequence_stats_card(
-                        idx=i+1,
-                        name=st.session_state.names[i],
-                        length=len(st.session_state.seqs[i]),
-                        gc_pct=stats['GC%'],
-                        at_pct=stats['AT%'],
-                        gradient_colors="135deg, #11998e 0%, #38ef7d 100%"
-                    )
-                    st.markdown(card_html, unsafe_allow_html=True)
-                
-                if len(st.session_state.seqs) > 3:
-                    st.info(f"Showing 3 of {len(st.session_state.seqs)} loaded sequences. All are validated and ready for analysis.")
+    # Compact sequence validation indicator - inline display
+    if st.session_state.get('seqs'):
+        st.markdown("**✓ Sequences Loaded:**")
+        
+        # Cache sequence stats with validation key to handle sequence changes
+        cache_key = f"stats_cache_{len(st.session_state.seqs)}"
+        if cache_key not in st.session_state:
+            # Calculate stats for all sequences
+            stats_list = []
+            for seq in st.session_state.seqs:
+                stats = get_basic_stats(seq)
+                stats_list.append(stats)
+            st.session_state[cache_key] = stats_list
+        
+        # Use cached stats - show compact summary
+        cached_stats = st.session_state[cache_key]
+        for i, stats in enumerate(cached_stats[:3]):
+            # Use helper function with green gradient for validation success
+            card_html = render_sequence_stats_card(
+                idx=i+1,
+                name=st.session_state.names[i],
+                length=len(st.session_state.seqs[i]),
+                gc_pct=stats['GC%'],
+                at_pct=stats['AT%'],
+                gradient_colors="135deg, #11998e 0%, #38ef7d 100%"
+            )
+            st.markdown(card_html, unsafe_allow_html=True)
+        
+        if len(st.session_state.seqs) > 3:
+            st.info(f"Showing 3 of {len(st.session_state.seqs)} loaded sequences. All are validated and ready for analysis.")
     
-    with col2:
-        # RIGHT COLUMN: Analysis & Run
-        st.markdown("""
-        <div style='background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); 
-                    padding: 1rem; border-radius: 12px; margin-bottom: 1rem;
-                    border-left: 4px solid #3b82f6; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);'>
-            <h3 style='margin: 0; color: #1e3a8a; font-size: 1.2rem; font-weight: 600;'>
-                Analysis Configuration
-            </h3>
-            <p style='margin: 0.5rem 0 0 0; color: #1e40af; font-size: 0.9rem;'>
-                Configure motif detection parameters and run analysis
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Determine default analysis mode based on sequence size
-        total_sequence_length = sum(len(seq) for seq in st.session_state.get('seqs', []))
-        
-        # Default to submotif for smaller sequences (<100kb), motif for larger sequences
-        if 'analysis_mode' not in st.session_state:
-            if total_sequence_length > 0 and total_sequence_length < 100_000:
-                st.session_state.analysis_mode = "Submotif Level"
-            else:
-                st.session_state.analysis_mode = "Motif Level"
-        
-        # Analysis Mode Selection - Radio Buttons
-        st.markdown("##### Analysis Granularity")
-        analysis_mode = st.radio(
-            "Select analysis detail level:",
-            ["Motif Level", "Submotif Level"],
-            index=0 if st.session_state.analysis_mode == "Motif Level" else 1,
-            horizontal=True,
-            help="Motif Level: Groups results by major structural classes (e.g., G-Quadruplex). "
-                 "Submotif Level: Detailed subclass analysis (e.g., Telomeric G4, Canonical G4, etc.)",
-            key="analysis_mode_radio"
-        )
-        
-        # Display configuration based on selected mode with visual feedback
-        if analysis_mode == "Motif Level":
-            st.info("""
-            **Motif Level Analysis**: Results will be grouped by major structural classes.
-            - 9 primary Non-B DNA classes
-            - Simplified visualization and reporting
-            - Recommended for genome-scale analysis (>100kb)
-            """)
+    # Section 2: Analysis Configuration
+    st.markdown("""
+    <div style='background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); 
+                padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem; margin-top: 1rem;
+                border-left: 4px solid #3b82f6;'>
+        <h4 style='margin: 0; color: #1e3a8a; font-size: 1rem; font-weight: 600;'>
+            Analysis Configuration
+        </h4>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Determine default analysis mode based on sequence size
+    total_sequence_length = sum(len(seq) for seq in st.session_state.get('seqs', []))
+    
+    # Default to submotif for smaller sequences (<100kb), motif for larger sequences
+    if 'analysis_mode' not in st.session_state:
+        if total_sequence_length > 0 and total_sequence_length < 100_000:
+            st.session_state.analysis_mode = "Submotif Level"
         else:
-            st.info("""
-            **Submotif Level Analysis**: Detailed subclass-level analysis.
-            - 24 specialized subclasses across 11 classes
-            - Comprehensive structural characterization
-            - Recommended for focused analysis (<100kb)
-            """)
-        
-        # ============================================================
-        # CLASS/SUBCLASS SELECTION SECTION
-        # ============================================================
-        st.markdown("##### Select Motif Classes for Analysis")
-        
-        # Initialize session state for class/subclass selection if not present
-        if 'selected_classes' not in st.session_state:
-            st.session_state.selected_classes = list(VALID_CLASSES)  # Default: all classes
-        if 'selected_subclasses' not in st.session_state:
-            # Default: all subclasses
+            st.session_state.analysis_mode = "Motif Level"
+    
+    # Analysis Mode Selection - Radio Buttons (horizontal for compact display)
+    analysis_mode = st.radio(
+        "Analysis Granularity:",
+        ["Motif Level", "Submotif Level"],
+        index=0 if st.session_state.analysis_mode == "Motif Level" else 1,
+        horizontal=True,
+        help="Motif Level: Groups results by major structural classes (e.g., G-Quadruplex). "
+             "Submotif Level: Detailed subclass analysis (e.g., Telomeric G4, Canonical G4, etc.)",
+        key="analysis_mode_radio"
+    )
+    
+    # ============================================================
+    # CLASS/SUBCLASS SELECTION SECTION
+    # ============================================================
+    
+    # Initialize session state for class/subclass selection if not present
+    if 'selected_classes' not in st.session_state:
+        st.session_state.selected_classes = list(VALID_CLASSES)  # Default: all classes
+    if 'selected_subclasses' not in st.session_state:
+        # Default: all subclasses
+        all_subclasses = []
+        for subclasses in CLASS_TO_SUBCLASSES.values():
+            all_subclasses.extend(subclasses)
+        st.session_state.selected_subclasses = all_subclasses
+    
+    # Get available class names (sorted for consistent display)
+    available_classes = sorted(list(VALID_CLASSES))
+    
+    # Add Select All / Deselect All buttons in a row
+    col_select_all, col_deselect_all = st.columns(2)
+    with col_select_all:
+        if st.button("Select All Classes", use_container_width=True, key="select_all_classes"):
+            st.session_state.selected_classes = list(VALID_CLASSES)
+            # Also select all subclasses
             all_subclasses = []
             for subclasses in CLASS_TO_SUBCLASSES.values():
                 all_subclasses.extend(subclasses)
             st.session_state.selected_subclasses = all_subclasses
+            st.rerun()
+    
+    with col_deselect_all:
+        if st.button("Deselect All Classes", use_container_width=True, key="deselect_all_classes"):
+            st.session_state.selected_classes = []
+            st.session_state.selected_subclasses = []
+            st.rerun()
+    
+    # Multiselect for motif classes
+    selected_classes = st.multiselect(
+        "Motif Classes:",
+        options=available_classes,
+        default=st.session_state.selected_classes,
+        help="Select which Non-B DNA motif classes to detect.",
+        key="class_multiselect"
+    )
+    
+    # Store selected classes in session state
+    st.session_state.selected_classes = selected_classes
+    
+    # If Submotif Level is selected, show subclass selection
+    if analysis_mode == "Submotif Level" and selected_classes:
+        # Build available subclasses based on selected classes
+        available_subclasses = []
+        for cls in selected_classes:
+            if cls in CLASS_TO_SUBCLASSES:
+                available_subclasses.extend(CLASS_TO_SUBCLASSES[cls])
         
-        # Get available class names (sorted for consistent display)
-        available_classes = sorted(list(VALID_CLASSES))
+        # Filter current subclass selection to only include valid options
+        current_subclass_selection = [
+            sub for sub in st.session_state.selected_subclasses
+            if sub in available_subclasses
+        ]
         
-        # Add Select All / Deselect All buttons
-        col_select_all, col_deselect_all = st.columns(2)
-        with col_select_all:
-            if st.button("Select All Classes", use_container_width=True, key="select_all_classes"):
-                st.session_state.selected_classes = list(VALID_CLASSES)
-                # Also select all subclasses
-                all_subclasses = []
-                for subclasses in CLASS_TO_SUBCLASSES.values():
-                    all_subclasses.extend(subclasses)
-                st.session_state.selected_subclasses = all_subclasses
-                st.rerun()
+        # If no subclasses selected, default to all available
+        if not current_subclass_selection:
+            current_subclass_selection = available_subclasses
         
-        with col_deselect_all:
-            if st.button("Deselect All Classes", use_container_width=True, key="deselect_all_classes"):
-                st.session_state.selected_classes = []
-                st.session_state.selected_subclasses = []
-                st.rerun()
-        
-        # Multiselect for motif classes
-        selected_classes = st.multiselect(
-            "Choose motif classes to include in analysis:",
-            options=available_classes,
-            default=st.session_state.selected_classes,
-            help="Select which Non-B DNA motif classes to detect. Unselected classes will be excluded from analysis results.",
-            key="class_multiselect"
+        # Subclass multiselect
+        selected_subclasses = st.multiselect(
+            "Subclasses:",
+            options=available_subclasses,
+            default=current_subclass_selection,
+            help="Select which subclasses to detect.",
+            key="subclass_multiselect"
         )
         
-        # Store selected classes in session state
-        st.session_state.selected_classes = selected_classes
-        
-        # If Submotif Level is selected, show subclass selection
-        if analysis_mode == "Submotif Level" and selected_classes:
-            st.markdown("##### Select Specific Subclasses")
-            st.caption("Optionally narrow down to specific subclasses within selected classes")
-            
-            # Build available subclasses based on selected classes
-            available_subclasses = []
-            for cls in selected_classes:
-                if cls in CLASS_TO_SUBCLASSES:
-                    available_subclasses.extend(CLASS_TO_SUBCLASSES[cls])
-            
-            # Filter current subclass selection to only include valid options
-            current_subclass_selection = [
-                sub for sub in st.session_state.selected_subclasses
-                if sub in available_subclasses
-            ]
-            
-            # If no subclasses selected, default to all available
-            if not current_subclass_selection:
-                current_subclass_selection = available_subclasses
-            
-            # Subclass multiselect
-            selected_subclasses = st.multiselect(
-                "Choose specific subclasses to include:",
-                options=available_subclasses,
-                default=current_subclass_selection,
-                help="Select which subclasses to detect. All subclasses of selected classes are included by default.",
-                key="subclass_multiselect"
-            )
-            
-            # Store selected subclasses
-            st.session_state.selected_subclasses = selected_subclasses
-        else:
-            # For Motif Level, select all subclasses of selected classes
-            available_subclasses = []
-            for cls in selected_classes:
-                if cls in CLASS_TO_SUBCLASSES:
-                    available_subclasses.extend(CLASS_TO_SUBCLASSES[cls])
-            st.session_state.selected_subclasses = available_subclasses
-        
-        # Show summary of selection
-        if selected_classes:
-            num_classes = len(selected_classes)
-            num_subclasses = len(st.session_state.selected_subclasses)
-            st.success(f"**Selection Summary:** {num_classes} classes and {num_subclasses} subclasses selected for analysis")
-        else:
-            st.warning("**No classes selected.** Please select at least one motif class to run analysis.")
-        
-        # Quick Options Section
-        st.markdown(f"##### {UI_TEXT['analysis_quick_options_title']}")
+        # Store selected subclasses
+        st.session_state.selected_subclasses = selected_subclasses
+    else:
+        # For Motif Level, select all subclasses of selected classes
+        available_subclasses = []
+        for cls in selected_classes:
+            if cls in CLASS_TO_SUBCLASSES:
+                available_subclasses.extend(CLASS_TO_SUBCLASSES[cls])
+        st.session_state.selected_subclasses = available_subclasses
+    
+    # Show compact summary of selection
+    if selected_classes:
+        num_classes = len(selected_classes)
+        num_subclasses = len(st.session_state.selected_subclasses)
+        st.success(f"{num_classes} classes, {num_subclasses} subclasses selected")
+    else:
+        st.warning("Please select at least one motif class.")
+    
+    # Quick Options Section - horizontal checkboxes
+    col_opt1, col_opt2 = st.columns(2)
+    with col_opt1:
         detailed_output = st.checkbox("Detailed Analysis", value=True, 
                                     help=UI_TEXT['tooltip_detailed_analysis'])
+        show_chunk_progress = st.checkbox("Chunk Progress", value=False,
+                                         help=UI_TEXT['tooltip_chunk_progress'])
+    with col_opt2:
         quality_check = st.checkbox("Quality Validation", value=True, 
                                    help=UI_TEXT['tooltip_quality_validation'])
-        
-        # Advanced Options - now visible by default
-        show_chunk_progress = st.checkbox("Show Chunk-Level Progress", value=False,
-                                         help=UI_TEXT['tooltip_chunk_progress'])
-        use_parallel_scanner = st.checkbox("Use Experimental Parallel Scanner", value=True,
+        use_parallel_scanner = st.checkbox("Parallel Scanner", value=True,
                                           help=UI_TEXT['tooltip_parallel_scanner'])
-        show_memory_usage = st.checkbox("Show Memory Usage", value=False,
-                                        help="Display real-time memory usage during analysis")
-        
-        if use_parallel_scanner:
-            st.caption(UI_TEXT['upload_parallel_note'])
-        
-        # Hardcoded default overlap handling
-        nonoverlap = True
-        overlap_option = "Remove overlaps within subclasses"
-        
-        # Helper text based on analysis mode - updated to reflect selection
-        if analysis_mode == "Motif Level":
-            st.caption(f"{len(selected_classes)} of 11 motif classes selected for detection")
-        else:
-            st.caption(f"{len(st.session_state.selected_subclasses)} of 24 subclasses selected for detection")
     
-    # ----- FULL-WIDTH STICKY RUN BUTTON -----
+    show_memory_usage = st.checkbox("Show Memory Usage", value=False,
+                                    help="Display real-time memory usage during analysis")
+    
+    # Hardcoded default overlap handling
+    nonoverlap = True
+    overlap_option = "Remove overlaps within subclasses"
+    
+    # ----- RUN BUTTON -----
     st.markdown("---")
     
     # Initialize analysis_done flag if not present (idempotent run button)
