@@ -1448,9 +1448,10 @@ class MotifScoring:
         gc_skew = abs(gc_skew) / len(sequence)
         
         # GC content (R-loops prefer GC-rich regions)
-        gc_content = len(re.findall(r'[GC]', sequence)) / len(sequence)
+        # Use standardized gc_content function (returns percentage, convert to fraction)
+        gc_pct = gc_content(sequence) / 100.0
         
-        return min(gc_skew * 0.6 + gc_content * 0.4, 1.0)
+        return min(gc_skew * 0.6 + gc_pct * 0.4, 1.0)
     
     @staticmethod
     def qmrlfs_score(sequence: str) -> float:
@@ -3729,6 +3730,11 @@ def calculate_genomic_density(motifs: List[Dict[str, Any]],
     IMPORTANT: Uses set-based overlap handling to ensure coverage never exceeds 100%.
     If motifs overlap, only unique positions are counted.
     
+    NOTE: Hybrids and Clusters are excluded from density calculations because:
+    - Hybrids represent overlaps of existing motifs (would lead to double-counting)
+    - Clusters represent high-density regions (derived from existing motifs)
+    - Including them would artificially inflate coverage metrics
+    
     Args:
         motifs: List of motif dictionaries
         sequence_length: Total length of analyzed sequence
@@ -3744,10 +3750,20 @@ def calculate_genomic_density(motifs: List[Dict[str, Any]],
     if not motifs or sequence_length == 0:
         return {'Overall': 0.0}
     
+    # Filter out Hybrid and Cluster motifs to avoid double-counting
+    # These are derived from overlaps/clustering of other motifs
+    filtered_motifs = [
+        m for m in motifs 
+        if m.get('Class') not in ['Hybrid', 'Non-B_DNA_Clusters']
+    ]
+    
+    if not filtered_motifs:
+        return {'Overall': 0.0}
+    
     if not by_class and not by_subclass:
         # Overall density using set-based coverage (handles overlaps correctly)
         covered_positions = set()
-        for motif in motifs:
+        for motif in filtered_motifs:
             start = motif.get('Start', 0) - 1  # Convert to 0-based
             end = motif.get('End', 0)
             covered_positions.update(range(start, end))
@@ -3760,7 +3776,7 @@ def calculate_genomic_density(motifs: List[Dict[str, Any]],
         density_by_subclass = {}
         subclass_groups = defaultdict(list)
         
-        for motif in motifs:
+        for motif in filtered_motifs:
             class_name = motif.get('Class', 'Unknown')
             subclass_name = motif.get('Subclass', 'Unknown')
             key = f"{class_name}:{subclass_name}"
@@ -3777,9 +3793,9 @@ def calculate_genomic_density(motifs: List[Dict[str, Any]],
             subclass_density = min((len(covered_positions) / sequence_length) * 100, 100.0)
             density_by_subclass[subclass_key] = round(subclass_density, 4)
         
-        # Calculate overall density (all motifs combined)
+        # Calculate overall density (all filtered motifs combined)
         all_covered_positions = set()
-        for motif in motifs:
+        for motif in filtered_motifs:
             start = motif.get('Start', 0) - 1  # Convert to 0-based
             end = motif.get('End', 0)
             all_covered_positions.update(range(start, end))
@@ -3793,7 +3809,7 @@ def calculate_genomic_density(motifs: List[Dict[str, Any]],
     density_by_class = {}
     class_groups = defaultdict(list)
     
-    for motif in motifs:
+    for motif in filtered_motifs:
         class_name = motif.get('Class', 'Unknown')
         class_groups[class_name].append(motif)
     
@@ -3808,9 +3824,9 @@ def calculate_genomic_density(motifs: List[Dict[str, Any]],
         class_density = min((len(covered_positions) / sequence_length) * 100, 100.0)
         density_by_class[class_name] = round(class_density, 4)
     
-    # Calculate overall density (all motifs combined)
+    # Calculate overall density (all filtered motifs combined)
     all_covered_positions = set()
-    for motif in motifs:
+    for motif in filtered_motifs:
         start = motif.get('Start', 0) - 1  # Convert to 0-based
         end = motif.get('End', 0)
         all_covered_positions.update(range(start, end))
