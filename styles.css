@@ -131,10 +131,7 @@ h4 {
 /* Reduce Streamlit Default Padding - Combined rules for clarity */
 .main .block-container {
     max-width: 100% !important;
-    padding-top: 2rem !important;
-    padding-right: 2rem !important;
-    padding-bottom: 1rem !important;
-    padding-left: 2rem !important;
+    padding: 2rem 2rem 1rem 2rem !important;
 }
 
 /* Compact Element Spacing */
