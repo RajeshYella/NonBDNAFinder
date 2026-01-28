@@ -458,6 +458,48 @@ def render():
         </div>
         """, unsafe_allow_html=True)
         
+        # Determine default analysis mode based on sequence size
+        total_sequence_length = sum(len(seq) for seq in st.session_state.get('seqs', []))
+        
+        # Default to submotif for smaller sequences (<100kb), motif for larger sequences
+        if 'analysis_mode' not in st.session_state:
+            if total_sequence_length > 0 and total_sequence_length < 100_000:
+                st.session_state.analysis_mode = "Submotif Level"
+            else:
+                st.session_state.analysis_mode = "Motif Level"
+        
+        # Analysis Mode Selection - Radio Buttons
+        st.markdown("##### Analysis Granularity")
+        analysis_mode = st.radio(
+            "Select analysis detail level:",
+            ["Motif Level", "Submotif Level"],
+            index=0 if st.session_state.analysis_mode == "Motif Level" else 1,
+            horizontal=True,
+            help="Motif Level: Groups results by major structural classes (e.g., G-Quadruplex). "
+                 "Submotif Level: Detailed subclass analysis (e.g., Telomeric G4, Canonical G4, etc.)",
+            key="analysis_mode_radio"
+        )
+        
+        # Update session state when selection changes
+        if analysis_mode != st.session_state.analysis_mode:
+            st.session_state.analysis_mode = analysis_mode
+        
+        # Display configuration based on selected mode with visual feedback
+        if analysis_mode == "Motif Level":
+            st.info("""
+            **Motif Level Analysis**: Results will be grouped by major structural classes.
+            - 9 primary Non-B DNA classes
+            - Simplified visualization and reporting
+            - Recommended for genome-scale analysis (>100kb)
+            """)
+        else:
+            st.info("""
+            **Submotif Level Analysis**: Detailed subclass-level analysis.
+            - 23+ specialized subclasses
+            - Comprehensive structural characterization
+            - Recommended for focused analysis (<100kb)
+            """)
+        
         # Quick Options Section
         st.markdown(f"##### {UI_TEXT['analysis_quick_options_title']}")
         detailed_output = st.checkbox("Detailed Analysis", value=True, 
@@ -480,8 +522,11 @@ def render():
         nonoverlap = True
         overlap_option = "Remove overlaps within subclasses"
         
-        # Helper text
-        st.caption(UI_TEXT['upload_quick_options_note'])
+        # Helper text based on analysis mode
+        if analysis_mode == "Motif Level":
+            st.caption("All 9 primary motif classes are detected automatically")
+        else:
+            st.caption("All 11 motif classes with 23+ subclasses are detected automatically")
     
     # ----- FULL-WIDTH STICKY RUN BUTTON -----
     st.markdown("---")
@@ -544,6 +589,9 @@ def render():
                 st.session_state.performance_metrics = None
                 st.session_state.cached_visualizations = {}
                 st.session_state.analysis_time = None
+                # Reset analysis mode to default based on sequence size
+                if 'analysis_mode' in st.session_state:
+                    del st.session_state.analysis_mode
                 st.rerun()
         
         # Placeholder for progress area
@@ -575,6 +623,7 @@ def render():
             # Store analysis parameters in session state for use in download section
             st.session_state.overlap_option_used = overlap_option
             st.session_state.nonoverlap_used = nonoverlap
+            st.session_state.analysis_mode_used = analysis_mode  # Store selected analysis mode
             
             # Set analysis parameters based on user selections
             # nonoverlap is already set above based on user selection
@@ -1122,7 +1171,8 @@ def render():
                     'speed_bp_per_sec': overall_speed,
                     'detector_count': len(DETECTOR_PROCESSES),
                     'visualization_count': total_viz_count,
-                    'validation_issues': len(validation_issues)
+                    'validation_issues': len(validation_issues),
+                    'analysis_mode': st.session_state.get('analysis_mode_used', 'Motif Level')
                 }
                 
                 # Save results to disk
