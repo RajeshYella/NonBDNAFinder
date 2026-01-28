@@ -17,7 +17,7 @@ section[data-testid="stSidebar"] {
    STREAMLIT TAB STYLING - COMPACT, BOLD, AND VIBRANT
    ═══════════════════════════════════════════════════════════════ */
 
-/* Tab Container - Maximize Horizontal Space and Ensure Full Visibility */
+/* Tab Container - Ensure Tabs Are Fully Visible Without Clipping */
 .stTabs [data-baseweb="tab-list"] {
     gap: 0 !important;
     width: 100% !important;
