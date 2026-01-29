@@ -488,10 +488,27 @@ def render():
         """Sanitize names for use as session state keys."""
         return name.replace(' ', '_').replace('-', '_').replace('/', '_')
     
-    # Initialize all submotifs as enabled by default
+    # Icons for motif classes (visual enhancement) - defined once
+    motif_icons = {
+        'Curved_DNA': '🌀',
+        'Slipped_DNA': '↔️',
+        'Cruciform': '✝️',
+        'R-Loop': '🔄',
+        'Triplex': '🔺',
+        'G-Quadruplex': '🔷',
+        'i-Motif': '💎',
+        'Z-DNA': '⚡',
+        'A-philic_DNA': '🅰️',
+        'Hybrid': '🔀',
+        'Non-B_DNA_Clusters': '🎯'
+    }
+    
+    # Build ordered list of all submotifs using taxonomy order
     all_submotifs_list = []
-    for class_name, subclasses in CLASS_TO_SUBCLASSES.items():
-        for subclass in subclasses:
+    for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
+        entry = MOTIF_CLASSIFICATION[class_id]
+        class_name = entry['class']
+        for subclass in entry['subclasses']:
             all_submotifs_list.append((class_name, subclass))
             key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
             if key not in st.session_state:
@@ -528,40 +545,6 @@ def render():
                 st.session_state[key] = False
             st.rerun()
     
-    # Icons for motif classes (visual enhancement)
-    motif_icons = {
-        'Curved_DNA': '🌀',
-        'Slipped_DNA': '↔️',
-        'Cruciform': '✝️',
-        'R-Loop': '🔄',
-        'Triplex': '🔺',
-        'G-Quadruplex': '🔷',
-        'i-Motif': '💎',
-        'Z-DNA': '⚡',
-        'A-philic_DNA': '🅰️',
-        'Hybrid': '🔀',
-        'Non-B_DNA_Clusters': '🎯'
-    }
-    
-    # Build compact grouped selector with expanders
-    # Container with custom styling
-    st.markdown("""
-    <style>
-    .motif-selector-container {
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 4px;
-        background: #fafafa;
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # Collect enabled classes/subclasses as we render
-    enabled_classes = set()
-    enabled_subclasses = []
-    
     # Create a scrollable container using columns
     with st.container():
         # Iterate through classes in taxonomy order
@@ -571,34 +554,30 @@ def render():
             subclasses = entry['subclasses']
             icon = motif_icons.get(class_name, '📍')
             
-            # Count enabled submotifs for this class
+            # Count enabled submotifs for this class from session state
             class_enabled_count = sum(
                 1 for sc in subclasses 
                 if st.session_state.get(f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}", True)
             )
             total_in_class = len(subclasses)
             all_enabled = class_enabled_count == total_in_class
-            none_enabled = class_enabled_count == 0
             
             # Create compact expander for each class
             display_name = class_name.replace('_', ' ')
             status_badge = f"({class_enabled_count}/{total_in_class})"
             
             with st.expander(f"{icon} **{display_name}** {status_badge}", expanded=False):
-                # Class-level toggle row
-                col_toggle, col_label = st.columns([1, 4])
-                with col_toggle:
-                    # Toggle all in class button
-                    if all_enabled:
-                        if st.button("☐ Uncheck All", key=f"uncheck_class_{class_name}", use_container_width=True):
-                            for sc in subclasses:
-                                st.session_state[f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}"] = False
-                            st.rerun()
-                    else:
-                        if st.button("☑ Check All", key=f"check_class_{class_name}", use_container_width=True):
-                            for sc in subclasses:
-                                st.session_state[f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}"] = True
-                            st.rerun()
+                # Class-level toggle button
+                if all_enabled:
+                    if st.button("☐ Uncheck All", key=f"uncheck_class_{class_name}", use_container_width=False):
+                        for sc in subclasses:
+                            st.session_state[f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}"] = False
+                        st.rerun()
+                else:
+                    if st.button("☑ Check All", key=f"check_class_{class_name}", use_container_width=False):
+                        for sc in subclasses:
+                            st.session_state[f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}"] = True
+                        st.rerun()
                 
                 # Submotif checkboxes in a compact grid (2 columns for denser display)
                 if len(subclasses) > 1:
@@ -606,37 +585,43 @@ def render():
                     for idx, subclass in enumerate(subclasses):
                         key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
                         with cols[idx % 2]:
-                            is_enabled = st.checkbox(
+                            st.checkbox(
                                 subclass, 
                                 value=st.session_state.get(key, True),
                                 key=key,
                                 help=f"Enable/disable {subclass} detection"
                             )
-                            if is_enabled:
-                                enabled_classes.add(class_name)
-                                enabled_subclasses.append(subclass)
                 else:
                     # Single submotif - just show checkbox
                     subclass = subclasses[0]
                     key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                    is_enabled = st.checkbox(
+                    st.checkbox(
                         subclass,
                         value=st.session_state.get(key, True),
                         key=key,
                         help=f"Enable/disable {subclass} detection"
                     )
-                    if is_enabled:
-                        enabled_classes.add(class_name)
-                        enabled_subclasses.append(subclass)
+    
+    # Build enabled classes/subclasses from session state (not from widget rendering)
+    # This ensures correct state regardless of expander collapse state
+    enabled_classes = set()
+    enabled_subclasses = []
+    for class_name, subclass in all_submotifs_list:
+        key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+        if st.session_state.get(key, True):
+            enabled_classes.add(class_name)
+            enabled_subclasses.append(subclass)
     
     # Update backward-compatible session state
     st.session_state.selected_classes = list(enabled_classes)
     st.session_state.selected_subclasses = enabled_subclasses
     
-    # Also update motif_selector_data for any code that uses it
+    # Also update motif_selector_data for any code that uses it (in taxonomy order)
     st.session_state.motif_selector_data = []
-    for class_name, subclasses in CLASS_TO_SUBCLASSES.items():
-        for subclass in subclasses:
+    for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
+        entry = MOTIF_CLASSIFICATION[class_id]
+        class_name = entry['class']
+        for subclass in entry['subclasses']:
             key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
             st.session_state.motif_selector_data.append({
                 'Enabled': st.session_state.get(key, True),
