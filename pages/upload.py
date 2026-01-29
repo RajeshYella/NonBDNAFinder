@@ -545,17 +545,10 @@ def render():
                 st.session_state[key] = False
             st.rerun()
     
-    # Create 6-column grid layout for motif classes
-    # 11 motif classes arranged in a 6x2 grid (6 columns, 2 rows)
-    NUM_COLUMNS = 6
-    all_class_ids = sorted(MOTIF_CLASSIFICATION.keys())
-    
-    # Process classes row by row in groups of NUM_COLUMNS
-    for row_start in range(0, len(all_class_ids), NUM_COLUMNS):
-        row_class_ids = all_class_ids[row_start:row_start + NUM_COLUMNS]
-        cols = st.columns(NUM_COLUMNS)
-        
-        for col_idx, class_id in enumerate(row_class_ids):
+    # Create a scrollable container using columns
+    with st.container():
+        # Iterate through classes in taxonomy order
+        for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
             entry = MOTIF_CLASSIFICATION[class_id]
             class_name = entry['class']
             subclasses = entry['subclasses']
@@ -569,42 +562,42 @@ def render():
             total_in_class = len(subclasses)
             all_enabled = class_enabled_count == total_in_class
             
-            with cols[col_idx]:
-                # Compact card header with class name and status
-                display_name = class_name.replace('_', ' ')
-                status_badge = f"({class_enabled_count}/{total_in_class})"
-                
-                # Class header with icon and status
-                st.markdown(f"""
-                <div style='background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-                            border-radius: 8px; padding: 6px 8px; margin-bottom: 4px;
-                            border-left: 3px solid #667eea; font-size: 0.8rem;'>
-                    <span style='font-weight: 600;'>{icon} {display_name}</span>
-                    <span style='color: #64748b; font-size: 0.75rem;'>{status_badge}</span>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Class-level toggle button (compact) - matches global button style
+            # Create compact expander for each class
+            display_name = class_name.replace('_', ' ')
+            status_badge = f"({class_enabled_count}/{total_in_class})"
+            
+            with st.expander(f"{icon} **{display_name}** {status_badge}", expanded=False):
+                # Class-level toggle button
                 if all_enabled:
-                    if st.button("✗ None", key=f"uncheck_class_{class_name}", use_container_width=True):
+                    if st.button("☐ Uncheck All", key=f"uncheck_class_{class_name}", use_container_width=False):
                         for sc in subclasses:
                             st.session_state[f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}"] = False
                         st.rerun()
                 else:
-                    if st.button("✓ All", key=f"check_class_{class_name}", use_container_width=True):
+                    if st.button("☑ Check All", key=f"check_class_{class_name}", use_container_width=False):
                         for sc in subclasses:
                             st.session_state[f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}"] = True
                         st.rerun()
                 
-                # Submotif checkboxes (vertical stack within column)
-                for subclass in subclasses:
+                # Submotif checkboxes in a compact grid (2 columns for denser display)
+                if len(subclasses) > 1:
+                    cols = st.columns(2)
+                    for idx, subclass in enumerate(subclasses):
+                        key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                        with cols[idx % 2]:
+                            st.checkbox(
+                                subclass, 
+                                value=st.session_state.get(key, True),
+                                key=key,
+                                help=f"Enable/disable {subclass} detection"
+                            )
+                else:
+                    # Single submotif - just show checkbox
+                    subclass = subclasses[0]
                     key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                    # Truncate long submotif names for compact display
-                    display_subclass = subclass[:18] + '...' if len(subclass) > 18 else subclass
-                    # Note: Don't pass 'value' when using 'key' with session state
-                    # Session state already holds the value from initialization
                     st.checkbox(
-                        display_subclass, 
+                        subclass,
+                        value=st.session_state.get(key, True),
                         key=key,
                         help=f"Enable/disable {subclass} detection"
                     )
