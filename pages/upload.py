@@ -476,18 +476,28 @@ def render():
     )
     
     # ============================================================
-    # DENSE MOTIF & SUBMOTIF SELECTOR (TABLE-BASED)
+    # MODERN COMPACT MOTIF & SUBMOTIF SELECTOR
     # ============================================================
-    # Uses st.data_editor for a dense, scrollable table.
-    # All motifs enabled by default - users only deselect what they don't want.
+    # Modern grouped chip-based UI with class-level toggles.
+    # All motifs enabled by default - users uncheck to exclude.
     # ============================================================
     
-    # Initialize session state for motif selector data
-    if 'motif_selector_data' not in st.session_state:
-        # Build initial table data with all motifs enabled
-        st.session_state.motif_selector_data = build_motif_selector_data()
+    # Initialize session state for individual submotif selections
+    # Key format: 'submotif_{class}_{submotif}' with sanitized names
+    def _sanitize_key(name: str) -> str:
+        """Sanitize names for use as session state keys."""
+        return name.replace(' ', '_').replace('-', '_').replace('/', '_')
     
-    # Initialize selected classes/subclasses for backward compatibility
+    # Initialize all submotifs as enabled by default
+    all_submotifs_list = []
+    for class_name, subclasses in CLASS_TO_SUBCLASSES.items():
+        for subclass in subclasses:
+            all_submotifs_list.append((class_name, subclass))
+            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+            if key not in st.session_state:
+                st.session_state[key] = True  # All enabled by default
+    
+    # Initialize backward compatibility lists
     if 'selected_classes' not in st.session_state:
         st.session_state.selected_classes = list(VALID_CLASSES)
     if 'selected_subclasses' not in st.session_state:
@@ -496,90 +506,154 @@ def render():
             all_subclasses.extend(subclasses)
         st.session_state.selected_subclasses = all_subclasses
     
-    # Create DataFrame for the data editor
-    selector_df = pd.DataFrame(st.session_state.motif_selector_data)
-    
-    # Select All / Deselect All buttons in compact row
-    col_sel_all, col_desel_all, col_spacer = st.columns([1, 1, 2])
-    with col_sel_all:
-        if st.button("✓ Select All", use_container_width=True, key="select_all_motifs"):
-            for row in st.session_state.motif_selector_data:
-                row['Enabled'] = True
-            st.session_state.selected_classes = list(VALID_CLASSES)
-            all_subclasses = []
-            for subclasses in CLASS_TO_SUBCLASSES.values():
-                all_subclasses.extend(subclasses)
-            st.session_state.selected_subclasses = all_subclasses
-            st.rerun()
-    
-    with col_desel_all:
-        if st.button("✗ Deselect All", use_container_width=True, key="deselect_all_motifs"):
-            for row in st.session_state.motif_selector_data:
-                row['Enabled'] = False
-            st.session_state.selected_classes = []
-            st.session_state.selected_subclasses = []
-            st.rerun()
-    
-    # Dense table-based motif selector using st.data_editor
+    # Header with Select All / Deselect All
     st.markdown("""
-    <div style='font-size: 0.85rem; color: #64748b; margin-bottom: 8px;'>
-        <strong>Motif & Submotif Selector</strong> — All enabled by default. Uncheck to exclude.
+    <div style='font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 6px;'>
+        🧬 Motif & Submotif Selector <span style='font-weight: 400; color: #6b7280; font-size: 0.8rem;'>— All enabled by default. Uncheck to exclude.</span>
     </div>
     """, unsafe_allow_html=True)
     
-    # Configure column display
-    column_config = {
-        "Enabled": st.column_config.CheckboxColumn(
-            "✓",
-            help="Enable/disable this submotif",
-            default=True,
-            width="small"
-        ),
-        "Motif Class": st.column_config.TextColumn(
-            "Motif Class",
-            help="Parent motif class",
-            width="medium",
-            disabled=True
-        ),
-        "Submotif": st.column_config.TextColumn(
-            "Submotif",
-            help="Specific submotif type",
-            width="large",
-            disabled=True
-        )
+    # Compact Select All / Deselect All buttons
+    col_sel, col_desel, col_space = st.columns([1, 1, 3])
+    with col_sel:
+        if st.button("✓ All", use_container_width=True, key="select_all_motifs", help="Enable all submotifs"):
+            for class_name, subclass in all_submotifs_list:
+                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                st.session_state[key] = True
+            st.rerun()
+    with col_desel:
+        if st.button("✗ None", use_container_width=True, key="deselect_all_motifs", help="Disable all submotifs"):
+            for class_name, subclass in all_submotifs_list:
+                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                st.session_state[key] = False
+            st.rerun()
+    
+    # Icons for motif classes (visual enhancement)
+    motif_icons = {
+        'Curved_DNA': '🌀',
+        'Slipped_DNA': '↔️',
+        'Cruciform': '✝️',
+        'R-Loop': '🔄',
+        'Triplex': '🔺',
+        'G-Quadruplex': '🔷',
+        'i-Motif': '💎',
+        'Z-DNA': '⚡',
+        'A-philic_DNA': '🅰️',
+        'Hybrid': '🔀',
+        'Non-B_DNA_Clusters': '🎯'
     }
     
-    # Render the dense motif selector table
-    edited_df = st.data_editor(
-        selector_df,
-        column_config=column_config,
-        use_container_width=True,
-        hide_index=True,
-        num_rows="fixed",
-        height=280,  # Compact height for dense display
-        key="motif_selector_editor"
-    )
+    # Build compact grouped selector with expanders
+    # Container with custom styling
+    st.markdown("""
+    <style>
+    .motif-selector-container {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 4px;
+        background: #fafafa;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
-    # Update session state from edited data
-    st.session_state.motif_selector_data = edited_df.to_dict('records')
+    # Collect enabled classes/subclasses as we render
+    enabled_classes = set()
+    enabled_subclasses = []
     
-    # Extract enabled classes and subclasses from the table
-    enabled_classes, enabled_subclasses = get_enabled_from_selector_data(
-        st.session_state.motif_selector_data
-    )
-    st.session_state.selected_classes = enabled_classes
+    # Create a scrollable container using columns
+    with st.container():
+        # Iterate through classes in taxonomy order
+        for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
+            entry = MOTIF_CLASSIFICATION[class_id]
+            class_name = entry['class']
+            subclasses = entry['subclasses']
+            icon = motif_icons.get(class_name, '📍')
+            
+            # Count enabled submotifs for this class
+            class_enabled_count = sum(
+                1 for sc in subclasses 
+                if st.session_state.get(f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}", True)
+            )
+            total_in_class = len(subclasses)
+            all_enabled = class_enabled_count == total_in_class
+            none_enabled = class_enabled_count == 0
+            
+            # Create compact expander for each class
+            display_name = class_name.replace('_', ' ')
+            status_badge = f"({class_enabled_count}/{total_in_class})"
+            
+            with st.expander(f"{icon} **{display_name}** {status_badge}", expanded=False):
+                # Class-level toggle row
+                col_toggle, col_label = st.columns([1, 4])
+                with col_toggle:
+                    # Toggle all in class button
+                    if all_enabled:
+                        if st.button("☐ Uncheck All", key=f"uncheck_class_{class_name}", use_container_width=True):
+                            for sc in subclasses:
+                                st.session_state[f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}"] = False
+                            st.rerun()
+                    else:
+                        if st.button("☑ Check All", key=f"check_class_{class_name}", use_container_width=True):
+                            for sc in subclasses:
+                                st.session_state[f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}"] = True
+                            st.rerun()
+                
+                # Submotif checkboxes in a compact grid (2 columns for denser display)
+                if len(subclasses) > 1:
+                    cols = st.columns(2)
+                    for idx, subclass in enumerate(subclasses):
+                        key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                        with cols[idx % 2]:
+                            is_enabled = st.checkbox(
+                                subclass, 
+                                value=st.session_state.get(key, True),
+                                key=key,
+                                help=f"Enable/disable {subclass} detection"
+                            )
+                            if is_enabled:
+                                enabled_classes.add(class_name)
+                                enabled_subclasses.append(subclass)
+                else:
+                    # Single submotif - just show checkbox
+                    subclass = subclasses[0]
+                    key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                    is_enabled = st.checkbox(
+                        subclass,
+                        value=st.session_state.get(key, True),
+                        key=key,
+                        help=f"Enable/disable {subclass} detection"
+                    )
+                    if is_enabled:
+                        enabled_classes.add(class_name)
+                        enabled_subclasses.append(subclass)
+    
+    # Update backward-compatible session state
+    st.session_state.selected_classes = list(enabled_classes)
     st.session_state.selected_subclasses = enabled_subclasses
     
-    # Show compact summary of selection
-    num_enabled = sum(1 for row in st.session_state.motif_selector_data if row.get('Enabled', False))
-    total_submotifs = len(st.session_state.motif_selector_data)
+    # Also update motif_selector_data for any code that uses it
+    st.session_state.motif_selector_data = []
+    for class_name, subclasses in CLASS_TO_SUBCLASSES.items():
+        for subclass in subclasses:
+            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+            st.session_state.motif_selector_data.append({
+                'Enabled': st.session_state.get(key, True),
+                'Motif Class': class_name,
+                'Submotif': subclass
+            })
+    
+    # Show compact summary
+    num_enabled = len(enabled_subclasses)
+    total_submotifs = len(all_submotifs_list)
     
     if enabled_classes:
         st.markdown(f"""
         <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-                    padding: 8px 12px; border-radius: 6px; margin: 8px 0;
-                    display: inline-flex; align-items: center; gap: 8px;'>
-            <span style='font-size: 1.1rem;'>✓</span>
+                    padding: 6px 10px; border-radius: 6px; margin: 6px 0;
+                    display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem;'>
+            <span style='font-size: 1rem;'>✓</span>
             <span style='font-weight: 600; color: #065f46;'>
                 {len(enabled_classes)} classes, {num_enabled}/{total_submotifs} submotifs enabled
             </span>
@@ -619,7 +693,7 @@ def render():
         detailed_output = st.checkbox(
             "📊 Detailed",
             value=st.session_state.toggle_detailed,
-            help=UI_TEXT['tooltip_detailed_analysis'],
+            help=UI_TEXT['help_detailed_analysis'],
             key="chk_detailed"
         )
         st.session_state.toggle_detailed = detailed_output
@@ -628,7 +702,7 @@ def render():
         quality_check = st.checkbox(
             "✅ Validation",
             value=st.session_state.toggle_validation,
-            help=UI_TEXT['tooltip_quality_validation'],
+            help=UI_TEXT['help_quality_validation'],
             key="chk_validation"
         )
         st.session_state.toggle_validation = quality_check
@@ -637,7 +711,7 @@ def render():
         use_parallel_scanner = st.checkbox(
             "⚡ Parallel",
             value=st.session_state.toggle_parallel,
-            help=UI_TEXT['tooltip_parallel_scanner'],
+            help=UI_TEXT['help_parallel_scanner'],
             key="chk_parallel"
         )
         st.session_state.toggle_parallel = use_parallel_scanner
@@ -646,7 +720,7 @@ def render():
         show_chunk_progress = st.checkbox(
             "📦 Chunks",
             value=st.session_state.toggle_chunk_progress,
-            help=UI_TEXT['tooltip_chunk_progress'],
+            help=UI_TEXT['help_chunk_progress'],
             key="chk_chunks"
         )
         st.session_state.toggle_chunk_progress = show_chunk_progress
