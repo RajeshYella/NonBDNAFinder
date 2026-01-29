@@ -571,7 +571,8 @@ def render():
             
             with cols[col_idx]:
                 # Compact card header with class name and status
-                display_name = class_name.replace('_', ' ')
+                # Keep original class names (with underscores/hyphens) for compact 6-column grid display
+                display_name = class_name
                 status_badge = f"({class_enabled_count}/{total_in_class})"
                 
                 # Class header with icon and status
