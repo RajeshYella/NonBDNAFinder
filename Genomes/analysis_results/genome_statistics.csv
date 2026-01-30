@@ -1,0 +1,9 @@
+Organism,Strain,Category,Phylum,Genome_Size_bp,Genome_Size_Mb,GC_Content_pct,Num_Sequences,Total_Motifs,Motifs_per_Kb,Motifs_per_Mb,Detection_Time_s,Throughput_bp_s,Curved_DNA,Slipped_DNA,Cruciform,R-Loop,Triplex,G-Quadruplex,i-Motif,Z-DNA,A-philic_DNA,Hybrid,Non-B_DNA_Clusters
+Buchnera aphidicola,str. APS,Obligate endosymbiont,Proteobacteria,452078,0.45,18.3,1,4865,10.761,10761.0,42.5,10643.0,4622,68,10,1,89,35,0,0,1,18,21
+Candidatus Carsonella ruddii,PV,Obligate endosymbiont,Proteobacteria,174014,0.17,17.6,1,1828,10.505,10505.0,16.4,10636.0,1771,11,4,2,19,14,0,0,0,3,4
+Cellulomonas shaoxiangyii,Z28,Free-living,Actinobacteria,3909366,3.91,75.3,1,40703,10.412,10412.0,378.6,10325.0,1,335,24,1786,5,24609,485,8746,1524,921,2267
+Miltoncostaea marina,DSM 45384,Free-living,Actinobacteria,3370274,3.37,76.2,1,40985,12.161,12161.0,328.5,10260.0,2,138,23,1549,5,25621,400,7837,1954,1114,2342
+Streptococcus pneumoniae,TIGR4,Pathogen,Firmicutes,2110968,2.11,39.7,1,3204,1.518,1518.0,200.4,10536.0,1675,41,3,114,158,1174,1,10,7,8,13
+Escherichia coli,K-12 substr. MG1655,Free-living,Proteobacteria,4641652,4.64,50.8,1,10365,2.233,2233.0,440.3,10542.0,1762,16,13,786,63,6553,26,900,67,78,101
+Mycobacterium tuberculosis,H37Rv,Pathogen,Actinobacteria,4411532,4.41,65.6,1,28411,6.44,6440.0,420.1,10502.0,66,185,7,2063,4,21315,231,2386,799,547,808
+Staphylococcus aureus,NCTC 8325,Pathogen,Firmicutes,2821361,2.82,32.9,1,3073,1.089,1089.0,268.0,10527.0,2322,46,2,41,62,518,0,7,68,3,4
