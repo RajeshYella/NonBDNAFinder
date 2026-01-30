@@ -1046,22 +1046,26 @@ def render():
                         except Exception as e:
                             # Fallback to standard scanner on error (ephemeral warning)
                             status_placeholder.warning(f"Parallel scanner failed, falling back to standard: {e}")
-                            results = analyze_sequence(seq, name)
+                            results = analyze_sequence(seq, name, 
+                                                       enabled_classes=list(st.session_state.selected_classes))
                     else:
-                        # Use standard consolidated NBDScanner analysis
-                        results = analyze_sequence(seq, name)
+                        # Use standard consolidated NBDScanner analysis with selective detection
+                        # Pass enabled_classes for performance optimization - only runs selected detectors
+                        results = analyze_sequence(seq, name, 
+                                                   enabled_classes=list(st.session_state.selected_classes))
                     
                     # Ensure all motifs have required fields
                     results = [ensure_subclass(motif) for motif in results]
                     
                     # ============================================================
-                    # FILTER RESULTS BASED ON SELECTED CLASSES/SUBCLASSES
+                    # FILTER RESULTS BASED ON SELECTED SUBCLASSES
                     # ============================================================
-                    # Apply user's class/subclass selection to filter results
+                    # Note: Class-level filtering is now done at detector level for performance.
+                    # Here we apply the finer-grained subclass filter.
                     selected_classes_set = set(st.session_state.selected_classes)
                     selected_subclasses_set = set(st.session_state.selected_subclasses)
                     
-                    # Filter motifs to only include selected classes and subclasses
+                    # Filter motifs to only include selected subclasses
                     filtered_results = []
                     for motif in results:
                         motif_class = motif.get('Class', '')

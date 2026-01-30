@@ -172,6 +172,27 @@ DETECTOR_DISPLAY_NAMES = {
     'a_philic': 'A-philic DNA'
 }
 
+# =============================================================================
+# CLASS TO DETECTOR MAPPING - For selective detection
+# =============================================================================
+# Maps canonical class names (from config/motif_taxonomy.py) to detector keys
+# This enables running only selected detectors for performance optimization
+
+CLASS_TO_DETECTOR = {
+    'Curved_DNA': 'curved_dna',
+    'Slipped_DNA': 'slipped_dna',
+    'Cruciform': 'cruciform',
+    'R-Loop': 'r_loop',
+    'Triplex': 'triplex',
+    'G-Quadruplex': 'g_quadruplex',
+    'i-Motif': 'i_motif',
+    'Z-DNA': 'z_dna',
+    'A-philic_DNA': 'a_philic'
+}
+
+# Reverse mapping: detector key to class name
+DETECTOR_TO_CLASS = {v: k for k, v in CLASS_TO_DETECTOR.items()}
+
 
 # =============================================================================
 # ANALYSIS PROGRESS TRACKING
@@ -566,7 +587,8 @@ class NonBScanner:
             }
     
     def analyze_sequence(self, sequence: str, sequence_name: str = "sequence",
-                        progress_callback: Optional[Callable[[str, int, int, float, int], None]] = None) -> List[Dict[str, Any]]:
+                        progress_callback: Optional[Callable[[str, int, int, float, int], None]] = None,
+                        enabled_classes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         """
         Detect all Non-B DNA motifs in a sequence with high performance.
         
@@ -633,6 +655,10 @@ class NonBScanner:
                               - total (int): Total number of detectors (9)
                               - elapsed (float): Time for this detector in seconds
                               - motif_count (int): Number of motifs found by this detector
+            enabled_classes: Optional list of class names to analyze. If None or empty,
+                            all classes are analyzed. If specified, only detectors for
+                            the given classes will run, improving performance.
+                            Example: ['G-Quadruplex', 'Z-DNA'] will only run those 2 detectors.
             
         Returns:
             List of motif dictionaries sorted by genomic position
@@ -641,6 +667,7 @@ class NonBScanner:
             - ~5,000-8,000 bp/s on typical sequences
             - Linear O(n) complexity for most detectors
             - Optimized k-mer indexing for repeat detection
+            - With enabled_classes: Speedup proportional to detectors skipped
             
         Example:
             >>> scanner = NonBScanner()
@@ -652,6 +679,10 @@ class NonBScanner:
             >>> motifs = scanner.analyze_sequence("GGGTTAGGGTTAGGGTTAGGG", "test", 
             ...                                   progress_callback=on_progress)
             >>> print(f"Found {len(motifs)} motifs")
+            >>>
+            >>> # Selective detection (performance optimization)
+            >>> motifs = scanner.analyze_sequence(seq, "test",
+            ...                                   enabled_classes=['G-Quadruplex', 'i-Motif'])
         """
         sequence = sequence.upper().strip()
         
@@ -661,7 +692,23 @@ class NonBScanner:
             raise ValueError(f"Invalid sequence: {msg}")
         
         all_motifs = []
-        total_detectors = len(self.detectors)
+        
+        # Determine which detectors to run based on enabled_classes
+        if enabled_classes:
+            # Convert enabled classes to detector keys
+            enabled_detectors = set()
+            for class_name in enabled_classes:
+                detector_key = CLASS_TO_DETECTOR.get(class_name)
+                if detector_key and detector_key in self.detectors:
+                    enabled_detectors.add(detector_key)
+            
+            # Filter detectors to only run enabled ones
+            detectors_to_run = {k: v for k, v in self.detectors.items() if k in enabled_detectors}
+        else:
+            # Run all detectors
+            detectors_to_run = self.detectors
+        
+        total_detectors = len(detectors_to_run)
         
         # Reset detector timings
         _reset_detector_timings()
@@ -669,13 +716,13 @@ class NonBScanner:
         # ═══════════════════════════════════════════════════════════════════════
         # PHASE 1: DETECTION - Candidate Enumeration Only
         # ═══════════════════════════════════════════════════════════════════════
-        # Run all detectors to enumerate candidates without biological filtering.
+        # Run selected detectors to enumerate candidates without biological filtering.
         # Detectors use pattern matching (regex/k-mer) to find all potential sites.
         # No scoring or biological interpretation occurs during this phase.
         # ═══════════════════════════════════════════════════════════════════════
         
-        # Run all detectors
-        for idx, (detector_name, detector) in enumerate(self.detectors.items()):
+        # Run selected detectors
+        for idx, (detector_name, detector) in enumerate(detectors_to_run.items()):
             try:
                 start_time = time.time()
                 motifs = detector.detect_motifs(sequence, sequence_name)
@@ -1030,7 +1077,8 @@ def analyze_sequence(sequence: str, sequence_name: str = "sequence",
                     chunk_size: int = None,
                     chunk_overlap: int = None,
                     progress_callback: Optional[Callable[[int, int, int, float, float], None]] = None,
-                    use_parallel_chunks: bool = True) -> List[Dict[str, Any]]:
+                    use_parallel_chunks: bool = True,
+                    enabled_classes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
     """
     Analyze a single DNA sequence for all Non-B DNA motifs (high-performance API).
     
@@ -1073,6 +1121,10 @@ def analyze_sequence(sequence: str, sequence_name: str = "sequence",
         progress_callback: Callback function called after each chunk is processed.
                           Signature: callback(chunk_num, total_chunks, bp_processed, elapsed, throughput)
         use_parallel_chunks: Enable parallel processing of chunks (default: True)
+        enabled_classes: Optional list of class names to analyze. If None or empty,
+                        all classes are analyzed. If specified, only detectors for
+                        the given classes will run, improving performance.
+                        Example: ['G-Quadruplex', 'Z-DNA'] will only run those 2 detectors.
         
     Returns:
         List of motif dictionaries sorted by genomic position
@@ -1084,6 +1136,7 @@ def analyze_sequence(sequence: str, sequence_name: str = "sequence",
         - 7.2kb sequence: ~2.0s (standard), ~0.22s (fast, 9x speedup)
         - 72kb sequence: ~20s (standard), ~2.2s (fast, 9x speedup)
         - 720kb sequence: ~200s (standard), ~22s (fast, 9x speedup)
+        - With enabled_classes: Additional speedup by skipping unneeded detectors
         
     Note: Speedup is wall-clock time reduction, not throughput increase. Each detector
           runs at the same speed, but all 9 run simultaneously in parallel.
@@ -1099,6 +1152,9 @@ def analyze_sequence(sequence: str, sequence_name: str = "sequence",
         ...     print(f"Chunk {chunk}/{total}: {bp} bp processed")
         >>> motifs = nbs.analyze_sequence(large_seq, "test", use_chunking=True, 
         ...                                progress_callback=progress)
+        >>> # Selective detection (performance optimization)
+        >>> motifs = nbs.analyze_sequence(seq, "test", 
+        ...                                enabled_classes=['G-Quadruplex', 'i-Motif'])
         >>> for m in motifs:
         ...     print(f"{m['Class']}: {m['Start']}-{m['End']}, score={m['Score']}")
     """
@@ -1120,25 +1176,27 @@ def analyze_sequence(sequence: str, sequence_name: str = "sequence",
             # Use parallel processing for 9x speedup
             try:
                 from parallel_scanner import analyze_sequence_parallel
-                return analyze_sequence_parallel(sequence, sequence_name, use_parallel=True)
+                return analyze_sequence_parallel(sequence, sequence_name, use_parallel=True,
+                                                enabled_classes=enabled_classes)
             except ImportError:
                 warnings.warn("Fast mode not available (parallel_scanner module not found), falling back to standard mode")
         
         # Standard mode (sequential) - use cached scanner for better performance
         scanner = _get_cached_scanner()
-        return scanner.analyze_sequence(sequence, sequence_name)
+        return scanner.analyze_sequence(sequence, sequence_name, enabled_classes=enabled_classes)
     
     # Chunked processing for large sequences
     return _analyze_sequence_chunked(
-        sequence, sequence_name, chunk_size, chunk_overlap, 
-        progress_callback, use_parallel_chunks
+        sequence, sequence_name, chunk_size, chunk_overlap,
+        progress_callback, use_parallel_chunks, enabled_classes
     )
 
 
 def _analyze_sequence_chunked(sequence: str, sequence_name: str,
                                chunk_size: int, chunk_overlap: int,
                                progress_callback: Optional[Callable[[int, int, int, float, float], None]] = None,
-                               use_parallel_chunks: bool = True) -> List[Dict[str, Any]]:
+                               use_parallel_chunks: bool = True,
+                               enabled_classes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
     """
     Analyze a large sequence by processing it in chunks.
     
@@ -1152,6 +1210,7 @@ def _analyze_sequence_chunked(sequence: str, sequence_name: str,
         chunk_overlap: Overlap between chunks
         progress_callback: Optional callback for progress tracking
         use_parallel_chunks: Enable parallel chunk processing
+        enabled_classes: Optional list of class names to analyze (for selective detection)
         
     Returns:
         List of deduplicated motif dictionaries sorted by position
@@ -1185,8 +1244,9 @@ def _analyze_sequence_chunked(sequence: str, sequence_name: str,
             chunk_seq = sequence[chunk_start:chunk_end]
             chunk_name = f"{sequence_name}_chunk{chunk_idx}"
             
-            # Analyze chunk
-            chunk_motifs = scanner.analyze_sequence(chunk_seq, chunk_name)
+            # Analyze chunk with enabled_classes filter
+            chunk_motifs = scanner.analyze_sequence(chunk_seq, chunk_name, 
+                                                    enabled_classes=enabled_classes)
             
             # Adjust motif positions to full sequence coordinates
             for motif in chunk_motifs:
@@ -1222,8 +1282,9 @@ def _analyze_sequence_chunked(sequence: str, sequence_name: str,
             chunk_seq = sequence[chunk_start:chunk_end]
             chunk_name = f"{sequence_name}_chunk{chunk_idx}"
             
-            # Analyze chunk
-            chunk_motifs = scanner.analyze_sequence(chunk_seq, chunk_name)
+            # Analyze chunk with enabled_classes filter
+            chunk_motifs = scanner.analyze_sequence(chunk_seq, chunk_name, 
+                                                    enabled_classes=enabled_classes)
             
             # Adjust motif positions to full sequence coordinates
             for motif in chunk_motifs:
