@@ -5,6 +5,7 @@ from config.typography import FONT_CONFIG
 from config.themes import TAB_THEMES
 from config.colors import SEMANTIC_COLORS
 from ui.css import load_css, get_page_colors
+from ui.headers import render_section_heading
 
 
 def render():

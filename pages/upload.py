@@ -28,6 +28,7 @@ from config.colors import CLASS_COLORS, CLASS_COLOR_NAMES
 # Import UI components
 from ui.css import load_css, get_page_colors
 from ui.formatters import format_time_scientific
+from ui.headers import render_section_heading
 
 # Import utilities
 from utilities import (
@@ -184,19 +185,8 @@ def render():
     # Apply Upload tab theme based on configuration
     load_css(TAB_THEMES.get('Upload & Analyze', 'nature_green'))
     
-    # Modern header for upload page
-    st.markdown("""
-    <div style='text-align: center; margin-bottom: 2rem;'>
-        <h2 style='margin: 0; font-size: 2rem; background: linear-gradient(135deg, #10b981, #059669);
-                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                   font-weight: 700;'>
-            Upload & Analyze Sequences
-        </h2>
-        <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 1rem;'>
-            Upload your DNA sequences and configure analysis parameters
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Uniform section heading (no caption)
+    render_section_heading("Upload & Analyze Sequences")
 
     # ============================================================
     # TWO-COLUMN LAYOUT: INPUT (LEFT) | ANALYSIS (RIGHT)
