@@ -6,6 +6,7 @@ to ensure visual consistency following scientific dashboard design principles.
 """
 
 import streamlit as st
+import html
 
 
 def render_section_heading(title: str):
@@ -23,6 +24,9 @@ def render_section_heading(title: str):
     Args:
         title: The heading text to display
     """
+    # Escape HTML to prevent XSS
+    safe_title = html.escape(title)
+    
     st.markdown(f"""
     <div style="
         display: flex;
@@ -42,7 +46,7 @@ def render_section_heading(title: str):
             font-weight: 700;
             color: #1f2937;
         ">
-            {title}
+            {safe_title}
         </h2>
     </div>
     """, unsafe_allow_html=True)
