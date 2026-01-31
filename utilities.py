@@ -4188,6 +4188,24 @@ MOTIF_CLASS_COLORS = {
     'Non-B_DNA_Clusters': '#666666'   # Dark gray
 }
 
+# Default fallback color for unknown motif classes
+DEFAULT_MOTIF_COLOR = '#808080'
+
+def _get_subclass_color(subclass_name: str) -> str:
+    """Get color for a subclass, using parent class color for consistency.
+    
+    Ensures subclass plots use the same color as their parent class,
+    maintaining visual consistency across all visualizations.
+    
+    Args:
+        subclass_name: Name of the subclass
+        
+    Returns:
+        Hex color string from NATURE_MOTIF_COLORS or default gray
+    """
+    parent_class = SUBCLASS_TO_CLASS.get(subclass_name, subclass_name)
+    return MOTIF_CLASS_COLORS.get(parent_class, MOTIF_CLASS_COLORS.get(subclass_name, DEFAULT_MOTIF_COLOR))
+
 # Helper function to format display names
 def _format_display_name(name: str) -> str:
     """Convert internal names to publication-ready display format.
@@ -6873,9 +6891,8 @@ def plot_manhattan_subclass_density(motifs: List[Dict[str, Any]],
     
     for subclass_name in subclasses:
         subclass_motifs = [m for m in motifs if m.get('Subclass', m.get('Class')) == subclass_name]
-        # Get parent class color for consistency
-        parent_class = SUBCLASS_TO_CLASS.get(subclass_name, subclass_name)
-        color = MOTIF_CLASS_COLORS.get(parent_class, MOTIF_CLASS_COLORS.get(subclass_name, '#808080'))
+        # Get parent class color for consistency using helper function
+        color = _get_subclass_color(subclass_name)
         
         for i in range(num_windows):
             window_start = i * window_size
@@ -7408,9 +7425,8 @@ def plot_linear_subclass_track(motifs: List[Dict[str, Any]],
     
     for i, subclass_name in enumerate(subclasses):
         y_pos = i * track_spacing
-        # Get parent class color for consistency
-        parent_class = SUBCLASS_TO_CLASS.get(subclass_name, subclass_name)
-        color = MOTIF_CLASS_COLORS.get(parent_class, MOTIF_CLASS_COLORS.get(subclass_name, '#808080'))
+        # Get parent class color for consistency using helper function
+        color = _get_subclass_color(subclass_name)
         
         for motif in subclass_motifs[subclass_name]:
             start = max(region_start, motif.get('Start', 0))

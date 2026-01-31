@@ -379,8 +379,34 @@ def render():
                            unsafe_allow_html=True)
 
 
+# Maximum number of overlap pairs to display in the overlap matrix
+MAX_OVERLAP_DISPLAY = 10
+
+
 def _calculate_overlaps(motifs: list, by: str = 'Class') -> dict:
-    """Calculate overlapping motifs by Class or Subclass."""
+    """Calculate overlapping motifs by Class or Subclass.
+    
+    Identifies pairs of motifs that have overlapping genomic coordinates
+    and belong to different classes/subclasses. This helps visualize
+    co-localization patterns between different motif types.
+    
+    Args:
+        motifs: List of motif dictionaries, each containing at minimum:
+            - 'Start': Start position (1-based)
+            - 'End': End position (inclusive)
+            - 'Class' or 'Subclass': Category for grouping
+        by: Field to group motifs by ('Class' or 'Subclass')
+        
+    Returns:
+        Dictionary mapping (class1, class2) tuples to overlap counts.
+        Pairs are sorted alphabetically to ensure consistent keys.
+        Only includes overlaps between DIFFERENT classes/subclasses.
+        
+    Example:
+        >>> overlaps = _calculate_overlaps(motifs, by='Class')
+        >>> overlaps
+        {('G-Quadruplex', 'Z-DNA'): 5, ('Cruciform', 'R-Loop'): 2}
+    """
     overlaps = {}
     
     # Sort motifs by start position
@@ -403,12 +429,25 @@ def _calculate_overlaps(motifs: list, by: str = 'Class') -> dict:
 
 
 def _render_overlap_matrix(overlaps: dict, title: str) -> None:
-    """Render overlap data as a compact matrix/table."""
+    """Render overlap data as a compact matrix/table.
+    
+    Displays the top overlap pairs sorted by count in descending order.
+    Limited to MAX_OVERLAP_DISPLAY entries for UI compactness.
+    
+    Args:
+        overlaps: Dictionary from _calculate_overlaps(), mapping 
+            (class1, class2) tuples to overlap counts.
+        title: Title to display above the overlap list.
+        
+    Renders:
+        Streamlit HTML with title and list of overlap pairs formatted as:
+        "Class1 ↔ Class2: <count>"
+    """
     if not overlaps:
         return
     
-    # Sort by count descending
-    sorted_overlaps = sorted(overlaps.items(), key=lambda x: x[1], reverse=True)[:10]  # Top 10
+    # Sort by count descending, limited to MAX_OVERLAP_DISPLAY
+    sorted_overlaps = sorted(overlaps.items(), key=lambda x: x[1], reverse=True)[:MAX_OVERLAP_DISPLAY]
     
     html = f"""
     <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: #334155;">{title}</div>
