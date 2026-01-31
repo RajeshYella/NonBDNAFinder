@@ -19,8 +19,6 @@ from config.themes import TAB_THEMES
 from config.analysis import ANALYSIS_CONFIG
 from config.motif_taxonomy import (
     MOTIF_CLASSIFICATION,
-    VALID_CLASSES,
-    CLASS_TO_SUBCLASSES,
     get_all_classes,
     build_motif_selector_data,
     get_enabled_from_selector_data
@@ -464,167 +462,113 @@ def render():
     st.session_state.analysis_mode_used = "Submotif Level"
     
     # ============================================================
-    # MODERN COMPACT MOTIF & SUBMOTIF SELECTOR
+    # FLAT SUBMOTIF SELECTOR (COLOR-ENCODED, 4 × 6 GRID)
     # ============================================================
-    # Modern grouped chip-based UI with class-level toggles.
-    # All motifs enabled by default - users uncheck to exclude.
+    # Flat subclass-first selector: users reason in submotifs, not abstract classes.
+    # Color already encodes class identity, so headers are redundant.
+    # Flat layout improves: scan speed, cognitive load, visual compactness.
     # ============================================================
-    
-    # Helper function to convert hex color to rgba
-    def _hex_to_rgba(hex_color: str, alpha: float) -> str:
-        """Convert hex color to rgba string with given alpha."""
-        hex_color = hex_color.lstrip('#')
-        r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
-        return f"rgba({r}, {g}, {b}, {alpha})"
-    
-    # Initialize session state for individual submotif selections
-    # Key format: 'submotif_{class}_{submotif}' with sanitized names
+
+    st.markdown("""
+    <div style="font-size: 0.95rem; font-weight: 600; color: #374151; margin-bottom: 8px;">
+    🧬 Submotif Selector
+    <span style="font-weight: 400; color: #6b7280; font-size: 0.8rem;">
+    — All enabled by default. Uncheck to exclude.
+    </span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ------------------------------------------------------------------
+    # Use CLASS_COLORS from config.colors for color encoding
+    # (single source of truth for motif class colors)
+    # ------------------------------------------------------------------
+
     def _sanitize_key(name: str) -> str:
-        """Sanitize names for use as session state keys."""
         return name.replace(' ', '_').replace('-', '_').replace('/', '_')
-    
-    # Icons for motif classes (visual enhancement) - defined once
-    motif_icons = {
-        'Curved_DNA': '🌀',
-        'Slipped_DNA': '↔️',
-        'Cruciform': '✝️',
-        'R-Loop': '🔄',
-        'Triplex': '🔺',
-        'G-Quadruplex': '🔷',
-        'i-Motif': '💎',
-        'Z-DNA': '⚡',
-        'A-philic_DNA': '🅰️',
-        'Hybrid': '🔀',
-        'Non-B_DNA_Clusters': '🎯'
-    }
-    
-    # Build ordered list of all submotifs using taxonomy order
-    all_submotifs_list = []
+
+    # ------------------------------------------------------------------
+    # Build flat ordered list of all subclasses (taxonomy order)
+    # ------------------------------------------------------------------
+    flat_submotifs = []
     for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
         entry = MOTIF_CLASSIFICATION[class_id]
         class_name = entry['class']
         for subclass in entry['subclasses']:
-            all_submotifs_list.append((class_name, subclass))
-            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-            if key not in st.session_state:
-                st.session_state[key] = True  # All enabled by default
-    
-    # Initialize backward compatibility lists
-    if 'selected_classes' not in st.session_state:
-        st.session_state.selected_classes = list(VALID_CLASSES)
-    if 'selected_subclasses' not in st.session_state:
-        all_subclasses = []
-        for subclasses in CLASS_TO_SUBCLASSES.values():
-            all_subclasses.extend(subclasses)
-        st.session_state.selected_subclasses = all_subclasses
-    
-    # Header with Select All / Deselect All
-    st.markdown("""
-    <div style='font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 6px;'>
-        🧬 Motif & Submotif Selector <span style='font-weight: 400; color: #6b7280; font-size: 0.8rem;'>— All enabled by default. Uncheck to exclude.</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Compact Select All / Deselect All buttons
-    col_sel, col_desel, col_space = st.columns([1, 1, 3])
-    with col_sel:
-        if st.button("✓ All", use_container_width=True, key="select_all_motifs", help="Enable all submotifs"):
-            for class_name, subclass in all_submotifs_list:
-                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                st.session_state[key] = True
+            flat_submotifs.append((class_name, subclass))
+
+    # Initialize session state (all ON by default)
+    for class_name, subclass in flat_submotifs:
+        key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+        if key not in st.session_state:
+            st.session_state[key] = True
+
+    # ------------------------------------------------------------------
+    # Global controls
+    # ------------------------------------------------------------------
+    col_all, col_none, _ = st.columns([1, 1, 4])
+
+    with col_all:
+        if st.button("✓ All", use_container_width=True, key="select_all_submotifs"):
+            for class_name, subclass in flat_submotifs:
+                st.session_state[
+                    f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                ] = True
             st.rerun()
-    with col_desel:
-        if st.button("✗ None", use_container_width=True, key="deselect_all_motifs", help="Disable all submotifs"):
-            for class_name, subclass in all_submotifs_list:
-                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                st.session_state[key] = False
+
+    with col_none:
+        if st.button("✗ None", use_container_width=True, key="deselect_all_submotifs"):
+            for class_name, subclass in flat_submotifs:
+                st.session_state[
+                    f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                ] = False
             st.rerun()
-    
-    # Create 6-column grid layout for motif classes
-    # 11 motif classes arranged in a 6x2 grid (6 columns, 2 rows)
+
+    # ------------------------------------------------------------------
+    # Render 4 × 6 grid
+    # ------------------------------------------------------------------
     NUM_COLUMNS = 6
-    all_class_ids = sorted(MOTIF_CLASSIFICATION.keys())
-    
-    # Process classes row by row in groups of NUM_COLUMNS
-    for row_start in range(0, len(all_class_ids), NUM_COLUMNS):
-        row_class_ids = all_class_ids[row_start:row_start + NUM_COLUMNS]
+    rows = [flat_submotifs[i:i + NUM_COLUMNS]
+            for i in range(0, len(flat_submotifs), NUM_COLUMNS)]
+
+    for row in rows:
         cols = st.columns(NUM_COLUMNS)
-        
-        for col_idx, class_id in enumerate(row_class_ids):
-            entry = MOTIF_CLASSIFICATION[class_id]
-            class_name = entry['class']
-            subclasses = entry['subclasses']
-            icon = motif_icons.get(class_name, '📍')
-            
-            # Get class-specific color from CLASS_COLORS
-            class_color = CLASS_COLORS.get(class_name, '#667eea')
-            
-            # Count enabled submotifs for this class from session state
-            class_enabled_count = sum(
-                1 for sc in subclasses 
-                if st.session_state.get(f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}", True)
-            )
-            total_in_class = len(subclasses)
-            all_enabled = class_enabled_count == total_in_class
-            
-            with cols[col_idx]:
-                # Compact card header with class name and status
-                # Keep original class names (with underscores/hyphens) for compact 6-column grid display
-                display_name = class_name
-                status_badge = f"({class_enabled_count}/{total_in_class})"
-                
-                # Class header with icon, status, and class-specific color encoding
-                # Use rgba for proper CSS color with alpha transparency
-                bg_color_light = _hex_to_rgba(class_color, 0.1)
-                bg_color_dark = _hex_to_rgba(class_color, 0.15)
+        for col, (class_name, subclass) in zip(cols, row):
+            color = CLASS_COLORS.get(class_name, "#cbd5e1")
+            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+
+            with col:
                 st.markdown(f"""
-                <div style='background: linear-gradient(135deg, {bg_color_light} 0%, {bg_color_dark} 100%);
-                            border-radius: 8px; padding: 6px 8px; margin-bottom: 4px;
-                            border-left: 3px solid {class_color}; font-size: 0.8rem;'>
-                    <span style='font-weight: 600; color: {class_color};'>{icon} {display_name}</span>
-                    <span style='color: #64748b; font-size: 0.75rem;'>{status_badge}</span>
-                </div>
+                <div style="
+                    border-left: 4px solid {color};
+                    padding-left: 6px;
+                    margin-bottom: 6px;
+                    font-size: 0.82rem;
+                ">
                 """, unsafe_allow_html=True)
-                
-                # Class-level toggle button (compact) - matches global button style
-                if all_enabled:
-                    if st.button("✗ None", key=f"uncheck_class_{class_name}", use_container_width=True):
-                        for sc in subclasses:
-                            st.session_state[f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}"] = False
-                        st.rerun()
-                else:
-                    if st.button("✓ All", key=f"check_class_{class_name}", use_container_width=True):
-                        for sc in subclasses:
-                            st.session_state[f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(sc)}"] = True
-                        st.rerun()
-                
-                # Submotif checkboxes (vertical stack within column)
-                for subclass in subclasses:
-                    key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                    # Truncate long submotif names for compact display
-                    display_subclass = subclass[:18] + '...' if len(subclass) > 18 else subclass
-                    # Note: Don't pass 'value' when using 'key' with session state
-                    # Session state already holds the value from initialization
-                    st.checkbox(
-                        display_subclass, 
-                        key=key,
-                        help=f"Enable/disable {subclass} detection"
-                    )
-    
-    # Build enabled classes/subclasses from session state (not from widget rendering)
-    # This ensures correct state regardless of expander collapse state
+
+                st.checkbox(
+                    subclass,
+                    key=key,
+                    help=f"{subclass} ({class_name.replace('_', ' ')})"
+                )
+
+                st.markdown("</div>", unsafe_allow_html=True)
+
+    # ------------------------------------------------------------------
+    # Build enabled class & subclass lists (for downstream analysis)
+    # ------------------------------------------------------------------
     enabled_classes = set()
     enabled_subclasses = []
-    for class_name, subclass in all_submotifs_list:
+
+    for class_name, subclass in flat_submotifs:
         key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
         if st.session_state.get(key, True):
             enabled_classes.add(class_name)
             enabled_subclasses.append(subclass)
-    
-    # Update backward-compatible session state
+
     st.session_state.selected_classes = list(enabled_classes)
     st.session_state.selected_subclasses = enabled_subclasses
-    
+
     # Also update motif_selector_data for any code that uses it (in taxonomy order)
     st.session_state.motif_selector_data = []
     for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
@@ -637,11 +581,11 @@ def render():
                 'Motif Class': class_name,
                 'Submotif': subclass
             })
-    
+
     # Show compact summary
     num_enabled = len(enabled_subclasses)
-    total_submotifs = len(all_submotifs_list)
-    
+    total_submotifs = len(flat_submotifs)
+
     if enabled_classes:
         st.markdown(f"""
         <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
