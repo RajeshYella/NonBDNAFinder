@@ -1640,8 +1640,6 @@ class HyperscanManager:
             logger.warning(f"Hyperscan scanning failed: {e}")
         
         return matches
-        
-        return matches
 
 # =============================================================================
 # PATTERN VALIDATION & TESTING
