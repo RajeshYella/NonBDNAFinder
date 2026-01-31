@@ -464,16 +464,56 @@ def render():
         else:
             st.session_state.analysis_mode = "Motif Level"
     
-    # Analysis Mode Selection - Radio Buttons (horizontal for compact display)
-    analysis_mode = st.radio(
-        "Analysis Granularity:",
-        ["Motif Level", "Submotif Level"],
-        index=0 if st.session_state.analysis_mode == "Motif Level" else 1,
-        horizontal=True,
-        help="Motif Level: Groups results by major structural classes (e.g., G-Quadruplex). "
-             "Submotif Level: Detailed subclass analysis (e.g., Telomeric G4, Canonical G4, etc.)",
-        key="analysis_mode_radio"
+    # ============================================================
+    # ANALYSIS GRANULARITY - COMPACT COLORFUL PILL TOGGLE
+    # ============================================================
+    # Elegant two-option pill toggle with icons and gradient styling
+    
+    # Constants for pill labels to avoid duplication
+    PILL_MOTIF_LEVEL = "🔬 Motif Level"
+    PILL_SUBMOTIF_LEVEL = "🧬 Submotif Level"
+    
+    current_mode = st.session_state.analysis_mode
+    
+    # Compact inline header with styled pills selector
+    st.markdown("""
+    <style>
+    .granularity-label-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #334155;
+        white-space: nowrap;
+    }
+    .granularity-label-inline .icon {
+        font-size: 1.05rem;
+    }
+    </style>
+    <div class="granularity-label-inline">
+        <span class="icon">🎯</span>
+        <span>Analysis Granularity:</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Use Streamlit pills with icons embedded in labels for visual appeal
+    analysis_mode = st.pills(
+        "granularity",
+        options=[PILL_MOTIF_LEVEL, PILL_SUBMOTIF_LEVEL],
+        default=PILL_MOTIF_LEVEL if current_mode == "Motif Level" else PILL_SUBMOTIF_LEVEL,
+        selection_mode="single",
+        key="analysis_mode_pills",
+        label_visibility="collapsed",
+        help="Motif Level: Groups by major structural classes (e.g., G-Quadruplex). Submotif Level: Detailed subclass analysis (e.g., Telomeric G4)."
     )
+    
+    # Map pill selection back to mode name
+    if analysis_mode:
+        actual_mode = "Motif Level" if analysis_mode == PILL_MOTIF_LEVEL else "Submotif Level"
+        if actual_mode != st.session_state.analysis_mode:
+            st.session_state.analysis_mode = actual_mode
+            st.rerun()
     
     # ============================================================
     # MODERN COMPACT MOTIF & SUBMOTIF SELECTOR
