@@ -4188,6 +4188,24 @@ MOTIF_CLASS_COLORS = {
     'Non-B_DNA_Clusters': '#666666'   # Dark gray
 }
 
+# Default fallback color for unknown motif classes
+DEFAULT_MOTIF_COLOR = '#808080'
+
+def _get_subclass_color(subclass_name: str) -> str:
+    """Get color for a subclass, using parent class color for consistency.
+    
+    Ensures subclass plots use the same color as their parent class,
+    maintaining visual consistency across all visualizations.
+    
+    Args:
+        subclass_name: Name of the subclass
+        
+    Returns:
+        Hex color string from NATURE_MOTIF_COLORS or default gray
+    """
+    parent_class = SUBCLASS_TO_CLASS.get(subclass_name, subclass_name)
+    return MOTIF_CLASS_COLORS.get(parent_class, MOTIF_CLASS_COLORS.get(subclass_name, DEFAULT_MOTIF_COLOR))
+
 # Helper function to format display names
 def _format_display_name(name: str) -> str:
     """Convert internal names to publication-ready display format.
@@ -6814,6 +6832,113 @@ def plot_manhattan_motif_density(motifs: List[Dict[str, Any]],
     return fig
 
 
+def plot_manhattan_subclass_density(motifs: List[Dict[str, Any]], 
+                                    sequence_length: int,
+                                    window_size: int = None,
+                                    score_type: str = 'density',
+                                    title: str = "Subclass Density",
+                                    figsize: Tuple[int, int] = None) -> plt.Figure:
+    """
+    Create Manhattan plot showing motif density by subclass across genomic coordinates.
+    
+    Similar to plot_manhattan_motif_density but groups by Subclass while using
+    parent Class colors for visual consistency.
+    
+    Args:
+        motifs: List of motif dictionaries
+        sequence_length: Total length of analyzed sequence in bp
+        window_size: Window size for density calculation (auto if None)
+        score_type: 'density' for motif count or 'score' for average score
+        title: Plot title
+        figsize: Figure size (width, height)
+        
+    Returns:
+        Matplotlib figure object (publication-ready at 300 DPI)
+    """
+    plt, sns, patches, PdfPages = _ensure_matplotlib()
+    set_scientific_style()
+    
+    if figsize is None:
+        figsize = FIGURE_SIZES['wide']
+    
+    if not motifs or sequence_length == 0:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No motifs to display', ha='center', va='center',
+                transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    # Auto-calculate window size (1% of sequence or minimum 1kb)
+    if window_size is None:
+        window_size = max(1000, sequence_length // 100)
+    
+    num_windows = max(1, sequence_length // window_size)
+    
+    # Get unique subclasses
+    subclasses = sorted(set(m.get('Subclass', m.get('Class', 'Unknown')) for m in motifs
+                           if m.get('Class') not in CIRCOS_EXCLUDED_CLASSES))
+    
+    if not subclasses:
+        subclasses = sorted(set(m.get('Subclass', m.get('Class', 'Unknown')) for m in motifs))
+    
+    # Create figure
+    fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+    
+    # Calculate metric for each window and subclass
+    positions_kb = []
+    values = []
+    colors = []
+    
+    for subclass_name in subclasses:
+        subclass_motifs = [m for m in motifs if m.get('Subclass', m.get('Class')) == subclass_name]
+        # Get parent class color for consistency using helper function
+        color = _get_subclass_color(subclass_name)
+        
+        for i in range(num_windows):
+            window_start = i * window_size
+            window_end = (i + 1) * window_size
+            window_center_kb = (window_start + window_end) / 2 / 1000
+            
+            # Count motifs in this window
+            window_motifs = []
+            for motif in subclass_motifs:
+                motif_start = motif.get('Start', 0) - 1
+                motif_end = motif.get('End', 0)
+                if not (motif_end <= window_start or motif_start >= window_end):
+                    window_motifs.append(motif)
+            
+            if window_motifs:
+                if score_type == 'density':
+                    value = len(window_motifs) / (window_size / 1000)
+                else:
+                    scores = [m.get('Score', 0) for m in window_motifs if isinstance(m.get('Score'), (int, float))]
+                    value = np.mean(scores) if scores else 0
+                
+                positions_kb.append(window_center_kb)
+                values.append(value)
+                colors.append(color)
+    
+    # Plot points with subclass-specific colors (parent class derived)
+    ax.scatter(positions_kb, values, c=colors, s=15, alpha=0.6, edgecolors='black', linewidth=0.2)
+    
+    # Styling
+    ax.set_xlabel('Genomic Position (kb)', fontsize=12, fontweight='bold')
+    y_label = 'Motif Density (motifs/kb)' if score_type == 'density' else 'Average Motif Score'
+    ax.set_ylabel(y_label, fontsize=12, fontweight='bold')
+    
+    display_title = title.replace('_', ' ')
+    ax.set_title(display_title, fontsize=14, fontweight='bold', pad=10)
+    
+    # Add horizontal grid
+    ax.grid(axis='y', alpha=0.3, linestyle='--', linewidth=0.5)
+    
+    # Apply Nature journal style
+    _apply_nature_style(ax)
+    
+    plt.tight_layout()
+    return fig
+
+
 def plot_cumulative_motif_distribution(motifs: List[Dict[str, Any]], 
                                        sequence_length: int,
                                        title: str = "Cumulative Motif Distribution",
@@ -7218,6 +7343,111 @@ def plot_linear_motif_track(motifs: List[Dict[str, Any]],
     # Styling
     ax.set_xlim(region_start, region_end)
     ax.set_ylim(-0.5, len(classes) * track_spacing - 0.5)
+    
+    ax.set_xlabel('Position (bp)', fontsize=12, fontweight='bold')
+    ax.set_yticks([])
+    
+    display_title = title.replace('_', ' ')
+    ax.set_title(display_title, fontsize=14, fontweight='bold', pad=10)
+    
+    # Add position ruler at top
+    ax.xaxis.tick_top()
+    ax.xaxis.set_label_position('top')
+    
+    # Format x-axis
+    ax.ticklabel_format(style='plain', axis='x')
+    
+    # Apply Nature journal style (minimal spines)
+    for spine in ['left', 'right', 'bottom']:
+        ax.spines[spine].set_visible(False)
+    ax.spines['top'].set_visible(True)
+    
+    plt.tight_layout()
+    return fig
+
+
+def plot_linear_subclass_track(motifs: List[Dict[str, Any]], 
+                               sequence_length: int,
+                               region_start: int = 0,
+                               region_end: int = None,
+                               title: str = "Subclass Track",
+                               figsize: Tuple[int, int] = None) -> plt.Figure:
+    """
+    Create horizontal graphical track with colored blocks for motif subclasses.
+    
+    Similar to plot_linear_motif_track but groups by Subclass while using
+    parent Class colors for visual consistency.
+    
+    Args:
+        motifs: List of motif dictionaries
+        sequence_length: Total length of analyzed sequence in bp
+        region_start: Start position of region to display (0-based)
+        region_end: End position of region to display (None = full sequence)
+        title: Plot title
+        figsize: Figure size (width, height)
+        
+    Returns:
+        Matplotlib figure object (publication-ready)
+    """
+    plt, sns, patches, PdfPages = _ensure_matplotlib()
+    set_scientific_style()
+    
+    if figsize is None:
+        figsize = FIGURE_SIZES['wide']
+    
+    if region_end is None:
+        region_end = sequence_length
+    
+    # Filter motifs in region
+    region_motifs = [m for m in motifs 
+                     if m.get('End', 0) > region_start and m.get('Start', 0) < region_end]
+    
+    if not region_motifs:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, f'No motifs in region {region_start}-{region_end}', 
+               ha='center', va='center', transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    # Group by subclass
+    subclass_motifs = defaultdict(list)
+    for motif in region_motifs:
+        subclass_name = motif.get('Subclass', motif.get('Class', 'Unknown'))
+        subclass_motifs[subclass_name].append(motif)
+    
+    # Create figure
+    fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+    
+    # Plot each subclass on a separate track
+    subclasses = sorted(subclass_motifs.keys())
+    track_height = 0.6
+    track_spacing = 1.0
+    
+    for i, subclass_name in enumerate(subclasses):
+        y_pos = i * track_spacing
+        # Get parent class color for consistency using helper function
+        color = _get_subclass_color(subclass_name)
+        
+        for motif in subclass_motifs[subclass_name]:
+            start = max(region_start, motif.get('Start', 0))
+            end = min(region_end, motif.get('End', 0))
+            length = end - start
+            
+            # Draw motif as rectangle
+            rect = patches.Rectangle(
+                (start, y_pos - track_height/2), length, track_height,
+                facecolor=color, edgecolor='black', linewidth=0.5, alpha=0.8
+            )
+            ax.add_patch(rect)
+        
+        # Add subclass label on the left
+        display_name = subclass_name.replace('_', ' ')
+        ax.text(region_start - (region_end - region_start) * 0.02, y_pos, 
+               display_name, ha='right', va='center', fontsize=8, fontweight='bold')
+    
+    # Styling
+    ax.set_xlim(region_start, region_end)
+    ax.set_ylim(-0.5, len(subclasses) * track_spacing - 0.5)
     
     ax.set_xlabel('Position (bp)', fontsize=12, fontweight='bold')
     ax.set_yticks([])

@@ -2,12 +2,11 @@
 Results page for NonBDNAFinder application.
 Displays analysis results with publication-quality visualizations.
 
-Visual Compression Strategy:
-- Inline section bars with emoji + thin dividers (not headings)
-- Single horizontal metrics ribbon at top
-- 2-panel grid layouts for related plots
-- Toggle controls instead of repeated captions
-- Collapsed preview for data tables
+Visual-First Scientific Dashboard:
+- Compact horizontal analysis summary (icons only)
+- Plot order: Track → Subclass Track → Distributions → Density → KDE → Score → Pie
+- NATURE_MOTIF_COLORS used consistently across all visualizations
+- No redundant text, titles, or explanatory prose
 """
 
 import streamlit as st
@@ -30,143 +29,85 @@ from utilities import (
     plot_nested_pie_chart,
     plot_manhattan_motif_density,
     plot_linear_motif_track,
+    plot_manhattan_subclass_density,
+    plot_linear_subclass_track,
     plot_density_comparison,
     plot_cluster_size_distribution,
     plot_motif_cooccurrence_matrix,
     plot_motif_length_kde,
     plot_score_distribution
 )
-from nonbscanner import get_motif_info as get_motif_classification_info
-from visualization_standards import (
-    NATURE_MOTIF_COLORS, 
-    PlotDominance, 
-    FigurePanel, 
-    MetricFilter,
-    LabelPolicy, 
-    UILayout, 
-    TRANSPARENCY_NOTE, 
-    SUPPLEMENTARY_NOTE,
-    should_show_plot, 
-    get_nature_style_params
-)
-
-
-def _render_section_bar(emoji: str, title: str, info_icon: bool = False) -> None:
-    """Render a compact inline section bar with emoji and thin divider."""
-    info_html = '<span style="margin-left: 8px; cursor: help;" title="More information available" aria-label="Information">ℹ️</span>' if info_icon else ''
-    st.markdown(f"""
-    <div class="section-bar">
-        <span class="section-bar__emoji" aria-hidden="true">{emoji}</span>
-        <span class="section-bar__title">{title}</span>
-        {info_html}
-    </div>
-    <div class="section-divider" aria-hidden="true"></div>
-    """, unsafe_allow_html=True)
-
-
-def _render_metrics_ribbon(metrics: dict) -> None:
-    """Render a compact horizontal metrics ribbon."""
-    # Build metrics HTML
-    items = []
-    
-    if 'total_time' in metrics:
-        items.append(f'<span class="ribbon-item">⏱ {metrics["total_time"]:.1f}s</span>')
-    
-    if 'total_bp' in metrics:
-        # Format as Mb or kb depending on size
-        bp = metrics['total_bp']
-        if bp >= 1_000_000:
-            bp_str = f'{bp/1_000_000:.1f} Mb'
-        else:
-            bp_str = f'{bp/1_000:.1f} kb'
-        items.append(f'<span class="ribbon-item">🧬 {bp_str}</span>')
-    
-    if 'speed' in metrics:
-        speed = metrics['speed']
-        if speed >= 1_000_000:
-            speed_str = f'{speed/1_000_000:.1f} Mb/s'
-        elif speed >= 1_000:
-            speed_str = f'{speed/1_000:.0f} kb/s'
-        else:
-            speed_str = f'{speed:.0f} bp/s'
-        items.append(f'<span class="ribbon-item">⚡ {speed_str}</span>')
-    
-    if 'total_motifs' in metrics:
-        items.append(f'<span class="ribbon-item">🔬 {metrics["total_motifs"]:,} motifs</span>')
-    
-    if 'detector_count' in metrics or 'sequences' in metrics:
-        det_count = metrics.get('detector_count', 9)
-        items.append(f'<span class="ribbon-item">🧪 {det_count} detectors</span>')
-    
-    ribbon_html = ' '.join(items)
-    st.markdown(f"""
-    <div class="metrics-ribbon">
-        {ribbon_html}
-    </div>
-    """, unsafe_allow_html=True)
+from visualization_standards import NATURE_MOTIF_COLORS
 
 logger = logging.getLogger(__name__)
 
 
-def render():
-    """Render the Results tab content."""
-    # Apply Results tab theme based on configuration
-    load_css(TAB_THEMES.get('Results', 'genomic_purple'))
-    
-    # Compact header for results page
-    st.markdown("""
-    <div style='text-align: center; margin-bottom: 1rem;'>
-        <h2 style='margin: 0; font-size: 1.8rem; background: linear-gradient(135deg, #a855f7, #8b5cf6);
-                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                   font-weight: 700;'>
-            📊 Analysis Results
-        </h2>
+def _render_section_divider(emoji: str) -> None:
+    """Render a minimal section divider with emoji only."""
+    st.markdown(f"""
+    <div style="display: flex; align-items: center; gap: 8px; padding: 4px 0; margin-top: 8px;">
+        <span style="font-size: 1rem;">{emoji}</span>
+        <div style="flex: 1; height: 1px; background: linear-gradient(90deg, #a855f7 0%, transparent 100%);"></div>
     </div>
     """, unsafe_allow_html=True)
+
+
+def _render_analysis_summary_box(coverage_pct: float, density: float, motif_count: int, seq_length: int) -> None:
+    """Render compact horizontal analysis summary box with icons only."""
+    st.markdown(f"""
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px; 
+                background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+                border-radius: 8px; border: 1px solid #e9d5ff; margin-bottom: 12px;
+                justify-content: space-around; align-items: center;">
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
+            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                         -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{coverage_pct:.2f}%</span>
+            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">📊 Coverage</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
+            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                         -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{density:.2f}</span>
+            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">📈 Motifs/kb</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
+            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                         -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{motif_count:,}</span>
+            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">🔬 Motifs</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
+            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+                         -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{seq_length:,}</span>
+            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">🧬 bp</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render():
+    """Render the Results tab content."""
+    # Apply Results tab theme
+    load_css(TAB_THEMES.get('Results', 'genomic_purple'))
     
-    # Deterministic Results Page: Only render, never compute
-    # If results are missing, show info and stop
+    # No results - show info and stop
     if not st.session_state.results:
         st.info(UI_TEXT['status_no_results'])
         st.info("Run analysis first in the 'Upload & Analyze' tab")
-        st.stop()  # Explicit stop to prevent any further execution
+        st.stop()
     
-    # Compact horizontal metrics ribbon (replacing large performance metrics block)
-    if st.session_state.get('performance_metrics'):
-        metrics = st.session_state.performance_metrics
-        _render_metrics_ribbon(metrics)
-    
-    # Compact Analysis Summary section bar
-    _render_section_bar("📋", "Analysis Summary")
-    
-    # Show selected class/subclass filter information (compact)
-    selected_classes_used = st.session_state.get('selected_classes_used', [])
-    selected_subclasses_used = st.session_state.get('selected_subclasses_used', [])
-    analysis_mode_used = st.session_state.get('analysis_mode_used', 'Motif Level')
-    
-    if selected_classes_used:
-        st.markdown(f"""
-        <div class="filter-badge">
-            <strong>Filter:</strong> {len(selected_classes_used)} classes / {len(selected_subclasses_used)} subclasses ({analysis_mode_used})
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Collapsed data table preview
-    with st.expander(f"View summary table ({len(st.session_state.summary_df)} rows)", expanded=False):
+    # Collapsed data table preview (minimal)
+    with st.expander(f"📋 Data table ({len(st.session_state.summary_df)} rows)", expanded=False):
         st.dataframe(st.session_state.summary_df, use_container_width=True)
     
-    # Sequence selection for detailed analysis using pills for better UX
+    # Sequence selection for multi-sequence files
     seq_idx = 0
     if len(st.session_state.seqs) > 1:
-        # Use pills for sequence selection - a more modern and visual alternative to dropdown
         try:
             selected_seq = st.pills(
-                "Choose Sequence for Details:",
+                "Sequence:",
                 options=list(range(len(st.session_state.seqs))),
                 format_func=lambda i: st.session_state.names[i],
                 selection_mode="single",
-                default=0,
-                help="Select a sequence to view detailed analysis results"
+                default=0
             )
             seq_idx = selected_seq or 0
         except Exception:
@@ -174,231 +115,347 @@ def render():
     
     motifs = st.session_state.results[seq_idx]
     sequence_length = len(st.session_state.seqs[seq_idx])
-    sequence_name = st.session_state.names[seq_idx]
     
     if not motifs:
         st.warning("No motifs detected for this sequence.")
-    else:
-        # Show all motifs including hybrid/cluster motifs
-        # No filtering is applied - all results are displayed
-        filtered_motifs = motifs
-        hybrid_cluster_motifs = [m for m in motifs if m.get('Class') in ['Hybrid', 'Non-B_DNA_Clusters']]
+        return
+    
+    # All motifs shown (no filtering)
+    filtered_motifs = motifs
+    
+    # Create DataFrame for large sets
+    df = pd.DataFrame(filtered_motifs) if filtered_motifs else pd.DataFrame()
+    if len(df) > 1000:
+        df = optimize_dataframe_memory(df)
+    
+    # Calculate stats
+    stats = get_basic_stats(st.session_state.seqs[seq_idx], filtered_motifs)
+    motif_count = len(filtered_motifs)
+    coverage_pct = stats.get("Coverage%", 0)
+    density = stats.get("Density", 0)
+    
+    # Render compact analysis summary box (icons only)
+    _render_analysis_summary_box(coverage_pct, density, motif_count, sequence_length)
+    
+    # Check for clusters/hybrids
+    has_clusters = any(m.get('Class') == 'Non-B_DNA_Clusters' for m in filtered_motifs)
+    has_hybrids = any(m.get('Class') == 'Hybrid' for m in filtered_motifs)
+    
+    # Create visualization tabs
+    viz_tabs = st.tabs(["🧬 All Motifs", "🔀 Dynamic Clusters"])
+    
+    # =================================================================
+    # TAB 1: ALL MOTIFS
+    # Order: Track → Subclass Track → Distributions → Density → KDE → Score → Pie
+    # =================================================================
+    with viz_tabs[0]:
         
-        # Create enhanced motifs DataFrame
-        df = pd.DataFrame(filtered_motifs) if filtered_motifs else pd.DataFrame()
+        # 1️⃣ MOTIF TRACK — Class Level
+        _render_section_divider("📍")
         
-        # Memory optimization: Optimize DataFrame for large result sets
-        if len(df) > 1000:
-            df = optimize_dataframe_memory(df)
-            logger.debug(f"Optimized DataFrame memory for {len(df)} motifs")
+        # Toggle for Manhattan vs Linear (size-aware default)
+        plot_type = st.radio(
+            "View mode",
+            options=["Manhattan", "Linear"],
+            index=0 if sequence_length > 50000 else 1,
+            horizontal=True,
+            label_visibility="collapsed"
+        )
         
-        # Calculate and display enhanced coverage statistics (using filtered motifs)
-        stats = get_basic_stats(st.session_state.seqs[seq_idx], filtered_motifs)
+        try:
+            if plot_type == "Manhattan":
+                fig_track = plot_manhattan_motif_density(
+                    filtered_motifs, sequence_length,
+                    title="Class Track"
+                )
+            else:
+                fig_track = plot_linear_motif_track(
+                    filtered_motifs, sequence_length,
+                    title="Class Track"
+                )
+            st.pyplot(fig_track)
+            plt.close(fig_track)
+        except Exception as e:
+            st.error(f"Track error: {e}")
         
-        motif_count = len(filtered_motifs)
-        hybrid_cluster_count = len(hybrid_cluster_motifs)
-        coverage_pct = stats.get("Motif Coverage %", 0)
-        non_b_density = (motif_count / sequence_length * 1000) if sequence_length > 0 else 0
+        # 2️⃣ SUBCLASS TRACK — NEW (same coordinates, parent class colors)
+        _render_section_divider("🔬")
         
-        # Compact summary card (horizontal metrics strip style)
-        st.markdown(f"""
-        <div class="stats-ribbon">
-            <div class="stats-ribbon__item">
-                <span class="stats-ribbon__value">{stats.get("Coverage%", 0):.2f}%</span>
-                <span class="stats-ribbon__label">Coverage</span>
-            </div>
-            <div class="stats-ribbon__item">
-                <span class="stats-ribbon__value">{stats.get("Density", 0):.2f}</span>
-                <span class="stats-ribbon__label">motifs/kb</span>
-            </div>
-            <div class="stats-ribbon__item">
-                <span class="stats-ribbon__value">{motif_count}</span>
-                <span class="stats-ribbon__label">Motifs</span>
-            </div>
-            <div class="stats-ribbon__item">
-                <span class="stats-ribbon__value">{sequence_length:,}</span>
-                <span class="stats-ribbon__label">bp</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        try:
+            if plot_type == "Manhattan":
+                fig_subtrack = plot_manhattan_subclass_density(
+                    filtered_motifs, sequence_length,
+                    title="Subclass Track"
+                )
+            else:
+                fig_subtrack = plot_linear_subclass_track(
+                    filtered_motifs, sequence_length,
+                    title="Subclass Track"
+                )
+            st.pyplot(fig_subtrack)
+            plt.close(fig_subtrack)
+        except Exception as e:
+            st.error(f"Subclass track error: {e}")
         
-        # Compact hybrid/cluster info badge
-        if hybrid_cluster_count > 0:
-            st.markdown(f'<div class="info-badge">🔗 {hybrid_cluster_count} Hybrid/Cluster motifs → Dynamic Clusters tab</div>', unsafe_allow_html=True)
+        # 3️⃣ DISTRIBUTION PLOTS (Side-by-Side)
+        _render_section_divider("📊")
         
-        # Show cached visualization summary if available (compact)
-        viz_cache_key = f"seq_{seq_idx}"
-        cached_viz = st.session_state.get('cached_visualizations', {}).get(viz_cache_key, {})
-        if cached_viz.get('summary'):
-            viz_summary = cached_viz['summary']
-            st.markdown(f'<div class="success-badge">✅ {viz_summary["unique_classes"]} classes, {viz_summary["unique_subclasses"]} subclasses ready</div>', unsafe_allow_html=True)
+        col_class, col_subclass = st.columns(2)
         
-        # Visualization section bar (replaces heading)
-        _render_section_bar("📈", "Visual Landscape", info_icon=True)
+        with col_class:
+            try:
+                fig_class_dist = plot_motif_distribution(
+                    filtered_motifs,
+                    by='Class',
+                    title="Class"
+                )
+                st.pyplot(fig_class_dist)
+                plt.close(fig_class_dist)
+            except Exception as e:
+                st.error(f"Class dist error: {e}")
         
-        # Single scientific transparency note (compact badge, not info box)
-        st.markdown(f'<div class="transparency-badge">📊 Only non-redundant metrics shown. Full data in exports.</div>', unsafe_allow_html=True)
+        with col_subclass:
+            try:
+                fig_subclass_dist = plot_motif_distribution(
+                    filtered_motifs,
+                    by='Subclass',
+                    title="Subclass"
+                )
+                st.pyplot(fig_subclass_dist)
+                plt.close(fig_subclass_dist)
+            except Exception as e:
+                st.error(f"Subclass dist error: {e}")
         
-        # Create simplified visualization tabs (text-first for accessibility)
-        viz_tabs = st.tabs(["All Motifs", "Dynamic Clusters"])
+        # 4️⃣ MOTIF DENSITY ANALYSIS
+        _render_section_divider("📈")
         
-        # Check if clusters exist
-        has_clusters = any(m.get('Class') == 'Non-B_DNA_Clusters' for m in filtered_motifs)
-        
-        # =================================================================
-        # ALL MOTIFS TAB: Global Non-B DNA Landscape & Structural Constraints
-        # =================================================================
-        with viz_tabs[0]:
-            # Compact section: Motif Composition (2-panel grid)
-            _render_section_bar("🧬", "Motif Composition")
+        try:
+            # Get cached or calculate density
+            viz_cache_key = f"seq_{seq_idx}"
+            cached_viz = st.session_state.get('cached_visualizations', {}).get(viz_cache_key, {})
+            cached_densities = cached_viz.get('densities', {})
             
-            # 2-panel grid: Donut + Class Bar side by side
-            col_donut, col_bars = st.columns([1, 1])
+            if cached_densities:
+                genomic_density = cached_densities['class_genomic']
+                positional_density_kbp = cached_densities['class_positional']
+            else:
+                genomic_density = calculate_genomic_density(filtered_motifs, sequence_length, by_class=True)
+                positional_density_kbp = calculate_positional_density(filtered_motifs, sequence_length, unit='kbp', by_class=True)
             
-            with col_donut:
-                try:
-                    fig_composition = plot_nested_pie_chart(
-                        filtered_motifs, 
-                        title="Class → Subclass"
-                    )
-                    st.pyplot(fig_composition)
-                    plt.close(fig_composition)
-                except Exception as e:
-                    st.error(f"Error: {e}")
-            
-            with col_bars:
-                # Stacked bar plots in right column
-                try:
-                    fig_class_bar = plot_motif_distribution(
-                        filtered_motifs,
-                        by='Class',
-                        title="Class Distribution"
-                    )
-                    st.pyplot(fig_class_bar)
-                    plt.close(fig_class_bar)
-                except Exception as e:
-                    st.error(f"Error: {e}")
-                
-                try:
-                    fig_subclass_bar = plot_motif_distribution(
-                        filtered_motifs,
-                        by='Subclass',
-                        title="Subclass Distribution"
-                    )
-                    st.pyplot(fig_subclass_bar)
-                    plt.close(fig_subclass_bar)
-                except Exception as e:
-                    st.error(f"Error: {e}")
-            
-            # Genome Localization: ONE plot with toggle
-            _render_section_bar("📍", "Genome Localization")
-            
-            # Toggle for Manhattan vs Linear (user controls representation)
-            plot_type = st.radio(
-                "Genome visualization view mode",
-                options=["Manhattan", "Linear"],
-                index=0 if sequence_length > 50000 else 1,
-                horizontal=True,
-                help="Manhattan: density hotspots view for large genomes. Linear: track view for small sequences."
+            fig_density = plot_density_comparison(
+                genomic_density, positional_density_kbp,
+                title="Density Analysis"
             )
+            st.pyplot(fig_density)
+            plt.close(fig_density)
+        except Exception as e:
+            st.error(f"Density error: {e}")
+        
+        # 5️⃣ MOTIF LENGTH KDE
+        _render_section_divider("📏")
+        
+        try:
+            fig_kde = plot_motif_length_kde(
+                filtered_motifs,
+                by_class=True,
+                title="Length KDE"
+            )
+            st.pyplot(fig_kde)
+            plt.close(fig_kde)
+        except Exception as e:
+            st.error(f"KDE error: {e}")
+        
+        # 6️⃣ MOTIF SCORE DISTRIBUTION
+        _render_section_divider("⭐")
+        
+        try:
+            fig_score = plot_score_distribution(
+                filtered_motifs, 
+                by_class=True,
+                title="Score (1-3)"
+            )
+            st.pyplot(fig_score)
+            plt.close(fig_score)
+        except Exception as e:
+            st.error(f"Score error: {e}")
+        
+        # 7️⃣ PIE / DONUT CHARTS (End)
+        _render_section_divider("🥧")
+        
+        try:
+            fig_pie = plot_nested_pie_chart(
+                filtered_motifs, 
+                title="Class → Subclass"
+            )
+            st.pyplot(fig_pie)
+            plt.close(fig_pie)
+        except Exception as e:
+            st.error(f"Pie chart error: {e}")
+    
+    # =================================================================
+    # TAB 2: DYNAMIC CLUSTERS
+    # Order: Cluster Track → Co-occurrence Matrix → Overlap Analysis
+    # =================================================================
+    with viz_tabs[1]:
+        
+        # 1️⃣ HYBRID & CLUSTER TRACK
+        if has_clusters or has_hybrids:
+            _render_section_divider("🔗")
+            
+            # Filter to just hybrid/cluster motifs for the track
+            cluster_hybrid_motifs = [m for m in filtered_motifs 
+                                    if m.get('Class') in ['Hybrid', 'Non-B_DNA_Clusters']]
             
             try:
-                if plot_type == "Manhattan":
-                    fig_position = plot_manhattan_motif_density(
-                        filtered_motifs, sequence_length,
-                        title=f"Density Hotspots"
+                if sequence_length > 50000:
+                    fig_cluster_track = plot_manhattan_motif_density(
+                        cluster_hybrid_motifs, sequence_length,
+                        title="Hybrid & Cluster Track"
                     )
                 else:
-                    fig_position = plot_linear_motif_track(
-                        filtered_motifs, sequence_length,
-                        title=f"Motif Track"
+                    fig_cluster_track = plot_linear_motif_track(
+                        cluster_hybrid_motifs, sequence_length,
+                        title="Hybrid & Cluster Track"
                     )
-                st.pyplot(fig_position)
-                plt.close(fig_position)
+                st.pyplot(fig_cluster_track)
+                plt.close(fig_cluster_track)
             except Exception as e:
-                st.error(f"Error: {e}")
+                st.error(f"Cluster track error: {e}")
             
-            # Structural Constraints: ONE row with 3 plots (grid layout)
-            _render_section_bar("📐", "Structural Constraints")
-            
-            # 3-column grid for peer diagnostics
-            col_length, col_score, col_density = st.columns(3)
-            
-            with col_length:
-                try:
-                    fig_length = plot_motif_length_kde(
-                        filtered_motifs,
-                        by_class=True,
-                        title="Length KDE"
-                    )
-                    st.pyplot(fig_length)
-                    plt.close(fig_length)
-                except Exception as e:
-                    st.error(f"Error: {e}")
-            
-            with col_score:
-                try:
-                    fig_score = plot_score_distribution(
-                        filtered_motifs, by_class=True,
-                        title="Score (1-3)"
-                    )
-                    st.pyplot(fig_score)
-                    plt.close(fig_score)
-                except Exception as e:
-                    st.error(f"Error: {e}")
-            
-            with col_density:
-                try:
-                    # Calculate or retrieve density metrics
-                    viz_cache_key = f"seq_{seq_idx}"
-                    cached_viz = st.session_state.get('cached_visualizations', {}).get(viz_cache_key, {})
-                    cached_densities = cached_viz.get('densities', {})
-                    
-                    if cached_densities:
-                        genomic_density = cached_densities['class_genomic']
-                        positional_density_kbp = cached_densities['class_positional']
-                    else:
-                        genomic_density = calculate_genomic_density(filtered_motifs, sequence_length, by_class=True)
-                        positional_density_kbp = calculate_positional_density(filtered_motifs, sequence_length, unit='kbp', by_class=True)
-                    
-                    fig_density = plot_density_comparison(
-                        genomic_density, positional_density_kbp,
-                        title="Density"
-                    )
-                    st.pyplot(fig_density)
-                    plt.close(fig_density)
-                except Exception as e:
-                    st.error(f"Error: {e}")
-        
-        # =================================================================
-        # DYNAMIC CLUSTERS TAB: Compact layout, no intro text
-        # =================================================================
-        with viz_tabs[1]:
-            # No intro paragraph - just plots
-            
-            # Cluster Size Distribution (conditional)
+            # Cluster Size Distribution
             if has_clusters:
-                _render_section_bar("📊", "Cluster Size Distribution")
+                _render_section_divider("📊")
                 try:
-                    fig_cluster = plot_cluster_size_distribution(
+                    fig_cluster_size = plot_cluster_size_distribution(
                         filtered_motifs,
                         title="Cluster Statistics"
                     )
-                    st.pyplot(fig_cluster)
-                    plt.close(fig_cluster)
+                    st.pyplot(fig_cluster_size)
+                    plt.close(fig_cluster_size)
                 except Exception as e:
-                    st.error(f"Error: {e}")
+                    st.error(f"Cluster size error: {e}")
+        else:
+            st.markdown("""
+            <div style="padding: 12px; background: #f0f9ff; border-radius: 8px; 
+                        color: #0369a1; font-size: 0.9rem; text-align: center;">
+                ℹ️ No clusters or hybrids detected in this sequence
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # 2️⃣ CO-OCCURRENCE MATRIX
+        _render_section_divider("🔗")
+        
+        try:
+            fig_cooccur = plot_motif_cooccurrence_matrix(
+                filtered_motifs,
+                title="Co-occurrence"
+            )
+            st.pyplot(fig_cooccur)
+            plt.close(fig_cooccur)
+        except Exception as e:
+            st.error(f"Co-occurrence error: {e}")
+        
+        # 3️⃣ OVERLAP ANALYSIS (Class × Class, Subclass × Subclass)
+        _render_section_divider("🔀")
+        
+        # Calculate overlap stats
+        class_overlaps = _calculate_overlaps(filtered_motifs, by='Class')
+        subclass_overlaps = _calculate_overlaps(filtered_motifs, by='Subclass')
+        
+        col_class_overlap, col_subclass_overlap = st.columns(2)
+        
+        with col_class_overlap:
+            if class_overlaps:
+                _render_overlap_matrix(class_overlaps, "Class Overlaps")
             else:
-                st.markdown('<div class="info-badge">ℹ️ No clusters detected</div>', unsafe_allow_html=True)
+                st.markdown('<div style="color: #64748b; font-size: 0.85rem;">No class overlaps</div>', 
+                           unsafe_allow_html=True)
+        
+        with col_subclass_overlap:
+            if subclass_overlaps:
+                _render_overlap_matrix(subclass_overlaps, "Subclass Overlaps")
+            else:
+                st.markdown('<div style="color: #64748b; font-size: 0.85rem;">No subclass overlaps</div>', 
+                           unsafe_allow_html=True)
+
+
+# Maximum number of overlap pairs to display in the overlap matrix
+MAX_OVERLAP_DISPLAY = 10
+
+
+def _calculate_overlaps(motifs: list, by: str = 'Class') -> dict:
+    """Calculate overlapping motifs by Class or Subclass.
+    
+    Identifies pairs of motifs that have overlapping genomic coordinates
+    and belong to different classes/subclasses. This helps visualize
+    co-localization patterns between different motif types.
+    
+    Args:
+        motifs: List of motif dictionaries, each containing at minimum:
+            - 'Start': Start position (1-based)
+            - 'End': End position (inclusive)
+            - 'Class' or 'Subclass': Category for grouping
+        by: Field to group motifs by ('Class' or 'Subclass')
+        
+    Returns:
+        Dictionary mapping (class1, class2) tuples to overlap counts.
+        Pairs are sorted alphabetically to ensure consistent keys.
+        Only includes overlaps between DIFFERENT classes/subclasses.
+        
+    Example:
+        >>> overlaps = _calculate_overlaps(motifs, by='Class')
+        >>> overlaps
+        {('G-Quadruplex', 'Z-DNA'): 5, ('Cruciform', 'R-Loop'): 2}
+    """
+    overlaps = {}
+    
+    # Sort motifs by start position
+    sorted_motifs = sorted(motifs, key=lambda m: m.get('Start', 0))
+    
+    for i, m1 in enumerate(sorted_motifs):
+        for m2 in sorted_motifs[i+1:]:
+            # Check overlap
+            if m2.get('Start', 0) >= m1.get('End', 0):
+                break  # No more overlaps possible
             
-            # Co-occurrence Matrix
-            _render_section_bar("🔗", "Co-occurrence Matrix")
-            try:
-                fig_cooccur = plot_motif_cooccurrence_matrix(
-                    filtered_motifs,
-                    title="Class Co-occurrence"
-                )
-                st.pyplot(fig_cooccur)
-                plt.close(fig_cooccur)
-            except Exception as e:
-                st.error(f"Error: {e}")
+            key1 = m1.get(by, 'Unknown')
+            key2 = m2.get(by, 'Unknown')
+            
+            if key1 != key2:  # Only count different classes/subclasses
+                pair = tuple(sorted([key1, key2]))
+                overlaps[pair] = overlaps.get(pair, 0) + 1
+    
+    return overlaps
+
+
+def _render_overlap_matrix(overlaps: dict, title: str) -> None:
+    """Render overlap data as a compact matrix/table.
+    
+    Displays the top overlap pairs sorted by count in descending order.
+    Limited to MAX_OVERLAP_DISPLAY entries for UI compactness.
+    
+    Args:
+        overlaps: Dictionary from _calculate_overlaps(), mapping 
+            (class1, class2) tuples to overlap counts.
+        title: Title to display above the overlap list.
+        
+    Renders:
+        Streamlit HTML with title and list of overlap pairs formatted as:
+        "Class1 ↔ Class2: <count>"
+    """
+    if not overlaps:
+        return
+    
+    # Sort by count descending, limited to MAX_OVERLAP_DISPLAY
+    sorted_overlaps = sorted(overlaps.items(), key=lambda x: x[1], reverse=True)[:MAX_OVERLAP_DISPLAY]
+    
+    html = f"""
+    <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: #334155;">{title}</div>
+    <div style="font-size: 0.75rem; color: #64748b;">
+    """
+    
+    for (k1, k2), count in sorted_overlaps:
+        html += f'<div style="padding: 2px 0;">{k1.replace("_", " ")} ↔ {k2.replace("_", " ")}: <strong>{count}</strong></div>'
+    
+    html += "</div>"
+    st.markdown(html, unsafe_allow_html=True)
