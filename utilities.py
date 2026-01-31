@@ -3007,6 +3007,13 @@ def export_to_excel(motifs: List[Dict[str, Any]], filename: str = "nonbscanner_r
     if not motifs:
         return "No motifs to export"
     
+    # Validate and normalize motifs before export
+    from export.export_validator import validate_export_data
+    try:
+        motifs = validate_export_data(motifs, auto_normalize=True, strict=False)
+    except Exception as e:
+        logger.warning(f"Export validation warning: {e}")
+    
     # Core columns for all sheets (Task 1 & 2 requirements)
     core_columns = CORE_OUTPUT_COLUMNS
     
