@@ -39,6 +39,9 @@ from visualization_standards import NATURE_MOTIF_COLORS
 
 logger = logging.getLogger(__name__)
 
+# Cluster class names excluded from certain visualizations
+CLUSTER_CLASSES = ['Hybrid', 'Non-B_DNA_Clusters']
+
 
 def _render_section_divider(emoji: str) -> None:
     """Render a minimal section divider with emoji only."""
@@ -165,9 +168,9 @@ def render():
         _render_section_divider("🔬")
         
         try:
-            # Filter out clusters (Non-B_DNA_Clusters and Hybrid) from subclass track
+            # Filter out clusters from subclass track
             subclass_motifs = [m for m in filtered_motifs 
-                               if m.get('Class') not in ['Hybrid', 'Non-B_DNA_Clusters']]
+                               if m.get('Class') not in CLUSTER_CLASSES]
             
             if subclass_motifs:
                 fig_subtrack = plot_linear_subclass_track(
@@ -288,7 +291,7 @@ def render():
             
             # Filter to just hybrid/cluster motifs for the track
             cluster_hybrid_motifs = [m for m in filtered_motifs 
-                                    if m.get('Class') in ['Hybrid', 'Non-B_DNA_Clusters']]
+                                    if m.get('Class') in CLUSTER_CLASSES]
             
             try:
                 fig_cluster_track = plot_linear_motif_track(

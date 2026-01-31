@@ -49,3 +49,6 @@ tmp/
 
 # Test outputs
 test_output/
+
+# Results folder (generated during analysis)
+results/
