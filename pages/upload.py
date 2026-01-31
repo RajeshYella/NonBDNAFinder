@@ -23,7 +23,7 @@ from config.motif_taxonomy import (
     build_motif_selector_data,
     get_enabled_from_selector_data
 )
-from config.colors import CLASS_COLORS
+from config.colors import CLASS_COLORS, CLASS_COLOR_NAMES
 
 # Import UI components
 from ui.css import load_css, get_page_colors
@@ -198,178 +198,136 @@ def render():
     </div>
     """, unsafe_allow_html=True)
 
-    # ----- SINGLE COLUMN LAYOUT: Compact and clean -----
-    # Section 1: Sequence Input
-    st.markdown("""
-    <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
-                padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
-                border-left: 4px solid #10b981;'>
-        <h4 style='margin: 0; color: #065f46; font-size: 1rem; font-weight: 600;'>
-            Sequence Input
-        </h4>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # ----- Input Method -----
-    input_method = st.radio(UI_TEXT['upload_input_method_prompt'],
+    # ============================================================
+    # TWO-COLUMN LAYOUT: INPUT (LEFT) | ANALYSIS (RIGHT)
+    # ============================================================
+
+    left_col, right_col = st.columns([1.1, 1.4])
+
+    # ============================================================
+    # LEFT COLUMN — SEQUENCE INPUT
+    # ============================================================
+    with left_col:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
+                    padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
+                    border-left: 4px solid #10b981;'>
+            <h4 style='margin: 0; color: #065f46; font-size: 1rem; font-weight: 600;'>
+                Sequence Input
+            </h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # ----- Input Method -----
+        input_method = st.radio(UI_TEXT['upload_input_method_prompt'],
                             [UI_TEXT['upload_method_file'], UI_TEXT['upload_method_paste'], 
                              UI_TEXT['upload_method_example'], UI_TEXT['upload_method_ncbi']],
                             horizontal=True,
                             label_visibility="collapsed",
                             key="upload_method")
 
-    seqs, names = [], []
+        seqs, names = [], []
 
-    if input_method == UI_TEXT['upload_method_file']:
-        fasta_file = st.file_uploader(UI_TEXT['upload_file_prompt'], 
-                                     type=["fa", "fasta", "txt", "fna"],
-                                     label_visibility="visible",
-                                     help=UI_TEXT['upload_file_help'])
-        if fasta_file:
-            # Compact file card after upload
-            file_size_mb = fasta_file.size / (1024 * 1024)
+        if input_method == UI_TEXT['upload_method_file']:
+            fasta_file = st.file_uploader(UI_TEXT['upload_file_prompt'], 
+                                         type=["fa", "fasta", "txt", "fna"],
+                                         label_visibility="visible",
+                                         help=UI_TEXT['upload_file_help'])
+            if fasta_file:
+                # Compact file card after upload
+                file_size_mb = fasta_file.size / (1024 * 1024)
             
-            # Memory-efficient processing with progress indicator
-            with st.spinner(f"{UI_TEXT['upload_processing']} {fasta_file.name}..."):
-                # Get preview first (lightweight operation)
-                preview_info = get_file_preview(fasta_file, max_sequences=3)
+                # Memory-efficient processing with progress indicator
+                with st.spinner(f"{UI_TEXT['upload_processing']} {fasta_file.name}..."):
+                    # Get preview first (lightweight operation)
+                    preview_info = get_file_preview(fasta_file, max_sequences=3)
                 
-                # Compact File Card
-                st.markdown(f"""
-                <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
-                            border-radius: 12px; padding: 12px; margin: 8px 0; color: white; 
-                            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
-                    <div style='display: flex; justify-content: space-between; align-items: center;'>
-                        <div>
-                            <div style='font-weight: 600; font-size: 0.95rem;'>File: {fasta_file.name}</div>
-                            <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
-                                {preview_info['num_sequences']} sequences | {preview_info['total_bp']:,} bp | {file_size_mb:.2f} MB
+                    # Compact File Card
+                    st.markdown(f"""
+                    <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
+                                border-radius: 12px; padding: 12px; margin: 8px 0; color: white; 
+                                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <div>
+                                <div style='font-weight: 600; font-size: 0.95rem;'>File: {fasta_file.name}</div>
+                                <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
+                                    {preview_info['num_sequences']} sequences | {preview_info['total_bp']:,} bp | {file_size_mb:.2f} MB
+                                </div>
+                            </div>
+                            <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
+                                {UI_TEXT['label_valid']}
                             </div>
                         </div>
-                        <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
-                            {UI_TEXT['label_valid']}
-                        </div>
                     </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
                 
-                # Show preview of first few sequences inline (compact)
-                st.markdown("**Sequence Preview:**")
-                for idx, prev in enumerate(preview_info['previews'], 1):
-                    # Use pre-calculated stats from preview (calculated from full sequence)
-                    card_html = render_sequence_stats_card(
-                        idx=idx,
-                        name=prev['name'],
-                        length=prev['length'],
-                        gc_pct=prev['gc_percent'],
-                        at_pct=prev['at_percent']
-                    )
-                    st.markdown(card_html, unsafe_allow_html=True)
+                    # Show preview of first few sequences inline (compact)
+                    st.markdown("**Sequence Preview:**")
+                    for idx, prev in enumerate(preview_info['previews'], 1):
+                        # Use pre-calculated stats from preview (calculated from full sequence)
+                        card_html = render_sequence_stats_card(
+                            idx=idx,
+                            name=prev['name'],
+                            length=prev['length'],
+                            gc_pct=prev['gc_percent'],
+                            at_pct=prev['at_percent']
+                        )
+                        st.markdown(card_html, unsafe_allow_html=True)
                 
-                if preview_info['num_sequences'] > 3:
-                    st.info(f"Showing 3 of {preview_info['num_sequences']} sequences. All sequences will be analyzed.")
+                    if preview_info['num_sequences'] > 3:
+                        st.info(f"Showing 3 of {preview_info['num_sequences']} sequences. All sequences will be analyzed.")
                 
-                # Now parse all sequences using chunked parsing for memory efficiency
-                seqs, names = [], []
-                has_large_sequences = False
+                    # Now parse all sequences using chunked parsing for memory efficiency
+                    seqs, names = [], []
+                    has_large_sequences = False
                 
-                if preview_info['num_sequences'] > 10:
-                    # Show progress bar for files with many sequences
-                    progress_bar = st.progress(0)
-                    status_text = st.empty()
+                    if preview_info['num_sequences'] > 10:
+                        # Show progress bar for files with many sequences
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
                     
-                    for idx, (name, seq) in enumerate(parse_fasta_chunked(fasta_file)):
-                        names.append(name)
-                        seqs.append(seq)
+                        for idx, (name, seq) in enumerate(parse_fasta_chunked(fasta_file)):
+                            names.append(name)
+                            seqs.append(seq)
                         
-                        # Track if we have very large sequences
-                        if len(seq) > 10_000_000:
-                            has_large_sequences = True
+                            # Track if we have very large sequences
+                            if len(seq) > 10_000_000:
+                                has_large_sequences = True
                         
-                        # Update progress
-                        progress = (idx + 1) / preview_info['num_sequences']
-                        progress_bar.progress(progress)
-                        display_name = name[:50] + ('...' if len(name) > 50 else '')
-                        status_text.text(f"Loading {idx + 1}/{preview_info['num_sequences']}: {display_name}")
+                            # Update progress
+                            progress = (idx + 1) / preview_info['num_sequences']
+                            progress_bar.progress(progress)
+                            display_name = name[:50] + ('...' if len(name) > 50 else '')
+                            status_text.text(f"Loading {idx + 1}/{preview_info['num_sequences']}: {display_name}")
                     
-                    progress_bar.empty()
-                    status_text.empty()
-                else:
-                    # Fast path for small files
-                    for name, seq in parse_fasta_chunked(fasta_file):
-                        names.append(name)
-                        seqs.append(seq)
+                        progress_bar.empty()
+                        status_text.empty()
+                    else:
+                        # Fast path for small files
+                        for name, seq in parse_fasta_chunked(fasta_file):
+                            names.append(name)
+                            seqs.append(seq)
                         
-                        # Track if we have very large sequences
-                        if len(seq) > 10_000_000:
-                            has_large_sequences = True
+                            # Track if we have very large sequences
+                            if len(seq) > 10_000_000:
+                                has_large_sequences = True
                 
-                # Force garbage collection after loading all sequences if we had large ones
-                if has_large_sequences:
-                    gc.collect()
+                    # Force garbage collection after loading all sequences if we had large ones
+                    if has_large_sequences:
+                        gc.collect()
                 
-                if not seqs:
-                    st.warning(UI_TEXT['upload_no_sequences'])
+                    if not seqs:
+                        st.warning(UI_TEXT['upload_no_sequences'])
 
-    elif input_method == UI_TEXT['upload_method_paste']:
-        seq_input = st.text_area(UI_TEXT['upload_paste_prompt'], 
-                                height=150, 
-                                placeholder=UI_TEXT['upload_paste_placeholder'],
-                                help=UI_TEXT['upload_paste_help'])
-        if seq_input:
-            seqs, names = [], []
-            cur_seq, cur_name = "", ""
-            for line in seq_input.splitlines():
-                if line.startswith(">"):
-                    if cur_seq:
-                        seqs.append(cur_seq)
-                        names.append(cur_name if cur_name else f"Seq{len(seqs)}")
-                    cur_name = line.strip().lstrip(">")
-                    cur_seq = ""
-                else:
-                    cur_seq += line.strip()
-            if cur_seq:
-                seqs.append(cur_seq)
-                names.append(cur_name if cur_name else f"Seq{len(seqs)}")
-            if seqs:
-                # Compact validation card
-                total_bp = sum(len(s) for s in seqs)
-                st.markdown(f"""
-                <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
-                            border-radius: 12px; padding: 12px; margin: 8px 0; color: white;
-                            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
-                    <div style='display: flex; justify-content: space-between; align-items: center;'>
-                        <div>
-                            <div style='font-weight: 600; font-size: 0.95rem;'>Pasted Sequences</div>
-                            <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
-                                {len(seqs)} sequences | {total_bp:,} bp
-                            </div>
-                        </div>
-                        <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
-                            Valid
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.warning(UI_TEXT['analysis_no_sequences_warning'])
-
-    elif input_method == "Example Data":
-        ex_type = st.radio("Example Type:", 
-                         ["Single Example", "Multi-FASTA Example"], 
-                         horizontal=True,
-                         help="Load example sequences for testing")
-        if ex_type == "Single Example":
-            if st.button("Load Single Example", use_container_width=True):
-                parsed_fasta = parse_fasta(EXAMPLE_FASTA)
-                seqs = list(parsed_fasta.values())
-                names = list(parsed_fasta.keys())
-                st.success(UI_TEXT['upload_example_single_success'])
-        else:
-            if st.button("Load Multi-FASTA Example", use_container_width=True):
+        elif input_method == UI_TEXT['upload_method_paste']:
+            seq_input = st.text_area(UI_TEXT['upload_paste_prompt'], 
+                                    height=150, 
+                                    placeholder=UI_TEXT['upload_paste_placeholder'],
+                                    help=UI_TEXT['upload_paste_help'])
+            if seq_input:
                 seqs, names = [], []
                 cur_seq, cur_name = "", ""
-                for line in EXAMPLE_MULTI_FASTA.splitlines():
+                for line in seq_input.splitlines():
                     if line.startswith(">"):
                         if cur_seq:
                             seqs.append(cur_seq)
@@ -381,250 +339,304 @@ def render():
                 if cur_seq:
                     seqs.append(cur_seq)
                     names.append(cur_name if cur_name else f"Seq{len(seqs)}")
-                st.success(UI_TEXT['upload_example_multi_success'].format(count=len(seqs)))
+                if seqs:
+                    # Compact validation card
+                    total_bp = sum(len(s) for s in seqs)
+                    st.markdown(f"""
+                    <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
+                                border-radius: 12px; padding: 12px; margin: 8px 0; color: white;
+                                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <div>
+                                <div style='font-weight: 600; font-size: 0.95rem;'>Pasted Sequences</div>
+                                <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
+                                    {len(seqs)} sequences | {total_bp:,} bp
+                                </div>
+                            </div>
+                            <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
+                                Valid
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.warning(UI_TEXT['analysis_no_sequences_warning'])
 
-    elif input_method == "NCBI Fetch":
-        db = st.radio("NCBI Database", ["nucleotide", "gene"], horizontal=True,
-                      help="Only nucleotide and gene databases are applicable for DNA motif analysis")
-        query = st.text_input("Enter query (accession, gene, etc.):", 
-                            help="e.g., NR_003287.2 or gene name")
-        retmax = st.number_input("Max Records", min_value=1, max_value=20, value=3)
-        if st.button("Fetch from NCBI", use_container_width=True):
-            if query:
-                with st.spinner("Contacting NCBI..."):
-                    try:
-                        handle = Entrez.efetch(db=db, id=query, rettype="fasta", retmode="text")
-                        records = list(SeqIO.parse(handle, "fasta"))
-                        handle.close()
-                        seqs = [str(rec.seq).upper().replace("U", "T") for rec in records]
-                        names = [rec.id for rec in records]
-                        if seqs:
-                            st.success(UI_TEXT['upload_ncbi_success'].format(count=len(seqs)))
-                    except Exception as e:
-                        st.error(UI_TEXT['upload_ncbi_error'].format(error=e))
+        elif input_method == "Example Data":
+            ex_type = st.radio("Example Type:", 
+                             ["Single Example", "Multi-FASTA Example"], 
+                             horizontal=True,
+                             help="Load example sequences for testing")
+            if ex_type == "Single Example":
+                if st.button("Load Single Example", use_container_width=True):
+                    parsed_fasta = parse_fasta(EXAMPLE_FASTA)
+                    seqs = list(parsed_fasta.values())
+                    names = list(parsed_fasta.keys())
+                    st.success(UI_TEXT['upload_example_single_success'])
             else:
-                st.warning(UI_TEXT['upload_ncbi_empty_warning'])
+                if st.button("Load Multi-FASTA Example", use_container_width=True):
+                    seqs, names = [], []
+                    cur_seq, cur_name = "", ""
+                    for line in EXAMPLE_MULTI_FASTA.splitlines():
+                        if line.startswith(">"):
+                            if cur_seq:
+                                seqs.append(cur_seq)
+                                names.append(cur_name if cur_name else f"Seq{len(seqs)}")
+                            cur_name = line.strip().lstrip(">")
+                            cur_seq = ""
+                        else:
+                            cur_seq += line.strip()
+                    if cur_seq:
+                        seqs.append(cur_seq)
+                        names.append(cur_name if cur_name else f"Seq{len(seqs)}")
+                    st.success(UI_TEXT['upload_example_multi_success'].format(count=len(seqs)))
 
-    # Persist sequences to session state if any found from input
-    if seqs:
-        st.session_state.seqs = seqs
-        st.session_state.names = names
-        st.session_state.results = []
+        elif input_method == "NCBI Fetch":
+            db = st.radio("NCBI Database", ["nucleotide", "gene"], horizontal=True,
+                          help="Only nucleotide and gene databases are applicable for DNA motif analysis")
+            query = st.text_input("Enter query (accession, gene, etc.):", 
+                                help="e.g., NR_003287.2 or gene name")
+            retmax = st.number_input("Max Records", min_value=1, max_value=20, value=3)
+            if st.button("Fetch from NCBI", use_container_width=True):
+                if query:
+                    with st.spinner("Contacting NCBI..."):
+                        try:
+                            handle = Entrez.efetch(db=db, id=query, rettype="fasta", retmode="text")
+                            records = list(SeqIO.parse(handle, "fasta"))
+                            handle.close()
+                            seqs = [str(rec.seq).upper().replace("U", "T") for rec in records]
+                            names = [rec.id for rec in records]
+                            if seqs:
+                                st.success(UI_TEXT['upload_ncbi_success'].format(count=len(seqs)))
+                        except Exception as e:
+                            st.error(UI_TEXT['upload_ncbi_error'].format(error=e))
+                else:
+                    st.warning(UI_TEXT['upload_ncbi_empty_warning'])
 
-    # Compact sequence validation indicator - inline display
-    if st.session_state.get('seqs'):
-        st.markdown("**✓ Sequences Loaded:**")
+        # Persist sequences to session state if any found from input
+        if seqs:
+            st.session_state.seqs = seqs
+            st.session_state.names = names
+            st.session_state.results = []
+
+        # Compact sequence validation indicator - inline display
+        if st.session_state.get('seqs'):
+            st.markdown("**✓ Sequences Loaded:**")
         
-        # Cache sequence stats with validation key to handle sequence changes
-        cache_key = f"stats_cache_{len(st.session_state.seqs)}"
-        if cache_key not in st.session_state:
-            # Calculate stats for all sequences
-            stats_list = []
-            for seq in st.session_state.seqs:
-                stats = get_basic_stats(seq)
-                stats_list.append(stats)
-            st.session_state[cache_key] = stats_list
+            # Cache sequence stats with validation key to handle sequence changes
+            cache_key = f"stats_cache_{len(st.session_state.seqs)}"
+            if cache_key not in st.session_state:
+                # Calculate stats for all sequences
+                stats_list = []
+                for seq in st.session_state.seqs:
+                    stats = get_basic_stats(seq)
+                    stats_list.append(stats)
+                st.session_state[cache_key] = stats_list
         
-        # Use cached stats - show compact summary
-        cached_stats = st.session_state[cache_key]
-        for i, stats in enumerate(cached_stats[:3]):
-            # Use helper function with green gradient for validation success
-            card_html = render_sequence_stats_card(
-                idx=i+1,
-                name=st.session_state.names[i],
-                length=len(st.session_state.seqs[i]),
-                gc_pct=stats['GC%'],
-                at_pct=stats['AT%'],
-                gradient_colors="135deg, #11998e 0%, #38ef7d 100%"
-            )
-            st.markdown(card_html, unsafe_allow_html=True)
-        
-        if len(st.session_state.seqs) > 3:
-            st.info(f"Showing 3 of {len(st.session_state.seqs)} loaded sequences. All are validated and ready for analysis.")
-    
-    # Section 2: Analysis Configuration
-    st.markdown("""
-    <div style='background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); 
-                padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem; margin-top: 1rem;
-                border-left: 4px solid #3b82f6;'>
-        <h4 style='margin: 0; color: #1e3a8a; font-size: 1rem; font-weight: 600;'>
-            Analysis Configuration
-        </h4>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # ============================================================
-    # FIXED ANALYSIS GRANULARITY - Always Submotif Level (no UI)
-    # ============================================================
-    # Detection is always submotif-level to preserve biological accuracy
-    # and prevent biologically invalid assumptions.
-    st.session_state.analysis_mode = "Submotif Level"
-    st.session_state.analysis_mode_used = "Submotif Level"
-    
-    # ============================================================
-    # FLAT SUBMOTIF SELECTOR (COLOR-ENCODED, 4 × 6 GRID)
-    # ============================================================
-    # Flat subclass-first selector: users reason in submotifs, not abstract classes.
-    # Color already encodes class identity, so headers are redundant.
-    # Flat layout improves: scan speed, cognitive load, visual compactness.
-    # ============================================================
-
-    st.markdown("""
-    <div style="font-size: 0.95rem; font-weight: 600; color: #374151; margin-bottom: 8px;">
-    🧬 Submotif Selector
-    <span style="font-weight: 400; color: #6b7280; font-size: 0.8rem;">
-    — All enabled by default. Uncheck to exclude.
-    </span>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ------------------------------------------------------------------
-    # Use CLASS_COLORS from config.colors for color encoding
-    # (single source of truth for motif class colors)
-    # ------------------------------------------------------------------
-
-    def _sanitize_key(name: str) -> str:
-        return name.replace(' ', '_').replace('-', '_').replace('/', '_')
-
-    # ------------------------------------------------------------------
-    # Build flat ordered list of all subclasses (taxonomy order)
-    # ------------------------------------------------------------------
-    flat_submotifs = []
-    for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
-        entry = MOTIF_CLASSIFICATION[class_id]
-        class_name = entry['class']
-        for subclass in entry['subclasses']:
-            flat_submotifs.append((class_name, subclass))
-
-    # Initialize session state (all ON by default)
-    for class_name, subclass in flat_submotifs:
-        key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-        if key not in st.session_state:
-            st.session_state[key] = True
-
-    # ------------------------------------------------------------------
-    # Global controls
-    # ------------------------------------------------------------------
-    col_all, col_none, _ = st.columns([1, 1, 4])
-
-    with col_all:
-        if st.button("✓ All", use_container_width=True, key="select_all_submotifs"):
-            for class_name, subclass in flat_submotifs:
-                st.session_state[
-                    f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                ] = True
-            st.rerun()
-
-    with col_none:
-        if st.button("✗ None", use_container_width=True, key="deselect_all_submotifs"):
-            for class_name, subclass in flat_submotifs:
-                st.session_state[
-                    f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                ] = False
-            st.rerun()
-
-    # ------------------------------------------------------------------
-    # Render 4 × 6 grid
-    # ------------------------------------------------------------------
-    NUM_COLUMNS = 6
-    rows = [flat_submotifs[i:i + NUM_COLUMNS]
-            for i in range(0, len(flat_submotifs), NUM_COLUMNS)]
-
-    for row in rows:
-        cols = st.columns(NUM_COLUMNS)
-        for col, (class_name, subclass) in zip(cols, row):
-            color = CLASS_COLORS.get(class_name, "#cbd5e1")
-            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-
-            with col:
-                st.markdown(f"""
-                <div style="
-                    border-left: 4px solid {color};
-                    padding-left: 6px;
-                    margin-bottom: 6px;
-                    font-size: 0.82rem;
-                ">
-                """, unsafe_allow_html=True)
-
-                st.checkbox(
-                    subclass,
-                    key=key,
-                    help=f"{subclass} ({class_name.replace('_', ' ')})"
+            # Use cached stats - show compact summary
+            cached_stats = st.session_state[cache_key]
+            for i, stats in enumerate(cached_stats[:3]):
+                # Use helper function with green gradient for validation success
+                card_html = render_sequence_stats_card(
+                    idx=i+1,
+                    name=st.session_state.names[i],
+                    length=len(st.session_state.seqs[i]),
+                    gc_pct=stats['GC%'],
+                    at_pct=stats['AT%'],
+                    gradient_colors="135deg, #11998e 0%, #38ef7d 100%"
                 )
-
-                st.markdown("</div>", unsafe_allow_html=True)
-
-    # ------------------------------------------------------------------
-    # Build enabled class & subclass lists (for downstream analysis)
-    # ------------------------------------------------------------------
-    enabled_classes = set()
-    enabled_subclasses = []
-
-    for class_name, subclass in flat_submotifs:
-        key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-        if st.session_state.get(key, True):
-            enabled_classes.add(class_name)
-            enabled_subclasses.append(subclass)
-
-    st.session_state.selected_classes = list(enabled_classes)
-    st.session_state.selected_subclasses = enabled_subclasses
-
-    # Also update motif_selector_data for any code that uses it (in taxonomy order)
-    st.session_state.motif_selector_data = []
-    for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
-        entry = MOTIF_CLASSIFICATION[class_id]
-        class_name = entry['class']
-        for subclass in entry['subclasses']:
-            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-            st.session_state.motif_selector_data.append({
-                'Enabled': st.session_state.get(key, True),
-                'Motif Class': class_name,
-                'Submotif': subclass
-            })
-
-    # Show compact summary
-    num_enabled = len(enabled_subclasses)
-    total_submotifs = len(flat_submotifs)
-
-    if enabled_classes:
-        st.markdown(f"""
-        <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-                    padding: 6px 10px; border-radius: 6px; margin: 6px 0;
-                    display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem;'>
-            <span style='font-size: 1rem;'>✓</span>
-            <span style='font-weight: 600; color: #065f46;'>
-                {len(enabled_classes)} classes, {num_enabled}/{total_submotifs} submotifs enabled
-            </span>
+                st.markdown(card_html, unsafe_allow_html=True)
+        
+            if len(st.session_state.seqs) > 3:
+                st.info(f"Showing 3 of {len(st.session_state.seqs)} loaded sequences. All are validated and ready for analysis.")
+    
+    # ============================================================
+    # RIGHT COLUMN — ANALYSIS CONFIGURATION
+    # ============================================================
+    with right_col:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); 
+                    padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
+                    border-left: 4px solid #3b82f6;'>
+            <h4 style='margin: 0; color: #1e3a8a; font-size: 1rem; font-weight: 600;'>
+                Analysis Configuration
+            </h4>
         </div>
         """, unsafe_allow_html=True)
-    else:
-        st.warning("⚠️ Please enable at least one submotif to run analysis.")
     
-    # ============================================================
-    # ANALYSIS OPTIONS - Always ON, Hidden from UI
-    # ============================================================
-    # All engine-level options are enforced internally and never shown.
-    # Validation always runs, parallelization enabled where applicable,
-    # results are reproducible and reviewer-safe.
-    # ============================================================
+        # ============================================================
+        # FIXED ANALYSIS GRANULARITY - Always Submotif Level (no UI)
+        # ============================================================
+        # Detection is always submotif-level to preserve biological accuracy
+        # and prevent biologically invalid assumptions.
+        st.session_state.analysis_mode = "Submotif Level"
+        st.session_state.analysis_mode_used = "Submotif Level"
     
-    # Enforce all analysis options as always ON (hard defaults, no UI)
-    st.session_state.toggle_detailed = True
-    st.session_state.toggle_validation = True
-    st.session_state.toggle_parallel = True
-    st.session_state.toggle_chunk_progress = True
-    st.session_state.toggle_memory = True
+        # ============================================================
+        # FLAT SUBMOTIF SELECTOR (COLOR-ENCODED, 4 × 6 GRID)
+        # ============================================================
+        # Flat subclass-first selector: users reason in submotifs, not abstract classes.
+        # Color already encodes class identity, so headers are redundant.
+        # Flat layout improves: scan speed, cognitive load, visual compactness.
+        # ============================================================
+
+        st.markdown("""
+        <div style="font-size: 0.95rem; font-weight: 600; color: #374151; margin-bottom: 8px;">
+        🧬 Submotif Selector
+        <span style="font-weight: 400; color: #6b7280; font-size: 0.8rem;">
+        — All enabled by default. Uncheck to exclude.
+        </span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ------------------------------------------------------------------
+        # Use CLASS_COLORS from config.colors for color encoding
+        # (single source of truth for motif class colors)
+        # ------------------------------------------------------------------
+
+        def _sanitize_key(name: str) -> str:
+            return name.replace(' ', '_').replace('-', '_').replace('/', '_')
+
+        # ------------------------------------------------------------------
+        # Build flat ordered list of all subclasses (taxonomy order)
+        # ------------------------------------------------------------------
+        flat_submotifs = []
+        for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
+            entry = MOTIF_CLASSIFICATION[class_id]
+            class_name = entry['class']
+            for subclass in entry['subclasses']:
+                flat_submotifs.append((class_name, subclass))
+
+        # Initialize session state (all ON by default)
+        for class_name, subclass in flat_submotifs:
+            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+            if key not in st.session_state:
+                st.session_state[key] = True
+
+        # ------------------------------------------------------------------
+        # Global controls
+        # ------------------------------------------------------------------
+        col_all, col_none, _ = st.columns([1, 1, 4])
+
+        with col_all:
+            if st.button("✓ All", use_container_width=True, key="select_all_submotifs"):
+                for class_name, subclass in flat_submotifs:
+                    st.session_state[
+                        f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                    ] = True
+                st.rerun()
+
+        with col_none:
+            if st.button("✗ None", use_container_width=True, key="deselect_all_submotifs"):
+                for class_name, subclass in flat_submotifs:
+                    st.session_state[
+                        f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                    ] = False
+                st.rerun()
+
+        # ------------------------------------------------------------------
+        # Render 4 × 6 grid
+        # ------------------------------------------------------------------
+        NUM_COLUMNS = 6
+        rows = [flat_submotifs[i:i + NUM_COLUMNS]
+                for i in range(0, len(flat_submotifs), NUM_COLUMNS)]
+
+        for row in rows:
+            cols = st.columns(NUM_COLUMNS)
+            for col, (class_name, subclass) in zip(cols, row):
+                color = CLASS_COLORS.get(class_name, "#cbd5e1")
+                color_name = CLASS_COLOR_NAMES.get(class_name, "gray")
+                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+
+                with col:
+                    st.markdown(f"""
+                    <div style="
+                        border-left: 4px solid {color};
+                        padding-left: 6px;
+                        margin-bottom: 6px;
+                        font-size: 0.82rem;
+                    ">
+                    """, unsafe_allow_html=True)
+
+                    st.checkbox(
+                        f"**:{color_name}[{subclass}]**",
+                        key=key,
+                        help=f"{subclass} ({class_name.replace('_', ' ')})"
+                    )
+
+                    st.markdown("</div>", unsafe_allow_html=True)
+
+        # ------------------------------------------------------------------
+        # Build enabled class & subclass lists (for downstream analysis)
+        # ------------------------------------------------------------------
+        enabled_classes = set()
+        enabled_subclasses = []
+
+        for class_name, subclass in flat_submotifs:
+            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+            if st.session_state.get(key, True):
+                enabled_classes.add(class_name)
+                enabled_subclasses.append(subclass)
+
+        st.session_state.selected_classes = list(enabled_classes)
+        st.session_state.selected_subclasses = enabled_subclasses
+
+        # Also update motif_selector_data for any code that uses it (in taxonomy order)
+        st.session_state.motif_selector_data = []
+        for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
+            entry = MOTIF_CLASSIFICATION[class_id]
+            class_name = entry['class']
+            for subclass in entry['subclasses']:
+                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                st.session_state.motif_selector_data.append({
+                    'Enabled': st.session_state.get(key, True),
+                    'Motif Class': class_name,
+                    'Submotif': subclass
+                })
+
+        # Show compact summary
+        num_enabled = len(enabled_subclasses)
+        total_submotifs = len(flat_submotifs)
+
+        if enabled_classes:
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+                        padding: 6px 10px; border-radius: 6px; margin: 6px 0;
+                        display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem;'>
+                <span style='font-size: 1rem;'>✓</span>
+                <span style='font-weight: 600; color: #065f46;'>
+                    {len(enabled_classes)} classes, {num_enabled}/{total_submotifs} submotifs enabled
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ Please enable at least one submotif to run analysis.")
     
-    # Expose variables for use in analysis logic below
-    detailed_output = True
-    quality_check = True
-    use_parallel_scanner = True
-    show_chunk_progress = True
-    show_memory_usage = True
+        # ============================================================
+        # ANALYSIS OPTIONS - Always ON, Hidden from UI
+        # ============================================================
+        # All engine-level options are enforced internally and never shown.
+        # Validation always runs, parallelization enabled where applicable,
+        # results are reproducible and reviewer-safe.
+        # ============================================================
     
-    # Hardcoded default overlap handling
-    nonoverlap = True
-    overlap_option = "Remove overlaps within subclasses"
+        # Enforce all analysis options as always ON (hard defaults, no UI)
+        st.session_state.toggle_detailed = True
+        st.session_state.toggle_validation = True
+        st.session_state.toggle_parallel = True
+        st.session_state.toggle_chunk_progress = True
+        st.session_state.toggle_memory = True
+    
+        # Expose variables for use in analysis logic below
+        detailed_output = True
+        quality_check = True
+        use_parallel_scanner = True
+        show_chunk_progress = True
+        show_memory_usage = True
+    
+        # Hardcoded default overlap handling
+        nonoverlap = True
+        overlap_option = "Remove overlaps within subclasses"
     
     # ----- RUN BUTTON -----
     st.markdown("---")
