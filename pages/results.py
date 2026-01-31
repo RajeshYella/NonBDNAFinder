@@ -27,9 +27,7 @@ from utilities import (
     # Visualization functions
     plot_motif_distribution, 
     plot_nested_pie_chart,
-    plot_manhattan_motif_density,
     plot_linear_motif_track,
-    plot_manhattan_subclass_density,
     plot_linear_subclass_track,
     plot_density_comparison,
     plot_cluster_size_distribution,
@@ -153,47 +151,33 @@ def render():
         # 1️⃣ MOTIF TRACK — Class Level
         _render_section_divider("📍")
         
-        # Toggle for Manhattan vs Linear (size-aware default)
-        plot_type = st.radio(
-            "View mode",
-            options=["Manhattan", "Linear"],
-            index=0 if sequence_length > 50000 else 1,
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-        
         try:
-            if plot_type == "Manhattan":
-                fig_track = plot_manhattan_motif_density(
-                    filtered_motifs, sequence_length,
-                    title="Class Track"
-                )
-            else:
-                fig_track = plot_linear_motif_track(
-                    filtered_motifs, sequence_length,
-                    title="Class Track"
-                )
+            fig_track = plot_linear_motif_track(
+                filtered_motifs, sequence_length,
+                title="Class Track"
+            )
             st.pyplot(fig_track)
             plt.close(fig_track)
         except Exception as e:
             st.error(f"Track error: {e}")
         
-        # 2️⃣ SUBCLASS TRACK — NEW (same coordinates, parent class colors)
+        # 2️⃣ SUBCLASS TRACK — NEW (same coordinates, parent class colors, no clusters)
         _render_section_divider("🔬")
         
         try:
-            if plot_type == "Manhattan":
-                fig_subtrack = plot_manhattan_subclass_density(
-                    filtered_motifs, sequence_length,
-                    title="Subclass Track"
-                )
-            else:
+            # Filter out clusters (Non-B_DNA_Clusters and Hybrid) from subclass track
+            subclass_motifs = [m for m in filtered_motifs 
+                               if m.get('Class') not in ['Hybrid', 'Non-B_DNA_Clusters']]
+            
+            if subclass_motifs:
                 fig_subtrack = plot_linear_subclass_track(
-                    filtered_motifs, sequence_length,
+                    subclass_motifs, sequence_length,
                     title="Subclass Track"
                 )
-            st.pyplot(fig_subtrack)
-            plt.close(fig_subtrack)
+                st.pyplot(fig_subtrack)
+                plt.close(fig_subtrack)
+            else:
+                st.info("No non-cluster motifs found for subclass track")
         except Exception as e:
             st.error(f"Subclass track error: {e}")
         
@@ -307,16 +291,10 @@ def render():
                                     if m.get('Class') in ['Hybrid', 'Non-B_DNA_Clusters']]
             
             try:
-                if sequence_length > 50000:
-                    fig_cluster_track = plot_manhattan_motif_density(
-                        cluster_hybrid_motifs, sequence_length,
-                        title="Hybrid & Cluster Track"
-                    )
-                else:
-                    fig_cluster_track = plot_linear_motif_track(
-                        cluster_hybrid_motifs, sequence_length,
-                        title="Hybrid & Cluster Track"
-                    )
+                fig_cluster_track = plot_linear_motif_track(
+                    cluster_hybrid_motifs, sequence_length,
+                    title="Hybrid & Cluster Track"
+                )
                 st.pyplot(fig_cluster_track)
                 plt.close(fig_cluster_track)
             except Exception as e:
