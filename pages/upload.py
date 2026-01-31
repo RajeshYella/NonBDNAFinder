@@ -715,9 +715,9 @@ def render():
     if 'toggle_parallel' not in st.session_state:
         st.session_state.toggle_parallel = True
     if 'toggle_chunk_progress' not in st.session_state:
-        st.session_state.toggle_chunk_progress = False
+        st.session_state.toggle_chunk_progress = True
     if 'toggle_memory' not in st.session_state:
-        st.session_state.toggle_memory = False
+        st.session_state.toggle_memory = True
     
     # Render toggle bar using columns for compact horizontal layout
     tog_cols = st.columns(5)
