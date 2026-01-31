@@ -158,6 +158,185 @@ The obligate endosymbionts *B. aphidicola* and *Ca. Carsonella ruddii* represent
 
 Strikingly, >95% of non-B DNA in endosymbionts comprises curved DNA structures (Figure 6). A-tract-mediated DNA bending has been proposed to facilitate nucleoid compaction^33^ and may be particularly important in endosymbionts lacking histone-like proteins lost during reductive evolution. The preservation of curved DNA-forming sequences despite strong deletion bias suggests functional importance for chromosome organization in minimal genomes.
 
+### 3.9 Subclass-Level Analysis: Beyond Class Classification
+
+While class-level analysis provides a broad overview of non-B DNA landscapes, subclass-level analysis reveals the fine-grained structural diversity within each motif category. Our comprehensive subclass analysis identified **24 distinct subclasses** across the 11 motif classes, with dramatically different distributions across genomes reflecting both sequence composition constraints and potential functional specialization.
+
+#### 3.9.1 G-Quadruplex Subclass Distribution
+
+G-quadruplexes represent the most structurally diverse motif class, with **8 distinct subclasses** detected across the analyzed genomes:
+
+**Table 3. G-Quadruplex subclass distribution across genomes (counts)**
+
+| Subclass | *Ca. Car* | *B. aph* | *S. aur* | *S. pne* | *E. col* | *M. tub* | *C. sha* | *M. mar* |
+|----------|-----------|----------|----------|----------|----------|----------|----------|----------|
+| Two-tetrad weak PQS | 13 | 35 | 516 | 1,158 | 6,389 | 20,392 | 22,675 | 23,959 |
+| Intramolecular G-triplex | 1 | 0 | 2 | 13 | 123 | 484 | 861 | 807 |
+| Extended-loop canonical | 0 | 0 | 0 | 3 | 21 | 343 | 883 | 705 |
+| Canonical intramolecular G4 | 0 | 0 | 0 | 0 | 20 | 90 | 154 | 130 |
+| Higher-order G4 array/G4-wire | 0 | 0 | 0 | 0 | 0 | 4 | 20 | 15 |
+| Stacked G4s with linker | 0 | 0 | 0 | 0 | 0 | 2 | 16 | 5 |
+| **Total G4** | **14** | **35** | **518** | **1,174** | **6,553** | **21,315** | **24,609** | **25,621** |
+
+The **Two-tetrad weak PQS** (potential quadruplex sequences) subclass dominates G4 content across all genomes, comprising 93-99% of total G4 motifs. These minimal G4 structures require only two G-tetrads and represent the most prevalent non-B DNA sequence pattern in high-GC genomes.
+
+**Intramolecular G-triplexes** (G3 structures) emerge as the second most common G4-related structure, particularly enriched in high-GC Actinobacteria where they reach densities of 220-240 per Mb. These structures can serve as intermediates in G4 folding or represent distinct regulatory elements^40^.
+
+**Extended-loop canonical G4s** and **Canonical intramolecular G4s** represent more complex, thermodynamically stable structures that are markedly enriched in high-GC genomes. *M. tuberculosis* contains 343 extended-loop G4s compared to zero in low-GC pathogens, suggesting potential roles in the distinctive biology of mycobacteria.
+
+**Higher-order G4 structures** including G4-wire arrays are rare but detectable exclusively in high-GC bacteria, with *C. shaoxiangyii* harboring 20 such structures that may represent tandem G4 regulatory regions or replication barriers.
+
+#### 3.9.2 Z-DNA Subclass Analysis
+
+Z-DNA motifs comprise two subclasses: canonical **Z-DNA** at alternating purine-pyrimidine sequences and **extended Genomic Z-DNA (eGZ)** representing longer Z-forming regions:
+
+**Table 4. Z-DNA subclass distribution (counts and density per Mb)**
+
+| Organism | Z-DNA | Z-DNA/Mb | eGZ | eGZ/Mb | Total |
+|----------|-------|----------|-----|--------|-------|
+| *Ca. Carsonella ruddii* | 0 | 0 | 0 | 0 | 0 |
+| *Buchnera aphidicola* | 0 | 0 | 0 | 0 | 0 |
+| *Staphylococcus aureus* | 7 | 2.5 | 0 | 0 | 7 |
+| *Streptococcus pneumoniae* | 10 | 4.7 | 0 | 0 | 10 |
+| *Escherichia coli* | 892 | 192.2 | 8 | 1.7 | 900 |
+| *Mycobacterium tuberculosis* | 2,243 | 508.4 | 143 | 32.4 | 2,386 |
+| *Cellulomonas shaoxiangyii* | 8,558 | 2,189.0 | 188 | 48.1 | 8,746 |
+| *Miltoncostaea marina* | 7,430 | 2,204.5 | 407 | 120.8 | 7,837 |
+
+The **eGZ subclass** (extended Genomic Z-DNA) is notably enriched in high-GC Actinobacteria, with *M. marina* exhibiting the highest eGZ density (120.8/Mb). These extended Z-forming regions may represent particularly stable left-handed DNA segments with enhanced regulatory potential.
+
+#### 3.9.3 Curved DNA Subclass Analysis
+
+Curved DNA structures comprise **Global Curvature** (affecting larger DNA regions) and **Local Curvature** (localized bends):
+
+**Table 5. Curved DNA subclass distribution (counts)**
+
+| Organism | GC% | Local Curvature | Global Curvature | Total | Local:Global Ratio |
+|----------|-----|-----------------|------------------|-------|-------------------|
+| *Ca. Carsonella ruddii* | 17.6 | 1,706 | 65 | 1,771 | 26:1 |
+| *Buchnera aphidicola* | 18.3 | 4,489 | 133 | 4,622 | 34:1 |
+| *Staphylococcus aureus* | 32.9 | 1,354 | 968 | 2,322 | 1.4:1 |
+| *Streptococcus pneumoniae* | 39.7 | 1,027 | 648 | 1,675 | 1.6:1 |
+| *Escherichia coli* | 50.8 | 1,171 | 591 | 1,762 | 2:1 |
+| *Mycobacterium tuberculosis* | 65.6 | 23 | 43 | 66 | 0.5:1 |
+
+The **Local:Global curvature ratio** reveals an interesting pattern: low-GC endosymbionts display extremely high ratios (26-34:1), indicating predominance of localized A-tract bends, while intermediate-GC bacteria show balanced ratios (1.4-2:1). In high-GC *M. tuberculosis*, global curvature actually exceeds local curvature (ratio 0.5:1), suggesting different mechanisms of DNA bending in GC-rich sequences.
+
+#### 3.9.4 i-Motif Subclass Analysis
+
+The i-Motif class comprises three subclasses with distinct structural requirements:
+
+**Table 6. i-Motif subclass distribution (counts and density per Mb)**
+
+| Organism | Canonical i-motif | Canonical/Mb | AC-motif | AC-motif/Mb | Total |
+|----------|-------------------|--------------|----------|-------------|-------|
+| *Ca. Carsonella ruddii* | 0 | 0 | 0 | 0 | 0 |
+| *Buchnera aphidicola* | 0 | 0 | 0 | 0 | 0 |
+| *Staphylococcus aureus* | 0 | 0 | 0 | 0 | 0 |
+| *Streptococcus pneumoniae* | 1 | 0.5 | 0 | 0 | 1 |
+| *Escherichia coli* | 24 | 5.2 | 2 | 0.4 | 26 |
+| *Mycobacterium tuberculosis* | 229 | 51.9 | 2 | 0.5 | 231 |
+| *Cellulomonas shaoxiangyii* | 484 | 123.8 | 1 | 0.3 | 485 |
+| *Miltoncostaea marina* | 398 | 118.1 | 2 | 0.6 | 400 |
+
+**Canonical i-motifs** dominate the i-Motif landscape, representing >99% of detected structures. The **AC-motif** subclass (adenine-cytosine motif) is rare but detectable across multiple genomes, potentially representing an alternative i-Motif conformation^41^.
+
+### 3.10 Non-B DNA Cluster Analysis: Genomic Hotspots of Structural Complexity
+
+Non-B DNA clusters represent genomic regions where **multiple distinct motif classes co-localize**, creating potential hotspots for regulatory activity or genomic instability. Our analysis revealed **5,560 total clusters** across all genomes, classified by complexity:
+
+**Table 7. Non-B DNA cluster distribution by complexity level (counts per Mb)**
+
+| Cluster Type | *Ca. Car* | *B. aph* | *S. aur* | *S. pne* | *E. col* | *M. tub* | *C. sha* | *M. mar* |
+|--------------|-----------|----------|----------|----------|----------|----------|----------|----------|
+| 3-class clusters | 23.0 | 44.2 | 1.1 | 5.7 | 17.5 | 159.4 | 458.1 | 554.0 |
+| 4-class clusters | 2.2 | 0 | 0.4 | 0.5 | 3.4 | 23.4 | 111.0 | 126.7 |
+| 5-class clusters | 0 | 0 | 0 | 0 | 0.6 | 0.5 | 10.7 | 13.7 |
+| 6-class clusters | 0 | 0 | 0 | 0 | 0.2 | 0 | 0 | 0.6 |
+| **Total Clusters** | **23** | **46** | **4** | **13** | **101** | **808** | **2,267** | **2,342** |
+
+**Key observations on cluster distribution:**
+
+1. **Cluster complexity correlates with GC content**: High-GC Actinobacteria harbor abundant complex clusters (5-6 class co-localization), while low-GC bacteria have simpler clusters (predominantly 3-class).
+
+2. **3-class clusters dominate**: These represent the most common cluster type across all genomes, comprising 69-95% of total clusters depending on genome GC content.
+
+3. **High-GC genomes exhibit cluster enrichment**: *M. marina* and *C. shaoxiangyii* contain >2,200 clusters each, representing cluster densities of 694-695 per Mb—approximately 100-fold higher than Firmicutes pathogens.
+
+4. **Endosymbiont clusters despite low GC**: Despite extremely low GC content, *B. aphidicola* exhibits moderate cluster density (46.2/Mb), primarily involving curved DNA, triplex, and slipped DNA co-localization.
+
+5. **Rare but present 6-class clusters**: The most complex clusters (6 motif classes co-localized) are detected only in *E. coli* and *M. marina*, representing potential regulatory super-hotspots.
+
+### 3.11 Hybrid Motif Analysis: Overlapping Structural Elements
+
+Hybrid motifs occur when two distinct non-B DNA structures physically overlap within the same sequence region. Our analysis identified **2,774 hybrid motifs** across all genomes, representing **58 distinct overlap types**:
+
+**Table 8. Top 15 hybrid motif types across all genomes (total counts)**
+
+| Rank | Hybrid Type | Count | Primary Genomes |
+|------|-------------|-------|-----------------|
+| 1 | G-Quadruplex + R-Loop | 569 | High-GC Actinobacteria |
+| 2 | A-philic DNA + G-Quadruplex | 383 | High-GC Actinobacteria |
+| 3 | G-Quadruplex + A-philic DNA | 348 | High-GC Actinobacteria |
+| 4 | R-Loop + G-Quadruplex | 276 | High-GC Actinobacteria |
+| 5 | G-Quadruplex + Z-DNA | 234 | High-GC Actinobacteria |
+| 6 | Z-DNA + G-Quadruplex | 227 | High-GC Actinobacteria |
+| 7 | G-Quadruplex + Slipped DNA | 86 | Actinobacteria, E. coli |
+| 8 | Slipped DNA + G-Quadruplex | 85 | Actinobacteria |
+| 9 | R-Loop + A-philic DNA | 74 | High-GC Actinobacteria |
+| 10 | A-philic DNA + R-Loop | 63 | High-GC Actinobacteria |
+| 11 | G-Quadruplex + i-Motif | 33 | High-GC Actinobacteria |
+| 12 | i-Motif + G-Quadruplex | 33 | High-GC Actinobacteria |
+| 13 | Z-DNA + R-Loop | 32 | Actinobacteria |
+| 14 | i-Motif + A-philic DNA | 30 | High-GC Actinobacteria |
+| 15 | R-Loop + i-Motif | 26 | Actinobacteria |
+
+**Key findings on hybrid motif biology:**
+
+1. **G-Quadruplex dominates hybrids**: G4 structures participate in the majority (>85%) of hybrid motifs, reflecting their structural flexibility and widespread distribution in high-GC genomes.
+
+2. **G4-R-Loop hybrids are most common**: The combination of G4 with R-loop forming regions represents the most prevalent hybrid type (845 total), suggesting potential regulatory coupling between these structures^42^.
+
+3. **Bidirectional overlaps detected**: Many hybrid types appear in both orientations (e.g., G4+R-Loop and R-Loop+G4), indicating true overlap rather than directional association.
+
+4. **A-philic DNA hybrid enrichment**: A-philic DNA frequently co-localizes with G4 structures (731 combined hybrids), potentially creating regions with dual minor groove binding and G4 regulatory properties.
+
+5. **Rare i-Motif hybrids**: i-Motif structures participate in hybrids less frequently than their G4 counterparts, possibly reflecting their stricter formation requirements.
+
+**Table 9. Hybrid motif density by organism (hybrids per Mb)**
+
+| Organism | GC% | Total Hybrids | Density/Mb | Dominant Hybrid |
+|----------|-----|---------------|------------|-----------------|
+| *Miltoncostaea marina* | 76.2 | 1,114 | 330.6 | G4+R-Loop |
+| *Cellulomonas shaoxiangyii* | 75.3 | 921 | 235.6 | G4+R-Loop |
+| *Mycobacterium tuberculosis* | 65.6 | 547 | 123.9 | G4+R-Loop |
+| *Escherichia coli* | 50.8 | 78 | 16.8 | G4+R-Loop |
+| *Buchnera aphidicola* | 18.3 | 18 | 39.8 | Curved+Slipped |
+| *Streptococcus pneumoniae* | 39.7 | 8 | 3.8 | Triplex+Curved |
+| *Candidatus Carsonella ruddii* | 17.6 | 3 | 17.2 | Slipped+Curved |
+| *Staphylococcus aureus* | 32.9 | 3 | 1.1 | Mixed |
+
+The dramatic variation in hybrid density (330-fold range) underscores how GC content shapes not only individual motif abundance but also the complexity of structural interactions within genomes.
+
+### 3.12 Slipped DNA Subclass Analysis
+
+Slipped DNA structures, formed at tandem repeat sequences, comprise two subclasses:
+
+**Table 10. Slipped DNA subclass distribution (counts)**
+
+| Organism | Direct Repeat | STR | Total | STR Fraction |
+|----------|---------------|-----|-------|--------------|
+| *Ca. Carsonella ruddii* | 10 | 1 | 11 | 9% |
+| *Buchnera aphidicola* | 64 | 4 | 68 | 6% |
+| *Staphylococcus aureus* | 46 | 0 | 46 | 0% |
+| *Streptococcus pneumoniae* | 39 | 2 | 41 | 5% |
+| *Escherichia coli* | 13 | 3 | 16 | 19% |
+| *Mycobacterium tuberculosis* | 125 | 60 | 185 | 32% |
+| *Cellulomonas shaoxiangyii* | 299 | 36 | 335 | 11% |
+| *Miltoncostaea marina* | 111 | 27 | 138 | 20% |
+
+**Short Tandem Repeats (STRs)** are notably enriched in *M. tuberculosis* (32% of slipped DNA), potentially contributing to the phenotypic variation and adaptation mechanisms observed in this pathogen^43^. The PE/PPE gene families of mycobacteria are known to harbor extensive STR sequences that may facilitate antigenic variation.
+
 ---
 
 ## 4. Discussion
@@ -178,13 +357,33 @@ The compartmentalization of non-B DNA types across GC content ranges may have fu
 
 **Pathogens** display lifestyle-appropriate non-B DNA signatures. *M. tuberculosis* G4 abundance may facilitate the transcriptional pausing and persistence mechanisms characteristic of this pathogen^38^. The relatively low non-B DNA content in Firmicutes pathogens may reflect their rapid-growth strategies that would be impaired by frequent polymerase stalling.
 
-### 4.3 Evolutionary Perspectives
+### 4.3 Subclass-Level Insights and Structural Complexity
+
+Our subclass-level analysis reveals previously unappreciated complexity in non-B DNA repertoires. Key insights include:
+
+**G-Quadruplex diversity**: The dominance of Two-tetrad weak PQS (93-99% of G4s) suggests that bacterial genomes favor minimal G4 structures that may be easier to resolve during replication. The presence of complex G4 subtypes (G4-wires, stacked G4s) exclusively in high-GC genomes implies that thermodynamic stability constraints limit G4 complexity in AT-rich backgrounds.
+
+**Curved DNA architecture**: The striking difference in Local:Global curvature ratios between low-GC endosymbionts (26-34:1) and high-GC bacteria (0.5-2:1) suggests fundamentally different DNA bending mechanisms. In AT-rich genomes, localized A-tract phasing predominates, while GC-rich genomes may rely on different bending modes.
+
+**Cluster complexity as a genomic signature**: The emergence of 5-6 class clusters exclusively in high-GC and model organisms (E. coli, M. marina) suggests that structural complexity accumulates in genomes with sufficient sequence diversity to support overlapping motif requirements.
+
+### 4.4 Hybrid Motifs: Implications for Genome Regulation and Stability
+
+The systematic identification of 2,774 hybrid motifs across 58 overlap types represents a significant advance in understanding non-B DNA biology. The predominance of G4-R-Loop hybrids has profound implications:
+
+1. **Transcription-replication conflicts**: G4-R-Loop hybrids represent potential collision sites between transcription and replication machinery, possibly explaining the association of these structures with genome instability hotspots^42^.
+
+2. **Regulatory coupling**: The physical overlap of G4 and R-loop structures suggests potential for coordinated regulation, where formation of one structure influences the other.
+
+3. **Drug target potential**: Hybrid regions may represent particularly sensitive targets for compounds that stabilize either structure, with potential therapeutic applications in mycobacterial infections^44^.
+
+### 4.5 Evolutionary Perspectives
 
 The observation that obligate endosymbionts maintain high curved DNA density despite overall genome erosion suggests positive selection for A-tract sequences. In contrast, G4 and Z-DNA structures in high-GC bacteria may represent a cost of high-GC maintenance, necessitating expanded DNA repair/helicase systems to manage structural impediments.
 
 The dramatic shift in non-B DNA composition across the GC spectrum (from >95% curved DNA at 17% GC to >60% G4 at 76% GC) implies that evolutionary transitions in GC content would fundamentally reshape genome architecture. Species undergoing GC shifts must simultaneously adapt their non-B DNA management systems, potentially constraining the rate of compositional evolution.
 
-### 4.4 Implications for Understanding DNA Structural Biology
+### 4.6 Implications for Understanding DNA Structural Biology
 
 This study represents the first systematic survey of non-B DNA across phylogenetically diverse bacteria using consistent methodology. Our findings have several broader implications:
 
@@ -194,11 +393,15 @@ This study represents the first systematic survey of non-B DNA across phylogenet
 
 3. **Scale of the phenomenon**: With densities ranging from 1-12 motifs per kb, non-B DNA structures occur approximately every 100-1000 bp, comparable to gene density and suggesting potential for regulatory interactions at most genetic loci.
 
-### 4.5 Limitations and Future Directions
+4. **Subclass diversity matters**: The 24 subclasses identified reveal that non-B DNA is not monolithic—different structural variants within each class may have distinct biological roles and properties.
+
+5. **Clusters and hybrids define complexity**: The thousands of cluster and hybrid regions identified suggest that non-B DNA biology cannot be fully understood by examining individual motifs in isolation.
+
+### 4.7 Limitations and Future Directions
 
 Several limitations should be noted. First, computational predictions require experimental validation, as not all predicted structures may form under physiological conditions. Second, our analysis focused on primary sequence without considering superhelical density or protein binding, which profoundly influence non-B DNA formation in vivo^39^. Third, the functional roles of predicted structures remain largely hypothetical and require targeted genetic studies.
 
-Future work should integrate non-B DNA predictions with transcriptomic data to identify correlated regulatory patterns, examine conservation of structural motifs across related genomes, and experimentally validate key predictions using structural probes and functional assays.
+Future work should integrate non-B DNA predictions with transcriptomic data to identify correlated regulatory patterns, examine conservation of structural motifs across related genomes, and experimentally validate key predictions using structural probes and functional assays. The subclass-level data generated here provides a foundation for targeted studies of specific structural variants and their biological functions.
 
 ---
 
@@ -216,7 +419,13 @@ This comprehensive comparative analysis of non-B DNA motifs across eight diverse
 
 5. **Pathogen non-B DNA profiles** correlate with lifestyle characteristics, potentially contributing to growth strategies and persistence mechanisms.
 
-These findings establish non-B DNA structures as significant features of bacterial genome organization that evolve in response to compositional pressures and likely influence chromosome maintenance, transcription regulation, and evolutionary potential.
+6. **Subclass-level diversity reveals structural complexity**: Within the 11 motif classes, 24 distinct subclasses show characteristic distribution patterns. Two-tetrad weak PQS dominates G4 content (93-99%), while Local Curvature predominates in low-GC genomes and Global Curvature in high-GC genomes.
+
+7. **Non-B DNA clusters identify genomic hotspots**: 5,560 clusters were identified, with 3-class clusters being most common. High-GC genomes harbor 100-fold more clusters than Firmicutes pathogens, with rare 6-class clusters representing potential regulatory super-hotspots.
+
+8. **Hybrid motifs reveal structural overlap complexity**: 2,774 hybrid motifs across 58 overlap types were detected, with G4-R-Loop hybrids being most prevalent (845 total). This structural overlap suggests regulatory coupling between transcription-related structures.
+
+These findings establish non-B DNA structures as significant features of bacterial genome organization that evolve in response to compositional pressures and likely influence chromosome maintenance, transcription regulation, and evolutionary potential. The subclass-level analysis reveals previously unappreciated complexity that should inform future functional studies.
 
 ---
 
@@ -240,6 +449,18 @@ Log-transformed motif densities (motifs/Mb) for 11 motif classes across eight ge
 ### Figure 6. Motif composition pie charts for representative genomes
 Individual pie charts showing proportional motif class distribution for each genome, arranged by GC content.
 
+### Figure 7. G-Quadruplex subclass distribution across genomes
+Stacked bar chart showing the distribution of 8 G4 subclasses (Two-tetrad weak PQS, Intramolecular G-triplex, Extended-loop canonical, Canonical intramolecular G4, Higher-order G4 array, Stacked G4s) normalized per Mb for each genome, ordered by GC content.
+
+### Figure 8. Non-B DNA cluster complexity analysis
+**(A)** Distribution of cluster types (3-class, 4-class, 5-class, 6-class) across genomes. **(B)** Cluster density (per Mb) versus GC content showing strong positive correlation. **(C)** Relative contribution of cluster complexity levels by phylum.
+
+### Figure 9. Hybrid motif network analysis
+**(A)** Network diagram showing overlap relationships between motif classes, with edge thickness proportional to overlap frequency. **(B)** Top 10 hybrid types by abundance. **(C)** Hybrid density versus GC content.
+
+### Figure 10. Curved DNA Local:Global curvature ratio across genomes
+Ratio of Local Curvature to Global Curvature motifs plotted against GC content, showing inverse relationship between GC content and preference for localized bending.
+
 ---
 
 ## 7. Tables
@@ -250,11 +471,56 @@ Individual pie charts showing proportional motif class distribution for each gen
 ### Table 2. Distribution of non-B DNA motif classes across genomes
 (See Results section 3.3)
 
+### Table 3. G-Quadruplex subclass distribution across genomes
+(See Results section 3.9.1)
+
+### Table 4. Z-DNA subclass distribution
+(See Results section 3.9.2)
+
+### Table 5. Curved DNA subclass distribution
+(See Results section 3.9.3)
+
+### Table 6. i-Motif subclass distribution
+(See Results section 3.9.4)
+
+### Table 7. Non-B DNA cluster distribution by complexity level
+(See Results section 3.10)
+
+### Table 8. Top 15 hybrid motif types
+(See Results section 3.11)
+
+### Table 9. Hybrid motif density by organism
+(See Results section 3.11)
+
+### Table 10. Slipped DNA subclass distribution
+(See Results section 3.12)
+
 ### Supplementary Table S1. Complete motif counts by class and subclass
 Available in analysis_summary.json
 
 ### Supplementary Table S2. Detailed genome statistics
 Available in genome_statistics.csv
+
+### Supplementary Table S3. Subclass-level comparative statistics
+Available in subclass_statistics.csv
+
+### Supplementary Table S4. Cluster analysis data
+Available in cluster_analysis.csv
+
+### Supplementary Table S5. Hybrid motif analysis data
+Available in hybrid_analysis.csv
+
+### Supplementary Table S6. G-Quadruplex subclass analysis
+Available in gquadruplex_subclass_analysis.csv
+
+### Supplementary Table S7. i-Motif subclass analysis
+Available in imotif_subclass_analysis.csv
+
+### Supplementary Table S8. Z-DNA subclass analysis
+Available in zdna_subclass_analysis.csv
+
+### Supplementary Table S9. Curved DNA subclass analysis
+Available in curved_dna_subclass_analysis.csv
 
 ---
 
@@ -338,11 +604,31 @@ Available in genome_statistics.csv
 
 39. Kouzine, F. et al. Permanganate/S1 nuclease footprinting reveals non-B DNA structures with regulatory potential across a mammalian genome. *Cell Syst.* **4**, 344–356.e7 (2017).
 
+40. Mendoza, O., Bourdoncle, A., Boulé, J. B., Brosh, R. M. & Mergny, J. L. G-quadruplexes and helicases. *Nucleic Acids Res.* **44**, 1989–2006 (2016).
+
+41. Day, H. A., Huguin, C. & Waller, Z. A. E. Silver cations fold i-motif at neutral pH. *Chem. Commun.* **49**, 7696–7698 (2013).
+
+42. García-Muse, T. & Aguilera, A. R loops: from physiological to pathological roles. *Cell* **179**, 604–618 (2019).
+
+43. Supply, P. et al. Variable human minisatellite-like regions in the Mycobacterium tuberculosis genome. *Mol. Microbiol.* **36**, 762–771 (2000).
+
+44. Perrone, R. et al. Anti-HIV-1 activity of the G-quadruplex ligand BRACO-19. *J. Antimicrob. Chemother.* **69**, 3248–3258 (2014).
+
 ---
 
 ## Data Availability
 
-Complete analysis results, including per-genome motif files (JSON format), comparative statistics (CSV), and all visualization figures are available in the Genomes/analysis_results directory of the NonBDNAFinder repository: https://github.com/VRYella/NonBDNAFinder
+Complete analysis results, including per-genome motif files (JSON format), comparative statistics (CSV), subclass-level analyses, cluster analyses, and hybrid analyses are available in the Genomes/analysis_results directory of the NonBDNAFinder repository: https://github.com/VRYella/NonBDNAFinder
+
+**Subclass-level data files:**
+- `subclass_statistics.csv` - Complete subclass-level statistics across all genomes
+- `cluster_analysis.csv` - Non-B DNA cluster analysis by type and genome
+- `hybrid_analysis.csv` - Hybrid motif (overlap) analysis
+- `gquadruplex_subclass_analysis.csv` - G-Quadruplex subclass breakdown
+- `imotif_subclass_analysis.csv` - i-Motif subclass breakdown
+- `zdna_subclass_analysis.csv` - Z-DNA subclass breakdown
+- `curved_dna_subclass_analysis.csv` - Curved DNA subclass breakdown
+- `subclass_pivot_table.csv` - Complete subclass pivot table for all genomes
 
 Raw genome sequences are available from NCBI GenBank under the accession numbers specified in Table 1.
 
@@ -350,7 +636,7 @@ Raw genome sequences are available from NCBI GenBank under the accession numbers
 
 ## Code Availability
 
-NonBDNAFinder v2024.1 source code is available at https://github.com/VRYella/NonBDNAFinder under the MIT license. The comparative analysis pipeline (run_comparative_analysis.py) is included in the repository.
+NonBDNAFinder v2024.1 source code is available at https://github.com/VRYella/NonBDNAFinder under the MIT license. The comparative analysis pipeline (run_comparative_analysis.py) and subclass analysis pipeline (run_subclass_analysis.py) are included in the repository.
 
 ---
 

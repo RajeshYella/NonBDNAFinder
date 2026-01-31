@@ -1,0 +1,258 @@
+Organism,Phylum,Category,GC_Content_pct,Genome_Size_Mb,Class,Subclass,Count,Density_per_Mb
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Curved_DNA,Local Curvature,4489,9929.7
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,G-Quadruplex,Two-tetrad weak PQS,35,77.42
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Curved_DNA,Global Curvature,133,294.2
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Hybrid,Curved_DNA_Slipped_DNA_Overlap,9,19.91
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Hybrid,Slipped_DNA_Curved_DNA_Overlap,7,15.48
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Slipped_DNA,Direct Repeat,64,141.57
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Triplex,Triplex,88,194.66
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Slipped_DNA,STR,4,8.85
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Non-B_DNA_Clusters,Mixed_Cluster_3_classes,20,44.24
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Cruciform,Cruciform forming IRs,10,22.12
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,A-philic_DNA,A-philic DNA,1,2.21
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Triplex,Sticky DNA,1,2.21
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Hybrid,Curved_DNA_Cruciform_Overlap,1,2.21
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Non-B_DNA_Clusters,Mixed_Cluster_4_classes,1,2.21
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,R-Loop,R-loop formation sites,1,2.21
+Buchnera aphidicola,Proteobacteria,Obligate endosymbiont,18.3,0.45,Hybrid,Triplex_Slipped_DNA_Overlap,1,2.21
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,Curved_DNA,Local Curvature,1706,9803.81
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,Curved_DNA,Global Curvature,65,373.53
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,Triplex,Triplex,19,109.19
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,G-Quadruplex,Two-tetrad weak PQS,13,74.71
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,Non-B_DNA_Clusters,Mixed_Cluster_3_classes,4,22.99
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,Slipped_DNA,Direct Repeat,10,57.47
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,G-Quadruplex,Intramolecular G-triplex,1,5.75
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,R-Loop,R-loop formation sites,2,11.49
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,Cruciform,Cruciform forming IRs,4,22.99
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,Hybrid,Slipped_DNA_Curved_DNA_Overlap,2,11.49
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,Slipped_DNA,STR,1,5.75
+Candidatus Carsonella ruddii,Proteobacteria,Obligate endosymbiont,17.6,0.17,Hybrid,Curved_DNA_Slipped_DNA_Overlap,1,5.75
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,G-Quadruplex,Two-tetrad weak PQS,22675,5800.17
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,R-Loop,R-loop formation sites,1786,456.85
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Z-DNA,Z-DNA,8558,2189.1
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,G-Quadruplex,Intramolecular G-triplex,861,220.24
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,A-philic_DNA,A-philic DNA,1524,389.83
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Non-B_DNA_Clusters,Mixed_Cluster_3_classes,1791,458.13
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,i-Motif,Canonical i-motif,484,123.81
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,G-Quadruplex,Extended-loop canonical,883,225.87
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,G-Quadruplex_R-Loop_Overlap,202,51.67
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,A-philic_DNA_G-Quadruplex_Overlap,138,35.3
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Triplex,Triplex,5,1.28
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,R-Loop_i-Motif_Overlap,13,3.33
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Non-B_DNA_Clusters,Mixed_Cluster_4_classes,434,111.02
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,G-Quadruplex,Canonical intramolecular G4,154,39.39
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Slipped_DNA,Direct Repeat,299,76.48
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Cruciform,Cruciform forming IRs,24,6.14
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,G-Quadruplex_A-philic_DNA_Overlap,104,26.6
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,Slipped_DNA_G-Quadruplex_Overlap,40,10.23
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,R-Loop_G-Quadruplex_Overlap,74,18.93
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,Z-DNA_G-Quadruplex_Overlap,77,19.7
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,G-Quadruplex_Slipped_DNA_Overlap,45,11.51
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Slipped_DNA,STR,36,9.21
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Z-DNA,eGZ,188,48.09
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,Slipped_DNA_i-Motif_Overlap,12,3.07
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,Z-DNA_R-Loop_Overlap,17,4.35
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,G-Quadruplex,Higher-order G4 array/G4-wire,20,5.12
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Non-B_DNA_Clusters,Mixed_Cluster_5_classes,42,10.74
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,i-Motif_G-Quadruplex_Overlap,10,2.56
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,Slipped_DNA_Z-DNA_Overlap,2,0.51
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,A-philic_DNA_R-Loop_Overlap,17,4.35
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,Slipped_DNA_R-Loop_Overlap,2,0.51
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,G-Quadruplex_i-Motif_Overlap,12,3.07
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,i-Motif_A-philic_DNA_Overlap,9,2.3
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,G-Quadruplex,Stacked G4s with linker,16,4.09
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,R-Loop_Z-DNA_Overlap,11,2.81
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,G-Quadruplex_Z-DNA_Overlap,79,20.21
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,i-Motif_Slipped_DNA_Overlap,7,1.79
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,R-Loop_A-philic_DNA_Overlap,24,6.14
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,R-Loop_Slipped_DNA_Overlap,8,2.05
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,i-Motif_R-Loop_Overlap,2,0.51
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,G-Quadruplex_Cruciform_Overlap,2,0.51
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,A-philic_DNA_i-Motif_Overlap,8,2.05
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,Cruciform_G-Quadruplex_Overlap,2,0.51
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,Cruciform_Z-DNA_Overlap,1,0.26
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,i-Motif,AC-motif,1,0.26
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Curved_DNA,Local Curvature,1,0.26
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,Triplex_i-Motif_Overlap,1,0.26
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,A-philic_DNA_Cruciform_Overlap,1,0.26
+Cellulomonas shaoxiangyii,Actinobacteria,Free-living,75.3,3.91,Hybrid,Cruciform_A-philic_DNA_Overlap,1,0.26
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,G-Quadruplex,Two-tetrad weak PQS,23959,7108.92
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Non-B_DNA_Clusters,Mixed_Cluster_4_classes,427,126.7
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,R-Loop,R-loop formation sites,1549,459.61
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Non-B_DNA_Clusters,Mixed_Cluster_3_classes,1867,553.96
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Z-DNA,Z-DNA,7430,2204.57
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,A-philic_DNA,A-philic DNA,1954,579.77
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Z-DNA,eGZ,407,120.76
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,G-Quadruplex,Intramolecular G-triplex,807,239.45
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,G-Quadruplex_Slipped_DNA_Overlap,23,6.82
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Slipped_DNA,Direct Repeat,111,32.94
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,i-Motif,Canonical i-motif,398,118.09
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,G-Quadruplex,Extended-loop canonical,705,209.18
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,G-Quadruplex_Z-DNA_Overlap,131,38.87
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,A-philic_DNA_G-Quadruplex_Overlap,194,57.56
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,G-Quadruplex_A-philic_DNA_Overlap,189,56.08
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,A-philic_DNA_i-Motif_Overlap,9,2.67
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,G-Quadruplex_R-Loop_Overlap,189,56.08
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,G-Quadruplex,Canonical intramolecular G4,130,38.57
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,R-Loop_Slipped_DNA_Overlap,2,0.59
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,i-Motif_G-Quadruplex_Overlap,16,4.75
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,R-Loop_G-Quadruplex_Overlap,78,23.14
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,G-Quadruplex_Cruciform_Overlap,3,0.89
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Cruciform,Cruciform forming IRs,23,6.82
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Non-B_DNA_Clusters,Mixed_Cluster_5_classes,46,13.65
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Slipped_DNA,STR,27,8.01
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,A-philic_DNA_R-Loop_Overlap,29,8.6
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Z-DNA_G-Quadruplex_Overlap,119,35.31
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,R-Loop_i-Motif_Overlap,8,2.37
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,R-Loop_A-philic_DNA_Overlap,28,8.31
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Triplex,Sticky DNA,1,0.3
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,G-Quadruplex_i-Motif_Overlap,15,4.45
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Cruciform_G-Quadruplex_Overlap,5,1.48
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Cruciform_Slipped_DNA_Overlap,1,0.3
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,i-Motif_Slipped_DNA_Overlap,7,2.08
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Z-DNA_R-Loop_Overlap,11,3.26
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,G-Quadruplex,Higher-order G4 array/G4-wire,15,4.45
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,i-Motif_A-philic_DNA_Overlap,17,5.04
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Slipped_DNA_G-Quadruplex_Overlap,16,4.75
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Slipped_DNA_i-Motif_Overlap,5,1.48
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,G-Quadruplex,Stacked G4s with linker,5,1.48
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Slipped_DNA_A-philic_DNA_Overlap,2,0.59
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Z-DNA_Slipped_DNA_Overlap,4,1.19
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,R-Loop_Z-DNA_Overlap,6,1.78
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Non-B_DNA_Clusters,Mixed_Cluster_6_classes,2,0.59
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Curved_DNA,Global Curvature,2,0.59
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Triplex,Triplex,4,1.19
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Cruciform_Z-DNA_Overlap,2,0.59
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,A-philic_DNA_Slipped_DNA_Overlap,1,0.3
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Slipped_DNA_R-Loop_Overlap,2,0.59
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,i-Motif,AC-motif,2,0.59
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Slipped_DNA_Z-DNA_Overlap,1,0.3
+Miltoncostaea marina,Actinobacteria,Free-living,76.2,3.37,Hybrid,Z-DNA_Cruciform_Overlap,1,0.3
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Curved_DNA,Global Curvature,648,306.97
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,G-Quadruplex,Two-tetrad weak PQS,1158,548.56
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Curved_DNA,Local Curvature,1027,486.51
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Triplex,Triplex,158,74.85
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,G-Quadruplex,Intramolecular G-triplex,13,6.16
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,R-Loop,R-loop formation sites,114,54.0
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Slipped_DNA,Direct Repeat,39,18.47
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,i-Motif,Canonical i-motif,1,0.47
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Cruciform,Cruciform forming IRs,3,1.42
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,A-philic_DNA,A-philic DNA,7,3.32
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Z-DNA,Z-DNA,10,4.74
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Hybrid,Triplex_Curved_DNA_Overlap,1,0.47
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Non-B_DNA_Clusters,Mixed_Cluster_3_classes,12,5.68
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Hybrid,Triplex_G-Quadruplex_Overlap,1,0.47
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Slipped_DNA,STR,2,0.95
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Hybrid,G-Quadruplex_Triplex_Overlap,1,0.47
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Hybrid,R-Loop_G-Quadruplex_Overlap,2,0.95
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,G-Quadruplex,Extended-loop canonical,3,1.42
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Hybrid,Slipped_DNA_G-Quadruplex_Overlap,1,0.47
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Non-B_DNA_Clusters,Mixed_Cluster_4_classes,1,0.47
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Hybrid,Triplex_Slipped_DNA_Overlap,1,0.47
+Streptococcus pneumoniae,Firmicutes,Pathogen,39.7,2.11,Hybrid,Curved_DNA_Slipped_DNA_Overlap,1,0.47
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Curved_DNA,Local Curvature,1171,252.28
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,G-Quadruplex,Two-tetrad weak PQS,6389,1376.45
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,R-Loop,R-loop formation sites,786,169.34
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Z-DNA,Z-DNA,892,192.17
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Curved_DNA,Global Curvature,591,127.33
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,A-philic_DNA,A-philic DNA,67,14.43
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,G-Quadruplex,Intramolecular G-triplex,123,26.5
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Non-B_DNA_Clusters,Mixed_Cluster_3_classes,81,17.45
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,R-Loop_G-Quadruplex_Overlap,16,3.45
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,G-Quadruplex,Canonical intramolecular G4,20,4.31
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Slipped_DNA,Direct Repeat,13,2.8
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Z-DNA,eGZ,8,1.72
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Triplex,Triplex,60,12.93
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,Triplex_R-Loop_Overlap,1,0.22
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,i-Motif,Canonical i-motif,24,5.17
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,G-Quadruplex_R-Loop_Overlap,20,4.31
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,G-Quadruplex,Extended-loop canonical,21,4.52
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Non-B_DNA_Clusters,Mixed_Cluster_4_classes,16,3.45
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,G-Quadruplex_Z-DNA_Overlap,6,1.29
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,R-Loop_Z-DNA_Overlap,2,0.43
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,Triplex_A-philic_DNA_Overlap,1,0.22
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,Triplex_G-Quadruplex_Overlap,2,0.43
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Cruciform,Cruciform forming IRs,13,2.8
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,Curved_DNA_G-Quadruplex_Overlap,3,0.65
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,i-Motif_R-Loop_Overlap,2,0.43
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,A-philic_DNA_R-Loop_Overlap,2,0.43
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,A-philic_DNA_G-Quadruplex_Overlap,2,0.43
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Triplex,Sticky DNA,3,0.65
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,Z-DNA_G-Quadruplex_Overlap,4,0.86
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,G-Quadruplex_Curved_DNA_Overlap,5,1.08
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Slipped_DNA,STR,3,0.65
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,R-Loop_A-philic_DNA_Overlap,3,0.65
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,i-Motif_A-philic_DNA_Overlap,1,0.22
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,Slipped_DNA_Triplex_Overlap,1,0.22
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Non-B_DNA_Clusters,Mixed_Cluster_5_classes,3,0.65
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,R-Loop_Triplex_Overlap,1,0.22
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,G-Quadruplex_Triplex_Overlap,1,0.22
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,i-Motif,AC-motif,2,0.43
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,R-Loop_Curved_DNA_Overlap,1,0.22
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,Curved_DNA_R-Loop_Overlap,1,0.22
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,R-Loop_i-Motif_Overlap,2,0.43
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Non-B_DNA_Clusters,Mixed_Cluster_6_classes,1,0.22
+Escherichia coli,Proteobacteria,Free-living,50.8,4.64,Hybrid,R-Loop_Cruciform_Overlap,1,0.22
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,R-Loop,R-loop formation sites,2063,467.64
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Curved_DNA,Local Curvature,23,5.21
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,G-Quadruplex,Two-tetrad weak PQS,20392,4622.43
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,G-Quadruplex,Canonical intramolecular G4,90,20.4
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Non-B_DNA_Clusters,Mixed_Cluster_3_classes,703,159.36
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Z-DNA,Z-DNA,2243,508.44
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,A-philic_DNA,A-philic DNA,799,181.12
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Z-DNA,eGZ,143,32.42
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,G-Quadruplex_R-Loop_Overlap,158,35.82
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,G-Quadruplex,Intramolecular G-triplex,484,109.71
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,G-Quadruplex,Extended-loop canonical,343,77.75
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Slipped_DNA,Direct Repeat,125,28.33
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,i-Motif,Canonical i-motif,229,51.91
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Non-B_DNA_Clusters,Mixed_Cluster_4_classes,103,23.35
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,R-Loop_G-Quadruplex_Overlap,106,24.03
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,R-Loop_A-philic_DNA_Overlap,19,4.31
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Slipped_DNA,STR,60,13.6
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,G-Quadruplex_Z-DNA_Overlap,18,4.08
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,G-Quadruplex_i-Motif_Overlap,6,1.36
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,G-Quadruplex_Slipped_DNA_Overlap,17,3.85
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,Slipped_DNA_G-Quadruplex_Overlap,28,6.35
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,R-Loop_Slipped_DNA_Overlap,4,0.91
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,A-philic_DNA_G-Quadruplex_Overlap,49,11.11
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Curved_DNA,Global Curvature,43,9.75
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,R-Loop_Z-DNA_Overlap,6,1.36
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,Z-DNA_G-Quadruplex_Overlap,27,6.12
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,G-Quadruplex_A-philic_DNA_Overlap,55,12.47
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Triplex,Triplex,3,0.68
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,i-Motif_A-philic_DNA_Overlap,3,0.68
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,i-Motif_G-Quadruplex_Overlap,7,1.59
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,Z-DNA_R-Loop_Overlap,4,0.91
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Cruciform,Cruciform forming IRs,7,1.59
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,G-Quadruplex_Curved_DNA_Overlap,2,0.45
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,R-Loop_i-Motif_Overlap,3,0.68
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,Curved_DNA_G-Quadruplex_Overlap,2,0.45
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,Slipped_DNA_R-Loop_Overlap,5,1.13
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,G-Quadruplex,Higher-order G4 array/G4-wire,4,0.91
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,Z-DNA_Slipped_DNA_Overlap,4,0.91
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,A-philic_DNA_R-Loop_Overlap,15,3.4
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,G-Quadruplex,Stacked G4s with linker,2,0.45
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,A-philic_DNA_i-Motif_Overlap,2,0.45
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,Cruciform_G-Quadruplex_Overlap,1,0.23
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,i-Motif,AC-motif,2,0.45
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Triplex,Sticky DNA,1,0.23
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,i-Motif_Slipped_DNA_Overlap,4,0.91
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Non-B_DNA_Clusters,Mixed_Cluster_5_classes,2,0.45
+Mycobacterium tuberculosis,Actinobacteria,Pathogen,65.6,4.41,Hybrid,i-Motif_R-Loop_Overlap,2,0.45
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,G-Quadruplex,Two-tetrad weak PQS,516,182.89
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Curved_DNA,Global Curvature,968,343.1
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Curved_DNA,Local Curvature,1354,479.91
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,R-Loop,R-loop formation sites,41,14.53
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Triplex,Triplex,58,20.56
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,G-Quadruplex,Intramolecular G-triplex,2,0.71
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Slipped_DNA,Direct Repeat,46,16.3
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Non-B_DNA_Clusters,Mixed_Cluster_3_classes,3,1.06
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,A-philic_DNA,A-philic DNA,68,24.1
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Z-DNA,Z-DNA,7,2.48
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Hybrid,R-Loop_Triplex_Overlap,1,0.35
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Triplex,Sticky DNA,4,1.42
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Hybrid,Slipped_DNA_A-philic_DNA_Overlap,1,0.35
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Cruciform,Cruciform forming IRs,2,0.71
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Non-B_DNA_Clusters,Mixed_Cluster_4_classes,1,0.35
+Staphylococcus aureus,Firmicutes,Pathogen,32.9,2.82,Hybrid,G-Quadruplex_Slipped_DNA_Overlap,1,0.35
