@@ -409,9 +409,9 @@ Future work should integrate non-B DNA predictions with transcriptomic data to i
 
 ### 4.8.1 Overview of Validation Approach
 
-To rigorously validate the NonBDNAFinder algorithm and establish its accuracy relative to existing tools, we conducted a comprehensive comparative analysis against the Non-B GFA (NBST) suite developed by the NCI/FNLCR team^50^. NBST represents the reference standard for non-B DNA prediction, powering the widely-used Non-B DB v2.0 database^13^. This validation employed a standardized test sequence (40,100 bp human genomic fragment, identifier: 693fc40d26a53) that was analyzed using identical input parameters where possible, enabling direct comparison of detection sensitivity, specificity, and classification accuracy.
+To rigorously validate the NonBDNAFinder algorithm and establish its accuracy relative to existing tools, we conducted a comprehensive comparative analysis against the Non-B GFA (NBST) suite developed by the NCI/FNLCR team^50,52^. NBST represents the reference standard for non-B DNA prediction, powering the widely-used Non-B DB v2.0 database^13^. This validation employed a standardized test sequence (40,100 bp human genomic fragment, identifier: 693fc40d26a53, derived from Alu-rich repeat regions commonly used for non-B DNA benchmarking; available in the NBSTVALIDATION directory of the repository) that was analyzed using identical input parameters where possible, enabling direct comparison of detection sensitivity, specificity, and classification accuracy.
 
-The NBST suite, implemented in C (~3,800 lines of code), employs traditional algorithmic approaches including sliding window scans, character-by-character matching, and recursive boundary detection. In contrast, NonBDNAFinder (~4,700 lines of Python across 14 detector modules) utilizes modern computational biology methods including G4Hunter scoring algorithms^25^, QmRLFS (Quantitative model R-loop forming sequence) detection^29^, and machine learning-optimized parameter thresholds derived from experimental validation datasets.
+The NBST suite, implemented in C (~3,800 lines of code), employs pattern-matching algorithmic approaches including sliding window scans, character-by-character matching, and recursive boundary detection. NonBDNAFinder (~4,700 lines of Python across 14 detector modules) employs scoring-based approaches including G4Hunter scoring algorithms^25^, QmRLFS (Quantitative model R-loop forming sequence) detection^29^, and thermodynamically-calibrated parameter thresholds derived from experimental validation datasets.
 
 ### 4.8.2 Comparative Detection Results
 
@@ -458,7 +458,7 @@ The most striking difference between tools lies in G-quadruplex (G4) detection, 
 
 - Incorporates experimental validation from G4-seq datasets^5^ and structural studies^4^
 
-The subclass distribution in our validation analysis reveals why this distinction matters biologically: 128/159 (80.5%) of NonBDNAFinder-detected G4s were classified as "Two-tetrad weak PQS," representing structures that form under specific cellular conditions but are missed by strict pattern matching. These weak PQS are increasingly recognized as functionally relevant regulatory elements^36^.
+The subclass distribution in our validation analysis reveals why this distinction matters biologically: 128/159 (80.5%) of NonBDNAFinder-detected G4s were classified as "Two-tetrad weak PQS," representing structures that form under specific cellular conditions but are missed by strict pattern matching. These weak PQS have been shown to form stable G4 structures in vitro and have been mapped genome-wide using G4-seq methodology^36,48^.
 
 ### 4.8.4 Z-DNA Detection: Thermodynamic Rigor
 
@@ -476,7 +476,7 @@ Interestingly, NBST detects more Z-DNA motifs (6 vs. 3) than NonBDNAFinder. Anal
 - 12486-12501: AGCGCGCGCGCGCGTT, Score=2.14
 - 26774-26783: GCGCGCGGCA, Score=1.0
 
-NBST includes all alternating purine-pyrimidine (RY) sequences exceeding minimum length thresholds, including CA/AC dinucleotide repeats that exhibit lower Z-DNA forming propensity^3^. NonBDNAFinder applies thermodynamic scoring that preferentially weights GC dinucleotides (Z-DNA stabilizing energy: CG = -3.9 kcal/mol vs. CA = -1.3 kcal/mol)^51^. The more stringent NonBDNAFinder approach prioritizes high-confidence Z-DNA sites while potentially missing weak Z-DNA formers that may be functionally relevant under specific conditions.
+NBST includes all alternating purine-pyrimidine (RY) sequences exceeding minimum length thresholds, including CA/AC dinucleotide repeats that exhibit lower Z-DNA forming propensity^3^. NonBDNAFinder applies thermodynamic scoring that preferentially weights GC dinucleotides (Z-DNA stabilizing energy: CG = -3.9 kcal/mol vs. CA = -1.3 kcal/mol)^51^. This GC-preferential scoring approach prioritizes high-confidence Z-DNA sites with strong thermodynamic stability, while NBST's broader pattern matching detects a wider range of alternating sequences including weaker Z-DNA formers. Both approaches represent valid trade-offs between sensitivity and specificity.
 
 ### 4.8.5 Curved DNA Detection: Comprehensive vs. Minimal
 
@@ -513,7 +513,7 @@ i-Motifs are four-stranded C-rich structures stabilized by hemi-protonated C·C�
 - Canonical i-motifs (9 motifs): C₃₊N₁₋₇ patterns analogous to G4 on complementary strand
 - AC-motifs (1 motif): Extended structures with intercalated adenines
 
-i-Motifs were long considered pH-dependent artifacts but recent cellular studies demonstrate their formation at neutral pH^41^, making their detection increasingly important.
+i-Motifs were long considered pH-dependent artifacts, but recent cellular studies using antibody-based detection demonstrate their formation under physiological conditions^6,41^, making their detection biologically relevant.
 
 **A-philic DNA Detection (9 motifs detected):**
 A-philic regions represent A-rich sequences (>60% adenine content) that show enhanced binding to minor groove ligands and distinct structural properties. These were not recognized as a separate non-B DNA class in the original NBST framework.
@@ -574,25 +574,25 @@ Beyond algorithmic differences, the two tools differ substantially in implementa
 - Memory: Dynamic allocation (supports 100MB+ sequences)
 - Scoring: Comprehensive (continuous scores, subclass classification)
 
-The architectural differences enable NonBDNAFinder to process genome-scale sequences (~24,000 bp/second) while maintaining interpretable intermediate results and detailed classification.
+The architectural differences enable NonBDNAFinder to process genome-scale sequences (~24,000 bp/second on a standard desktop with 8-core CPU and 16GB RAM; NBST performance varies by motif type but typically processes ~50,000 bp/second for individual detectors). The object-oriented design facilitates method extensibility while maintaining interpretable intermediate results and detailed classification.
 
 ### 4.8.9 Validation Summary and Recommendations
 
-This comparative analysis validates NonBDNAFinder as a comprehensive, modern non-B DNA detection platform that extends significantly beyond the capabilities of traditional tools:
+This comparative analysis validates NonBDNAFinder as a comprehensive non-B DNA detection platform that extends significantly beyond the capabilities of established tools:
 
 **Strengths of NonBDNAFinder:**
 1. Detection of 5 additional motif classes (R-loops, i-motifs, A-philic DNA, hybrids, clusters)
 2. Subclass-level classification within each major class (24 total subclasses)
 3. Continuous scoring enabling prioritization of high-confidence predictions
-4. Modern algorithmic approaches (G4Hunter, QmRLFS) validated against experimental data
+4. Scoring-based approaches (G4Hunter, QmRLFS) calibrated against experimental data
 5. Scalable architecture supporting genome-wide analysis
 6. Comprehensive output formats for downstream analysis
 
 **Appropriate use cases for each tool:**
-- **NBST/Non-B DB**: Best for canonical, high-confidence structure detection using established standards; reference database queries
+- **NBST/Non-B DB**: Best for canonical, high-confidence structure detection using established standards; reference database queries; validation of findings
 - **NonBDNAFinder**: Best for comprehensive analysis including emerging structure classes; quantitative scoring; genome-scale studies; hybrid and cluster identification
 
-For maximal detection coverage, we recommend using both tools in parallel, with NonBDNAFinder providing comprehensive detection and NBST serving as a validation filter for canonical structures.
+For maximal detection coverage, we recommend a two-stage approach: (1) use NonBDNAFinder for comprehensive detection across all motif classes, then (2) validate canonical structures (G4, Z-DNA, mirror repeats) against NBST results, accepting structures detected by both tools as high-confidence and flagging discordant detections for manual review.
 
 ## 5. Conclusions
 
