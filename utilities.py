@@ -1612,7 +1612,7 @@ class HyperscanManager:
             return True
             
         except Exception as e:
-            print(f"Hyperscan compilation failed: {e}")
+            logger.warning(f"Hyperscan compilation failed: {e}")
             return False
     
     def scan_sequence(self, sequence: str) -> List[Tuple[int, int, str]]:
@@ -1637,7 +1637,7 @@ class HyperscanManager:
         try:
             hyperscan.hs_scan(self.compiled_db, sequence.encode(), match_handler, None)
         except Exception as e:
-            print(f"Hyperscan scanning failed: {e}")
+            logger.warning(f"Hyperscan scanning failed: {e}")
         
         return matches
 
@@ -2239,7 +2239,7 @@ def write_fasta(sequences: Dict[str, str], filename: str) -> bool:
                     f.write(f"{seq[i:i+80]}\n")
         return True
     except Exception as e:
-        print(f"Error writing FASTA file {filename}: {e}")
+        logger.error(f"Error writing FASTA file {filename}: {e}")
         return False
 
 def read_fasta_file(filename: str) -> Dict[str, str]:
@@ -2257,7 +2257,7 @@ def read_fasta_file(filename: str) -> Dict[str, str]:
             content = f.read()
         return parse_fasta(content)
     except Exception as e:
-        print(f"Error reading FASTA file {filename}: {e}")
+        logger.error(f"Error reading FASTA file {filename}: {e}")
         return {}
 
 # =============================================================================
@@ -2856,7 +2856,7 @@ def export_to_bed(motifs: List[Dict[str, Any]], sequence_name: str = "sequence",
             with open(filename, 'w') as f:
                 f.write(bed_content)
         except Exception as e:
-            print(f"Error writing BED file {filename}: {e}")
+            logger.error(f"Error writing BED file {filename}: {e}")
     
     return bed_content
 
@@ -2922,7 +2922,7 @@ def export_to_csv(motifs: List[Dict[str, Any]], filename: Optional[str] = None,
             with open(filename, 'w', newline='') as f:
                 f.write(csv_content)
         except Exception as e:
-            print(f"Error writing CSV file {filename}: {e}")
+            logger.error(f"Error writing CSV file {filename}: {e}")
     
     return csv_content
 
@@ -2963,7 +2963,7 @@ def export_to_json(motifs: List[Dict[str, Any]], filename: Optional[str] = None,
             with open(filename, 'w') as f:
                 f.write(json_content)
         except Exception as e:
-            print(f"Error writing JSON file {filename}: {e}")
+            logger.error(f"Error writing JSON file {filename}: {e}")
     
     return json_content
 
@@ -3004,6 +3004,13 @@ def export_to_excel(motifs: List[Dict[str, Any]], filename: str = "nonbscanner_r
     
     if not motifs:
         return "No motifs to export"
+    
+    # Validate and normalize motifs before export
+    from export.export_validator import validate_export_data
+    try:
+        motifs = validate_export_data(motifs, auto_normalize=True, strict=False)
+    except Exception as e:
+        logger.warning(f"Export validation warning: {e}")
     
     # Core columns for all sheets (Task 1 & 2 requirements)
     core_columns = CORE_OUTPUT_COLUMNS
@@ -3397,7 +3404,7 @@ def export_to_gff3(motifs: List[Dict[str, Any]], sequence_name: str = "sequence"
             with open(filename, 'w') as f:
                 f.write(gff_content)
         except Exception as e:
-            print(f"Error writing GFF3 file {filename}: {e}")
+            logger.error(f"Error writing GFF3 file {filename}: {e}")
     
     return gff_content
 
@@ -4165,28 +4172,11 @@ FEATURES:
 # Default DPI for publication quality (Nature requires 300 DPI minimum)
 PUBLICATION_DPI = 300
 
-# Nature-level color palette for motif classes (colorblind-friendly)
+# MOTIF_CLASS_COLORS: Centralized visualization color palette
+# Single source of truth: config/colors.py → VISUALIZATION_MOTIF_COLORS
 # Based on Wong, B. (2011) Nature Methods colorblind-safe palette
-# Each motif class has a unique color for distinguishability
 # Reference: Wong, B. (2011) Points of view: Color blindness. Nat Methods 8, 441
-MOTIF_CLASS_COLORS = {
-    # Primary motif classes (6 core colors per Nature guidelines)
-    'Curved_DNA': '#CC79A7',          # Reddish Purple - Structure
-    'G-Quadruplex': '#0072B2',        # Blue - Stable structures
-    'Z-DNA': '#882255',               # Wine - Alternative helices
-    'Cruciform': '#56B4E9',           # Sky Blue - Symmetric structures
-    'Triplex': '#E69F00',             # Orange - Triple-stranded
-    'R-Loop': '#009E73',              # Bluish Green - RNA-DNA hybrids
-    
-    # Secondary classes (consolidated to reduce color count)
-    'i-Motif': '#0072B2',             # Same as G4 (complementary structures)
-    'A-philic_DNA': '#CC79A7',        # Same as Curved (structural affinity)
-    'Slipped_DNA': '#E69F00',         # Same as Triplex (repeats)
-    
-    # Meta-classes (neutral grays)
-    'Hybrid': '#888888',              # Medium gray
-    'Non-B_DNA_Clusters': '#666666'   # Dark gray
-}
+from config.colors import VISUALIZATION_MOTIF_COLORS as MOTIF_CLASS_COLORS
 
 # Default fallback color for unknown motif classes
 DEFAULT_MOTIF_COLOR = '#808080'
@@ -5317,17 +5307,17 @@ def save_all_plots(motifs: List[Dict[str, Any]],
                     fig.write_html(filepath)
                 else:
                     # Unsupported format - try default write_image
-                    print(f"⚠ Unsupported format '{file_format}' for Plotly, attempting save anyway")
+                    logger.warning(f"Unsupported format '{file_format}' for Plotly, attempting save anyway")
                     try:
                         fig.write_image(filepath)
                     except Exception as fmt_err:
                         raise ValueError(f"Unsupported file format: {file_format}. Use 'png', 'pdf', 'svg', or 'html'.") from fmt_err
             
             saved_files[plot_name] = filepath
-            print(f"[OK] Saved {plot_name} to {filepath}")
+            logger.info(f"Saved {plot_name} to {filepath}")
             
         except Exception as e:
-            print(f"✗ Failed to generate {plot_name}: {e}")
+            logger.error(f"Failed to generate {plot_name}: {e}")
     
     return saved_files
 

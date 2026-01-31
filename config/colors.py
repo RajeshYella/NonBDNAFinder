@@ -184,7 +184,39 @@ VISUALIZATION_PALETTE = {
     'chart_12': '#546E7A',        # STEEL BLUE - Balanced contrast
 }
 
-# ==================== MOTIF CLASS COLOR ENCODING ====================
+# ==================== VISUALIZATION MOTIF COLORS (PUBLICATION-GRADE) ====================
+# Nature-ready colorblind-friendly palette for scientific visualizations and plots.
+# Based on Wong, B. (2011) Nature Methods colorblind-safe palette.
+# Reference: Wong, B. (2011) Points of view: Color blindness. Nat Methods 8, 441
+# 
+# These colors follow Nature journal guidelines for scientific figures:
+# - Limited to 6 primary colors for main biological classes
+# - Colorblind accessible (tested with all three types)
+# - High contrast for print and screen
+#
+# NOTE: This is the SINGLE SOURCE OF TRUTH for visualization colors.
+#       utilities.py imports MOTIF_CLASS_COLORS from here.
+#       visualization/standards.py re-exports NATURE_MOTIF_COLORS from here.
+VISUALIZATION_MOTIF_COLORS = {
+    # Primary motif classes (6 core colors per Nature guidelines)
+    'Curved_DNA': '#CC79A7',          # Reddish Purple - Structure
+    'G-Quadruplex': '#0072B2',        # Blue - Stable structures
+    'Z-DNA': '#882255',               # Wine - Alternative helices
+    'Cruciform': '#56B4E9',           # Sky Blue - Symmetric structures
+    'Triplex': '#E69F00',             # Orange - Triple-stranded
+    'R-Loop': '#009E73',              # Bluish Green - RNA-DNA hybrids
+    
+    # Secondary classes (consolidated to reduce visual complexity)
+    'i-Motif': '#0072B2',             # Same as G4 (complementary structures)
+    'A-philic_DNA': '#CC79A7',        # Same as Curved (structural affinity)
+    'Slipped_DNA': '#E69F00',         # Same as Triplex (repeats)
+    
+    # Meta-classes (neutral grays)
+    'Hybrid': '#888888',              # Medium gray
+    'Non-B_DNA_Clusters': '#666666'   # Dark gray
+}
+
+# ==================== MOTIF CLASS COLOR ENCODING (UI) ====================
 # Each motif class has a single, consistent color for visual encoding.
 # Applied to class header cards and submotifs under that class.
 # Matches genome browser conventions for scannable, dense UI.

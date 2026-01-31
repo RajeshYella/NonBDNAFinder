@@ -34,27 +34,10 @@ from enum import Enum
 # =============================================================================
 # MOTIF CLASS COLOR SCHEME - NATURE-READY (MAX 6 COLORS + NEUTRAL)
 # =============================================================================
+# Single source of truth: config/colors.py → VISUALIZATION_MOTIF_COLORS
+# This module re-exports as NATURE_MOTIF_COLORS for backward compatibility
 
-# Primary color palette - scientifically meaningful groupings
-# Limit to 6 colors for main biological classes per Nature guidelines
-NATURE_MOTIF_COLORS = {
-    # Primary motif classes (6 colors)
-    'Curved_DNA': '#CC79A7',          # Reddish Purple - Structure
-    'G-Quadruplex': '#0072B2',        # Blue - Stable structures
-    'Z-DNA': '#882255',               # Wine - Alternative helices
-    'Cruciform': '#56B4E9',           # Sky Blue - Symmetric structures
-    'Triplex': '#E69F00',             # Orange - Triple-stranded
-    'R-Loop': '#009E73',              # Bluish Green - RNA-DNA hybrids
-    
-    # Secondary classes (consolidated to neutral tones)
-    'i-Motif': '#0072B2',             # Same as G4 (complementary structures)
-    'A-philic_DNA': '#CC79A7',        # Same as Curved (structural affinity)
-    'Slipped_DNA': '#E69F00',         # Same as Triplex (repeats)
-    
-    # Meta-classes (neutral grays)
-    'Hybrid': '#888888',              # Medium gray
-    'Non-B_DNA_Clusters': '#666666'   # Dark gray
-}
+from config.colors import VISUALIZATION_MOTIF_COLORS as NATURE_MOTIF_COLORS
 
 # Subclass color variations (tonal only - lighter/darker versions)
 SUBCLASS_TONE_ADJUSTMENTS = {

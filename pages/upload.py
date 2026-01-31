@@ -16,7 +16,7 @@ import logging
 from config.text import UI_TEXT
 from config.typography import FONT_CONFIG
 from config.themes import TAB_THEMES
-from config.analysis import ANALYSIS_CONFIG
+from config.analysis import ANALYSIS_CONFIG, GC_BALANCE_MIN, GC_BALANCE_MAX
 from config.motif_taxonomy import (
     MOTIF_CLASSIFICATION,
     get_all_classes,
@@ -60,10 +60,6 @@ logger = logging.getLogger(__name__)
 
 # Configuration availability flag
 CONFIG_AVAILABLE = False
-
-# GC Balance Thresholds (typical genomic DNA range)
-GC_BALANCE_MIN = 30  # Minimum GC% for balanced genome
-GC_BALANCE_MAX = 70  # Maximum GC% for balanced genome
 
 
 def ensure_subclass(motif):

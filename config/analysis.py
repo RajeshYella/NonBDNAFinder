@@ -6,6 +6,17 @@ This module contains analysis parameters:
 - Performance and display settings
 - Motif filtering options
 - File upload limits
+- GC balance thresholds
+- Results display settings
+
+PARAMETERS USED IN THIS MODULE
+--------------------------------
+CHUNK_THRESHOLD = 10_000 bp
+DEFAULT_CHUNK_SIZE = 10_000 bp
+DEFAULT_CHUNK_OVERLAP = 500 bp
+GC_BALANCE_MIN = 30%
+GC_BALANCE_MAX = 70%
+MAX_OVERLAP_DISPLAY = 10
 """
 
 # ==================== ANALYSIS PARAMETERS ====================
@@ -33,3 +44,13 @@ ANALYSIS_CONFIG = {
     # File upload limits
     'max_file_size_mb': 1024,      # Maximum file size in MB (1 GB default)
 }
+
+# ==================== SEQUENCE COMPOSITION THRESHOLDS ====================
+# GC balance thresholds for genomic DNA analysis
+# Typical balanced genomic DNA falls within 30-70% GC content
+GC_BALANCE_MIN = 30   # Minimum GC% for balanced genome
+GC_BALANCE_MAX = 70   # Maximum GC% for balanced genome
+
+# ==================== RESULTS DISPLAY SETTINGS ====================
+# Maximum number of overlap pairs to display in overlap matrices
+MAX_OVERLAP_DISPLAY = 10
