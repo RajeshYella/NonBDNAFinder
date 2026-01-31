@@ -201,3 +201,19 @@ CLASS_COLORS = {
     'Hybrid': '#64748b',              # Slate - Dynamic overlaps
     'Non-B_DNA_Clusters': '#0f172a',  # Dark slate - Clusters
 }
+
+# Streamlit color names for :color[text] syntax (matches CLASS_COLORS)
+# Used for colorizing submotif checkbox labels in the UI
+CLASS_COLOR_NAMES = {
+    'Curved_DNA': 'blue',             # Cyan → blue (closest Streamlit color)
+    'Slipped_DNA': 'orange',          # Amber → orange
+    'Cruciform': 'red',               # Red → red
+    'R-Loop': 'violet',               # Violet → violet
+    'Triplex': 'violet',              # Pink → violet (closest)
+    'G-Quadruplex': 'green',          # Emerald → green
+    'i-Motif': 'green',               # Green → green
+    'Z-DNA': 'blue',                  # Indigo → blue
+    'A-philic_DNA': 'orange',         # Orange → orange
+    'Hybrid': 'gray',                 # Slate → gray
+    'Non-B_DNA_Clusters': 'gray',     # Dark slate → gray
+}
