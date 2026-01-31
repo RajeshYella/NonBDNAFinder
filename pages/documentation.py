@@ -9,6 +9,7 @@ from config.text import UI_TEXT
 from config.typography import FONT_CONFIG
 from config.themes import TAB_THEMES
 from ui.css import load_css
+from ui.headers import render_section_heading
 
 # Configuration availability flag
 # This is set to False by default as configuration is not available
@@ -23,7 +24,9 @@ def render():
     """Render the Documentation page content."""
     # Apply Documentation tab theme based on configuration
     load_css(TAB_THEMES.get('Documentation', 'midnight'))
-    st.header(UI_TEXT['heading_documentation'])
+    
+    # Uniform section heading (no caption)
+    render_section_heading("Scientific Documentation & References")
     
     # Motif classes documentation
     st.markdown("""

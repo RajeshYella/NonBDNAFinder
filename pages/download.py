@@ -12,6 +12,7 @@ from openpyxl import Workbook
 from config.text import UI_TEXT
 from config.themes import TAB_THEMES
 from ui.css import load_css
+from ui.headers import render_section_heading
 from ui.guards import generate_excel_bytes
 from utilities import (
     export_to_csv,
@@ -28,18 +29,8 @@ def render():
     # Apply Download tab theme based on configuration
     load_css(TAB_THEMES.get('Download', 'clinical_teal'))
     
-    st.markdown("""
-    <div style='text-align: center; margin-bottom: 2rem;'>
-        <h2 style='margin: 0; font-size: 2rem; background: linear-gradient(135deg, #0ea5e9, #0284c7);
-                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                   font-weight: 700;'>
-            Download & Export Results
-        </h2>
-        <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 1rem;'>
-            Export your analysis in multiple formats for publication and further analysis
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Uniform section heading (no caption)
+    render_section_heading("Download & Export Results")
     
     if not st.session_state.results:
         st.info(UI_TEXT['download_no_results'])
