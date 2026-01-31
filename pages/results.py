@@ -53,14 +53,14 @@ from visualization_standards import (
 
 def _render_section_bar(emoji: str, title: str, info_icon: bool = False) -> None:
     """Render a compact inline section bar with emoji and thin divider."""
-    info_html = '<span style="margin-left: 8px; cursor: help;">ℹ️</span>' if info_icon else ''
+    info_html = '<span style="margin-left: 8px; cursor: help;" title="More information available" aria-label="Information">ℹ️</span>' if info_icon else ''
     st.markdown(f"""
     <div class="section-bar">
-        <span class="section-bar__emoji">{emoji}</span>
+        <span class="section-bar__emoji" aria-hidden="true">{emoji}</span>
         <span class="section-bar__title">{title}</span>
         {info_html}
     </div>
-    <div class="section-divider"></div>
+    <div class="section-divider" aria-hidden="true"></div>
     """, unsafe_allow_html=True)
 
 
@@ -152,7 +152,7 @@ def render():
         """, unsafe_allow_html=True)
     
     # Collapsed data table preview
-    with st.expander(f"▸ View summary table ({len(st.session_state.summary_df)} rows)", expanded=False):
+    with st.expander(f"View summary table ({len(st.session_state.summary_df)} rows)", expanded=False):
         st.dataframe(st.session_state.summary_df, use_container_width=True)
     
     # Sequence selection for detailed analysis using pills for better UX
@@ -239,8 +239,8 @@ def render():
         # Single scientific transparency note (compact badge, not info box)
         st.markdown(f'<div class="transparency-badge">📊 Only non-redundant metrics shown. Full data in exports.</div>', unsafe_allow_html=True)
         
-        # Create simplified visualization tabs
-        viz_tabs = st.tabs(["🔬 All Motifs", "🔀 Dynamic Clusters"])
+        # Create simplified visualization tabs (text-first for accessibility)
+        viz_tabs = st.tabs(["All Motifs", "Dynamic Clusters"])
         
         # Check if clusters exist
         has_clusters = any(m.get('Class') == 'Non-B_DNA_Clusters' for m in filtered_motifs)
@@ -295,11 +295,11 @@ def render():
             
             # Toggle for Manhattan vs Linear (user controls representation)
             plot_type = st.radio(
-                "View mode:",
+                "Genome visualization view mode",
                 options=["Manhattan", "Linear"],
                 index=0 if sequence_length > 50000 else 1,
                 horizontal=True,
-                label_visibility="collapsed"
+                help="Manhattan: density hotspots view for large genomes. Linear: track view for small sequences."
             )
             
             try:
