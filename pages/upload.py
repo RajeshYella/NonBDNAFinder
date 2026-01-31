@@ -470,6 +470,13 @@ def render():
     # All motifs enabled by default - users uncheck to exclude.
     # ============================================================
     
+    # Helper function to convert hex color to rgba
+    def _hex_to_rgba(hex_color: str, alpha: float) -> str:
+        """Convert hex color to rgba string with given alpha."""
+        hex_color = hex_color.lstrip('#')
+        r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+        return f"rgba({r}, {g}, {b}, {alpha})"
+    
     # Initialize session state for individual submotif selections
     # Key format: 'submotif_{class}_{submotif}' with sanitized names
     def _sanitize_key(name: str) -> str:
@@ -567,8 +574,11 @@ def render():
                 status_badge = f"({class_enabled_count}/{total_in_class})"
                 
                 # Class header with icon, status, and class-specific color encoding
+                # Use rgba for proper CSS color with alpha transparency
+                bg_color_light = _hex_to_rgba(class_color, 0.1)
+                bg_color_dark = _hex_to_rgba(class_color, 0.15)
                 st.markdown(f"""
-                <div style='background: linear-gradient(135deg, {class_color}15 0%, {class_color}25 100%);
+                <div style='background: linear-gradient(135deg, {bg_color_light} 0%, {bg_color_dark} 100%);
                             border-radius: 8px; padding: 6px 8px; margin-bottom: 4px;
                             border-left: 3px solid {class_color}; font-size: 0.8rem;'>
                     <span style='font-weight: 600; color: {class_color};'>{icon} {display_name}</span>
