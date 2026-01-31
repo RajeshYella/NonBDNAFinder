@@ -25,7 +25,7 @@ from config.motif_taxonomy import (
     build_motif_selector_data,
     get_enabled_from_selector_data
 )
-# Note: CLASS_COLORS removed - using local SUBMOTIF_CLASS_COLORS instead
+
 
 # Import UI components
 from ui.css import load_css, get_page_colors
@@ -65,6 +65,25 @@ CONFIG_AVAILABLE = False
 # GC Balance Thresholds (typical genomic DNA range)
 GC_BALANCE_MIN = 30  # Minimum GC% for balanced genome
 GC_BALANCE_MAX = 70  # Maximum GC% for balanced genome
+
+# =============================================================================
+# SUBMOTIF CLASS COLOR ENCODING
+# Color stripe on the left of each submotif encodes its parent motif class.
+# This allows users to visually identify class membership without explicit labels.
+# =============================================================================
+SUBMOTIF_CLASS_COLORS = {
+    'Curved_DNA': '#38bdf8',
+    'Slipped_DNA': '#f59e0b',
+    'Cruciform': '#ef4444',
+    'R-Loop': '#a78bfa',
+    'Triplex': '#fb7185',
+    'G-Quadruplex': '#10b981',
+    'i-Motif': '#22c55e',
+    'Z-DNA': '#6366f1',
+    'A-philic_DNA': '#fb923c',
+    'Hybrid': '#94a3b8',
+    'Non-B_DNA_Clusters': '#64748b'
+}
 
 
 def ensure_subclass(motif):
@@ -481,22 +500,8 @@ def render():
     """, unsafe_allow_html=True)
 
     # ------------------------------------------------------------------
-    # Class → Color map (single source of truth)
+    # Helper function for session state key sanitization
     # ------------------------------------------------------------------
-    SUBMOTIF_CLASS_COLORS = {
-        'Curved_DNA': '#38bdf8',
-        'Slipped_DNA': '#f59e0b',
-        'Cruciform': '#ef4444',
-        'R-Loop': '#a78bfa',
-        'Triplex': '#fb7185',
-        'G-Quadruplex': '#10b981',
-        'i-Motif': '#22c55e',
-        'Z-DNA': '#6366f1',
-        'A-philic_DNA': '#fb923c',
-        'Hybrid': '#94a3b8',
-        'Non-B_DNA_Clusters': '#64748b'
-    }
-
     def _sanitize_key(name: str) -> str:
         return name.replace(' ', '_').replace('-', '_').replace('/', '_')
 
@@ -547,7 +552,9 @@ def render():
             st.rerun()
 
     # ------------------------------------------------------------------
-    # Render 4 × 6 grid
+    # Render submotif grid (NUM_COLUMNS per row)
+    # Note: Currently 24 submotifs = 4 complete rows of 6 columns each.
+    # If submotif count changes, partial rows are handled gracefully.
     # ------------------------------------------------------------------
     NUM_COLUMNS = 6
     rows = [flat_submotifs[i:i + NUM_COLUMNS]
@@ -555,11 +562,12 @@ def render():
 
     for row in rows:
         cols = st.columns(NUM_COLUMNS)
-        for col, (class_name, subclass) in zip(cols, row):
+        # Use enumerate to handle partial rows correctly
+        for idx, (class_name, subclass) in enumerate(row):
             color = SUBMOTIF_CLASS_COLORS.get(class_name, "#cbd5e1")
             key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
 
-            with col:
+            with cols[idx]:
                 st.markdown(f"""
                 <div style="
                     border-left: 4px solid {color};
