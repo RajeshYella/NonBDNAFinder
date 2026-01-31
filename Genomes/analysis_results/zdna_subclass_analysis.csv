@@ -1,0 +1,9 @@
+Organism,Phylum,GC_Content_pct,Genome_Size_Mb,Total_ZDNA,Z_DNA,Z_DNA_per_Mb,eGZ,eGZ_per_Mb
+Buchnera aphidicola,Proteobacteria,18.3,0.45,0,0,0.0,0,0.0
+Candidatus Carsonella ruddii,Proteobacteria,17.6,0.17,0,0,0.0,0,0.0
+Cellulomonas shaoxiangyii,Actinobacteria,75.3,3.91,8746,8558,2189.1,188,48.09
+Miltoncostaea marina,Actinobacteria,76.2,3.37,7837,7430,2204.57,407,120.76
+Streptococcus pneumoniae,Firmicutes,39.7,2.11,10,10,4.74,0,0.0
+Escherichia coli,Proteobacteria,50.8,4.64,900,892,192.17,8,1.72
+Mycobacterium tuberculosis,Actinobacteria,65.6,4.41,2386,2243,508.44,143,32.42
+Staphylococcus aureus,Firmicutes,32.9,2.82,7,7,2.48,0,0.0
