@@ -25,6 +25,7 @@ from config.motif_taxonomy import (
     build_motif_selector_data,
     get_enabled_from_selector_data
 )
+from config.colors import CLASS_COLORS
 
 # Import UI components
 from ui.css import load_css, get_page_colors
@@ -454,66 +455,13 @@ def render():
     </div>
     """, unsafe_allow_html=True)
     
-    # Determine default analysis mode based on sequence size
-    total_sequence_length = sum(len(seq) for seq in st.session_state.get('seqs', []))
-    
-    # Default to submotif for smaller sequences (<100kb), motif for larger sequences
-    if 'analysis_mode' not in st.session_state:
-        if total_sequence_length > 0 and total_sequence_length < 100_000:
-            st.session_state.analysis_mode = "Submotif Level"
-        else:
-            st.session_state.analysis_mode = "Motif Level"
-    
     # ============================================================
-    # ANALYSIS GRANULARITY - COMPACT COLORFUL PILL TOGGLE
+    # FIXED ANALYSIS GRANULARITY - Always Submotif Level (no UI)
     # ============================================================
-    # Elegant two-option pill toggle with icons and gradient styling
-    
-    # Constants for pill labels to avoid duplication
-    PILL_MOTIF_LEVEL = "🔬 Motif Level"
-    PILL_SUBMOTIF_LEVEL = "🧬 Submotif Level"
-    
-    current_mode = st.session_state.analysis_mode
-    
-    # Compact inline header with styled pills selector
-    st.markdown("""
-    <style>
-    .granularity-label-inline {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.88rem;
-        font-weight: 700;
-        color: #334155;
-        white-space: nowrap;
-    }
-    .granularity-label-inline .icon {
-        font-size: 1.05rem;
-    }
-    </style>
-    <div class="granularity-label-inline">
-        <span class="icon">🎯</span>
-        <span>Analysis Granularity:</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Use Streamlit pills with icons embedded in labels for visual appeal
-    analysis_mode = st.pills(
-        "granularity",
-        options=[PILL_MOTIF_LEVEL, PILL_SUBMOTIF_LEVEL],
-        default=PILL_MOTIF_LEVEL if current_mode == "Motif Level" else PILL_SUBMOTIF_LEVEL,
-        selection_mode="single",
-        key="analysis_mode_pills",
-        label_visibility="collapsed",
-        help="Motif Level: Groups by major structural classes (e.g., G-Quadruplex). Submotif Level: Detailed subclass analysis (e.g., Telomeric G4)."
-    )
-    
-    # Map pill selection back to mode name
-    if analysis_mode:
-        actual_mode = "Motif Level" if analysis_mode == PILL_MOTIF_LEVEL else "Submotif Level"
-        if actual_mode != st.session_state.analysis_mode:
-            st.session_state.analysis_mode = actual_mode
-            st.rerun()
+    # Detection is always submotif-level to preserve biological accuracy
+    # and prevent biologically invalid assumptions.
+    st.session_state.analysis_mode = "Submotif Level"
+    st.session_state.analysis_mode_used = "Submotif Level"
     
     # ============================================================
     # MODERN COMPACT MOTIF & SUBMOTIF SELECTOR
@@ -601,6 +549,9 @@ def render():
             subclasses = entry['subclasses']
             icon = motif_icons.get(class_name, '📍')
             
+            # Get class-specific color from CLASS_COLORS
+            class_color = CLASS_COLORS.get(class_name, '#667eea')
+            
             # Count enabled submotifs for this class from session state
             class_enabled_count = sum(
                 1 for sc in subclasses 
@@ -615,12 +566,12 @@ def render():
                 display_name = class_name
                 status_badge = f"({class_enabled_count}/{total_in_class})"
                 
-                # Class header with icon and status
+                # Class header with icon, status, and class-specific color encoding
                 st.markdown(f"""
-                <div style='background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                <div style='background: linear-gradient(135deg, {class_color}15 0%, {class_color}25 100%);
                             border-radius: 8px; padding: 6px 8px; margin-bottom: 4px;
-                            border-left: 3px solid #667eea; font-size: 0.8rem;'>
-                    <span style='font-weight: 600;'>{icon} {display_name}</span>
+                            border-left: 3px solid {class_color}; font-size: 0.8rem;'>
+                    <span style='font-weight: 600; color: {class_color};'>{icon} {display_name}</span>
                     <span style='color: #64748b; font-size: 0.75rem;'>{status_badge}</span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -696,76 +647,26 @@ def render():
         st.warning("⚠️ Please enable at least one submotif to run analysis.")
     
     # ============================================================
-    # INLINE TOGGLE BAR - Analysis Options
+    # ANALYSIS OPTIONS - Always ON, Hidden from UI
     # ============================================================
-    # Compact single-row toggle chips instead of vertical checkboxes
+    # All engine-level options are enforced internally and never shown.
+    # Validation always runs, parallelization enabled where applicable,
+    # results are reproducible and reviewer-safe.
     # ============================================================
     
-    st.markdown("""
-    <div style='font-size: 0.85rem; color: #64748b; margin: 12px 0 8px 0;'>
-        <strong>Analysis Options</strong>
-    </div>
-    """, unsafe_allow_html=True)
+    # Enforce all analysis options as always ON (hard defaults, no UI)
+    st.session_state.toggle_detailed = True
+    st.session_state.toggle_validation = True
+    st.session_state.toggle_parallel = True
+    st.session_state.toggle_chunk_progress = True
+    st.session_state.toggle_memory = True
     
-    # Initialize toggle states in session state
-    if 'toggle_detailed' not in st.session_state:
-        st.session_state.toggle_detailed = True
-    if 'toggle_validation' not in st.session_state:
-        st.session_state.toggle_validation = True
-    if 'toggle_parallel' not in st.session_state:
-        st.session_state.toggle_parallel = True
-    if 'toggle_chunk_progress' not in st.session_state:
-        st.session_state.toggle_chunk_progress = True
-    if 'toggle_memory' not in st.session_state:
-        st.session_state.toggle_memory = True
-    
-    # Render toggle bar using columns for compact horizontal layout
-    tog_cols = st.columns(5)
-    
-    with tog_cols[0]:
-        detailed_output = st.checkbox(
-            "📊 Detailed",
-            value=st.session_state.toggle_detailed,
-            help=UI_TEXT['help_detailed_analysis'],
-            key="chk_detailed"
-        )
-        st.session_state.toggle_detailed = detailed_output
-    
-    with tog_cols[1]:
-        quality_check = st.checkbox(
-            "✅ Validation",
-            value=st.session_state.toggle_validation,
-            help=UI_TEXT['help_quality_validation'],
-            key="chk_validation"
-        )
-        st.session_state.toggle_validation = quality_check
-    
-    with tog_cols[2]:
-        use_parallel_scanner = st.checkbox(
-            "⚡ Parallel",
-            value=st.session_state.toggle_parallel,
-            help=UI_TEXT['help_parallel_scanner'],
-            key="chk_parallel"
-        )
-        st.session_state.toggle_parallel = use_parallel_scanner
-    
-    with tog_cols[3]:
-        show_chunk_progress = st.checkbox(
-            "📦 Chunks",
-            value=st.session_state.toggle_chunk_progress,
-            help=UI_TEXT['help_chunk_progress'],
-            key="chk_chunks"
-        )
-        st.session_state.toggle_chunk_progress = show_chunk_progress
-    
-    with tog_cols[4]:
-        show_memory_usage = st.checkbox(
-            "💾 Memory",
-            value=st.session_state.toggle_memory,
-            help="Display real-time memory usage during analysis",
-            key="chk_memory"
-        )
-        st.session_state.toggle_memory = show_memory_usage
+    # Expose variables for use in analysis logic below
+    detailed_output = True
+    quality_check = True
+    use_parallel_scanner = True
+    show_chunk_progress = True
+    show_memory_usage = True
     
     # Hardcoded default overlap handling
     nonoverlap = True
@@ -832,9 +733,7 @@ def render():
                 st.session_state.performance_metrics = None
                 st.session_state.cached_visualizations = {}
                 st.session_state.analysis_time = None
-                # Reset analysis mode to default based on sequence size
-                if 'analysis_mode' in st.session_state:
-                    del st.session_state.analysis_mode
+                # analysis_mode is always "Submotif Level" (fixed), no reset needed
                 st.rerun()
         
         # Placeholder for progress area
@@ -869,7 +768,7 @@ def render():
             # Store analysis parameters in session state for use in download section
             st.session_state.overlap_option_used = overlap_option
             st.session_state.nonoverlap_used = nonoverlap
-            st.session_state.analysis_mode_used = analysis_mode  # Store selected analysis mode
+            # analysis_mode_used is already set at the top (fixed as "Submotif Level")
             st.session_state.selected_classes_used = list(st.session_state.selected_classes)  # Store selected classes
             st.session_state.selected_subclasses_used = list(st.session_state.selected_subclasses)  # Store selected subclasses
             

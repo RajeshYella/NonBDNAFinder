@@ -183,3 +183,21 @@ VISUALIZATION_PALETTE = {
     'chart_11': '#FFC400',        # GOLD FLASH - Ultra warm
     'chart_12': '#546E7A',        # STEEL BLUE - Balanced contrast
 }
+
+# ==================== MOTIF CLASS COLOR ENCODING ====================
+# Each motif class has a single, consistent color for visual encoding.
+# Applied to class header cards and submotifs under that class.
+# Matches genome browser conventions for scannable, dense UI.
+CLASS_COLORS = {
+    'Curved_DNA': '#06b6d4',          # Cyan - DNA bending
+    'Slipped_DNA': '#f59e0b',         # Amber - Slipped structures
+    'Cruciform': '#ef4444',           # Red - Cruciform/Inverted repeats
+    'R-Loop': '#8b5cf6',              # Violet - R-loop formation
+    'Triplex': '#ec4899',             # Pink - Triplex structures
+    'G-Quadruplex': '#10b981',        # Emerald - G4 structures
+    'i-Motif': '#22c55e',             # Green - i-Motif structures
+    'Z-DNA': '#6366f1',               # Indigo - Z-DNA/Left-handed helix
+    'A-philic_DNA': '#f97316',        # Orange - A-philic DNA
+    'Hybrid': '#64748b',              # Slate - Dynamic overlaps
+    'Non-B_DNA_Clusters': '#0f172a',  # Dark slate - Clusters
+}
