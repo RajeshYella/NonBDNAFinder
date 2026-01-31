@@ -469,18 +469,15 @@ def render():
     # ============================================================
     # Elegant two-option pill toggle with icons and gradient styling
     
+    # Constants for pill labels to avoid duplication
+    PILL_MOTIF_LEVEL = "🔬 Motif Level"
+    PILL_SUBMOTIF_LEVEL = "🧬 Submotif Level"
+    
     current_mode = st.session_state.analysis_mode
     
     # Compact inline header with styled pills selector
     st.markdown("""
     <style>
-    .granularity-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 8px 0;
-        flex-wrap: wrap;
-    }
     .granularity-label-inline {
         display: inline-flex;
         align-items: center;
@@ -503,17 +500,17 @@ def render():
     # Use Streamlit pills with icons embedded in labels for visual appeal
     analysis_mode = st.pills(
         "granularity",
-        options=["🔬 Motif Level", "🧬 Submotif Level"],
-        default="🔬 Motif Level" if current_mode == "Motif Level" else "🧬 Submotif Level",
+        options=[PILL_MOTIF_LEVEL, PILL_SUBMOTIF_LEVEL],
+        default=PILL_MOTIF_LEVEL if current_mode == "Motif Level" else PILL_SUBMOTIF_LEVEL,
         selection_mode="single",
         key="analysis_mode_pills",
         label_visibility="collapsed",
         help="Motif Level: Groups by major structural classes (e.g., G-Quadruplex). Submotif Level: Detailed subclass analysis (e.g., Telomeric G4)."
     )
     
-    # Map pill selection back to mode name (strip icon prefix)
+    # Map pill selection back to mode name
     if analysis_mode:
-        actual_mode = "Motif Level" if "Motif" in analysis_mode else "Submotif Level"
+        actual_mode = "Motif Level" if analysis_mode == PILL_MOTIF_LEVEL else "Submotif Level"
         if actual_mode != st.session_state.analysis_mode:
             st.session_state.analysis_mode = actual_mode
             st.rerun()
