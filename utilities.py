@@ -4165,28 +4165,11 @@ FEATURES:
 # Default DPI for publication quality (Nature requires 300 DPI minimum)
 PUBLICATION_DPI = 300
 
-# Nature-level color palette for motif classes (colorblind-friendly)
+# MOTIF_CLASS_COLORS: Centralized visualization color palette
+# Single source of truth: config/colors.py → VISUALIZATION_MOTIF_COLORS
 # Based on Wong, B. (2011) Nature Methods colorblind-safe palette
-# Each motif class has a unique color for distinguishability
 # Reference: Wong, B. (2011) Points of view: Color blindness. Nat Methods 8, 441
-MOTIF_CLASS_COLORS = {
-    # Primary motif classes (6 core colors per Nature guidelines)
-    'Curved_DNA': '#CC79A7',          # Reddish Purple - Structure
-    'G-Quadruplex': '#0072B2',        # Blue - Stable structures
-    'Z-DNA': '#882255',               # Wine - Alternative helices
-    'Cruciform': '#56B4E9',           # Sky Blue - Symmetric structures
-    'Triplex': '#E69F00',             # Orange - Triple-stranded
-    'R-Loop': '#009E73',              # Bluish Green - RNA-DNA hybrids
-    
-    # Secondary classes (consolidated to reduce color count)
-    'i-Motif': '#0072B2',             # Same as G4 (complementary structures)
-    'A-philic_DNA': '#CC79A7',        # Same as Curved (structural affinity)
-    'Slipped_DNA': '#E69F00',         # Same as Triplex (repeats)
-    
-    # Meta-classes (neutral grays)
-    'Hybrid': '#888888',              # Medium gray
-    'Non-B_DNA_Clusters': '#666666'   # Dark gray
-}
+from config.colors import VISUALIZATION_MOTIF_COLORS as MOTIF_CLASS_COLORS
 
 # Default fallback color for unknown motif classes
 DEFAULT_MOTIF_COLOR = '#808080'

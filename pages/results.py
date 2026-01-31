@@ -17,6 +17,7 @@ from collections import Counter
 
 from config.text import UI_TEXT
 from config.themes import TAB_THEMES
+from config.analysis import MAX_OVERLAP_DISPLAY
 from ui.css import load_css
 from utilities import (
     get_basic_stats, 
@@ -358,10 +359,6 @@ def render():
             else:
                 st.markdown('<div style="color: #64748b; font-size: 0.85rem;">No subclass overlaps</div>', 
                            unsafe_allow_html=True)
-
-
-# Maximum number of overlap pairs to display in the overlap matrix
-MAX_OVERLAP_DISPLAY = 10
 
 
 def _calculate_overlaps(motifs: list, by: str = 'Class') -> dict:
