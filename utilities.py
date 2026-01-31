@@ -1612,7 +1612,7 @@ class HyperscanManager:
             return True
             
         except Exception as e:
-            print(f"Hyperscan compilation failed: {e}")
+            logger.warning(f"Hyperscan compilation failed: {e}")
             return False
     
     def scan_sequence(self, sequence: str) -> List[Tuple[int, int, str]]:
@@ -1637,7 +1637,9 @@ class HyperscanManager:
         try:
             hyperscan.hs_scan(self.compiled_db, sequence.encode(), match_handler, None)
         except Exception as e:
-            print(f"Hyperscan scanning failed: {e}")
+            logger.warning(f"Hyperscan scanning failed: {e}")
+        
+        return matches
         
         return matches
 
@@ -2239,7 +2241,7 @@ def write_fasta(sequences: Dict[str, str], filename: str) -> bool:
                     f.write(f"{seq[i:i+80]}\n")
         return True
     except Exception as e:
-        print(f"Error writing FASTA file {filename}: {e}")
+        logger.error(f"Error writing FASTA file {filename}: {e}")
         return False
 
 def read_fasta_file(filename: str) -> Dict[str, str]:
@@ -2257,7 +2259,7 @@ def read_fasta_file(filename: str) -> Dict[str, str]:
             content = f.read()
         return parse_fasta(content)
     except Exception as e:
-        print(f"Error reading FASTA file {filename}: {e}")
+        logger.error(f"Error reading FASTA file {filename}: {e}")
         return {}
 
 # =============================================================================
@@ -2856,7 +2858,7 @@ def export_to_bed(motifs: List[Dict[str, Any]], sequence_name: str = "sequence",
             with open(filename, 'w') as f:
                 f.write(bed_content)
         except Exception as e:
-            print(f"Error writing BED file {filename}: {e}")
+            logger.error(f"Error writing BED file {filename}: {e}")
     
     return bed_content
 
@@ -2922,7 +2924,7 @@ def export_to_csv(motifs: List[Dict[str, Any]], filename: Optional[str] = None,
             with open(filename, 'w', newline='') as f:
                 f.write(csv_content)
         except Exception as e:
-            print(f"Error writing CSV file {filename}: {e}")
+            logger.error(f"Error writing CSV file {filename}: {e}")
     
     return csv_content
 
@@ -2963,7 +2965,7 @@ def export_to_json(motifs: List[Dict[str, Any]], filename: Optional[str] = None,
             with open(filename, 'w') as f:
                 f.write(json_content)
         except Exception as e:
-            print(f"Error writing JSON file {filename}: {e}")
+            logger.error(f"Error writing JSON file {filename}: {e}")
     
     return json_content
 
@@ -3397,7 +3399,7 @@ def export_to_gff3(motifs: List[Dict[str, Any]], sequence_name: str = "sequence"
             with open(filename, 'w') as f:
                 f.write(gff_content)
         except Exception as e:
-            print(f"Error writing GFF3 file {filename}: {e}")
+            logger.error(f"Error writing GFF3 file {filename}: {e}")
     
     return gff_content
 
@@ -5300,17 +5302,17 @@ def save_all_plots(motifs: List[Dict[str, Any]],
                     fig.write_html(filepath)
                 else:
                     # Unsupported format - try default write_image
-                    print(f"⚠ Unsupported format '{file_format}' for Plotly, attempting save anyway")
+                    logger.warning(f"Unsupported format '{file_format}' for Plotly, attempting save anyway")
                     try:
                         fig.write_image(filepath)
                     except Exception as fmt_err:
                         raise ValueError(f"Unsupported file format: {file_format}. Use 'png', 'pdf', 'svg', or 'html'.") from fmt_err
             
             saved_files[plot_name] = filepath
-            print(f"[OK] Saved {plot_name} to {filepath}")
+            logger.info(f"Saved {plot_name} to {filepath}")
             
         except Exception as e:
-            print(f"✗ Failed to generate {plot_name}: {e}")
+            logger.error(f"Failed to generate {plot_name}: {e}")
     
     return saved_files
 
