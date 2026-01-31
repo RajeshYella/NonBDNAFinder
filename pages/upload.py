@@ -202,7 +202,7 @@ def render():
     # TWO-COLUMN LAYOUT: INPUT (LEFT) | ANALYSIS (RIGHT)
     # ============================================================
 
-    left_col, right_col = st.columns([1.1, 1.4])
+    left_col, right_col = st.columns([0.9, 1.6])
 
     # ============================================================
     # LEFT COLUMN — SEQUENCE INPUT
