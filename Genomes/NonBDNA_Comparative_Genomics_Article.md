@@ -594,9 +594,99 @@ This comparative analysis validates NonBDNAFinder as a comprehensive non-B DNA d
 
 For maximal detection coverage, we recommend a two-stage approach: (1) use NonBDNAFinder for comprehensive detection across all motif classes, then (2) validate canonical structures (G4, Z-DNA, mirror repeats) against NBST results, accepting structures detected by both tools as high-confidence and flagging discordant detections for manual review.
 
+### 4.8.10 Detailed Similarities Between Tools
+
+Despite fundamental differences in implementation, NBST and NonBDNAFinder share important commonalities that enable comparative analysis:
+
+**Shared Framework Elements:**
+- Both employ sequence-based computational prediction for non-B DNA structures
+- Linear time complexity O(n) enabling genome-scale analysis
+- Position-based annotation (start, stop, length, strand information)
+- FASTA format input compatibility
+- Tabular output suitable for downstream bioinformatics pipelines
+- Validation against experimental data from literature
+
+**Conceptual Overlap in Detection Classes:**
+Both tools detect overlapping structural classes with varying terminology: G-quadruplexes (high conceptual overlap), Z-DNA (high overlap), cruciforms/palindromes (moderate overlap), tandem repeats (moderate overlap), and curved DNA (moderate overlap). This shared focus on biologically relevant structures enables meaningful cross-validation between tools.
+
+### 4.8.11 Tool Limitations and Constraints
+
+**NBST Limitations:**
+1. **Limited motif coverage**: Absence of R-loop, i-motif, A-philic DNA, and hybrid structure detection limits comprehensiveness for modern genomic studies where these structures play documented roles
+2. **Binary detection logic**: All-or-nothing classification lacks confidence gradations needed for prioritizing experimental validation targets
+3. **Minimal subclass resolution**: Single G4 class cannot distinguish functionally distinct variants (telomeric vs. two-tetrad vs. G-triplex structures)
+4. **Fixed sequence length constraints**: Memory allocation limits restrict analysis of large genome assemblies (>50 MB requires splitting)
+5. **STR over-prediction**: Detects all tandem repeats regardless of thermodynamic propensity to form slipped structures, requiring downstream filtering
+
+**NonBDNAFinder Limitations:**
+1. **Computational speed**: 3-5× slower than NBST for overlapping motif classes due to Python overhead and complex scoring calculations
+2. **Parameter sensitivity**: Scoring thresholds require calibration; suboptimal parameters risk over/under-detection
+3. **Z-DNA under-detection**: Stringent thermodynamic criteria (GC-preferential) exclude weaker but potentially relevant CA/AC alternating sequences
+4. **STR under-detection**: Focus on hairpin-forming subset misses disease-relevant tandem repeats that don't form strong secondary structures
+5. **Memory overhead**: 2-3× higher memory usage than NBST for equivalent sequence lengths
+6. **Novel class validation gap**: R-loop, i-motif, and hybrid predictions lack experimental validation on standard test sequences
+
+### 4.8.12 Applications and Best Practices
+
+**Recommended Tool Selection Guidelines:**
+
+*Use NBST when:*
+- Speed is critical (high-throughput database screening)
+- Established standards required (comparison with Non-B DB v2.0)
+- STR/repeat analysis is primary focus (trinucleotide disease repeats)
+- Simple standalone installation preferred (no dependency management)
+
+*Use NonBDNAFinder when:*
+- Comprehensive detection needed (all 11 motif classes)
+- R-loop analysis important (transcription-associated instability, cancer genomics)
+- Quantitative scoring required (prioritization for experimental validation)
+- Subclass information matters (G4 topology, curved DNA mechanisms)
+- Hybrid/cluster analysis needed (regulatory hotspots, fragile sites)
+- Publication-quality visualizations required (Nature/Science standards)
+
+**Integrated Two-Stage Approach (Optimal Strategy):**
+1. **Stage 1**: Run NonBDNAFinder for comprehensive detection across all motif classes with quantitative scoring
+2. **Stage 2**: Cross-validate canonical structures (G4, Z-DNA, triplex) with NBST results
+3. **Stage 3**: Structures detected by both tools = high confidence; discordant detections = manual review based on biological context
+
+**Domain-Specific Recommendations:**
+- **Cancer genomics**: NonBDNAFinder (R-loop detection critical, G4s as drug targets)
+- **Clinical/disease studies**: NBST (established STR standards, validated disease repeats)
+- **Drug discovery**: NonBDNAFinder (G4 subclass targeting, quantitative scoring for lead prioritization)
+- **Evolutionary genomics**: NonBDNAFinder (comprehensive coverage across diverse GC ranges)
+
+### 4.8.13 Validation Quality Control and Reproducibility
+
+**Test Sequence Characteristics:**
+The standardized validation sequence (ID: 693fc40d26a53, 40,523 bp, GC = 43.2%) represents a human genomic Alu-rich repeat region commonly used for non-B DNA tool benchmarking. This sequence enables reproducible comparisons and is included in the NBSTVALIDATION directory of the NonBDNAFinder repository for community use.
+
+**Quality Control Metrics:**
+- Minimum motif length: 10 bp (both tools)
+- Strand analysis: Both forward and reverse strands examined
+- Overlap tolerance: ±50 bp for G4, ±20 bp for Z-DNA (position concordance)
+- Reproducibility: 100% deterministic results (fixed algorithms, fixed parameters)
+- Cross-platform validation: Tested on Ubuntu 20.04/22.04 Linux distributions
+
+**Statistical Methodology:**
+Position concordance calculated as the fraction of NBST motifs with NonBDNAFinder overlaps within tolerance windows. Fold difference computed as NBF_Count / NBST_Count, with values >1 indicating higher NonBDNAFinder sensitivity and infinity (∞) indicating exclusive NonBDNAFinder detection.
+
+### 4.8.14 Validation Figures
+
+**Figure V1. Motif Detection Comparison Bar Chart**
+Direct comparison of NBST and NonBDNAFinder detection counts for overlapping motif classes on the validation sequence. NonBDNAFinder detects 7.2× more G-quadruplexes (159 vs. 22) and 46× more curved DNA structures (46 vs. 1), while NBST detects 2× more Z-DNA (6 vs. 3) and 5× more STRs (50 vs. 10). (See Genomes/validation_results/Figure_V1_Comparison_Bar_Chart.png)
+
+**Figure V2. Novel Motif Classes Pie Chart**
+Distribution of 74 novel motifs detected exclusively by NonBDNAFinder, including R-loops (32.4%), non-B DNA clusters (35.1%), i-motifs (13.5%), A-philic DNA (12.2%), and hybrid structures (6.8%). These classes are not detected by NBST but represent emerging areas of non-B DNA biology with documented functional roles. (See Genomes/validation_results/Figure_V2_Novel_Classes.png)
+
+**Figure V3. G-Quadruplex Subclass Distribution**
+NonBDNAFinder's subclass-level resolution reveals that two-tetrad weak PQS structures dominate (128/159 = 80.5%), followed by canonical intramolecular G4s (18), extended-loop variants (7), and rare G-triplexes (3). NBST's single G4 class cannot distinguish these functionally distinct variants. (See Genomes/validation_results/Figure_V3_GQ_Subclass_Distribution.png)
+
+**Figure V4. Genome Track Visualization**
+Genomic tracks showing spatial distribution of NonBDNAFinder-detected motifs across the 40,523 bp validation sequence. G-quadruplexes (red) cluster in specific regions, Z-DNA (blue) appears at scattered locations, curved DNA (green) shows broad distribution, and novel classes (R-loops in magenta, i-motifs in cyan) localize to distinct genomic segments. This visualization demonstrates the complementary genomic distributions of different motif classes. (See Genomes/validation_results/Figure_V4_Genome_Tracks.png)
+
 ## 5. Conclusions
 
-This comprehensive comparative analysis of non-B DNA motifs across eight diverse bacterial genomes reveals that:
+This comprehensive comparative analysis of non-B DNA motifs across eight diverse bacterial genomes, combined with rigorous validation against the NBST reference tool, reveals that:
 
 1. **Genomic GC content is the primary determinant** of non-B DNA landscape composition, with high-GC genomes dominated by G-quadruplexes and Z-DNA, while low-GC genomes are enriched in curved DNA structures.
 
@@ -614,7 +704,13 @@ This comprehensive comparative analysis of non-B DNA motifs across eight diverse
 
 8. **Hybrid motifs reveal structural overlap complexity**: 2,774 hybrid motifs across 58 overlap types were detected, with G4-R-Loop hybrids being most prevalent (845 total). This structural overlap suggests regulatory coupling between transcription-related structures.
 
-These findings establish non-B DNA structures as significant features of bacterial genome organization that evolve in response to compositional pressures and likely influence chromosome maintenance, transcription regulation, and evolutionary potential. The subclass-level analysis reveals previously unappreciated complexity that should inform future functional studies.
+9. **Tool validation establishes complementarity**: Head-to-head comparison with NBST on standardized test sequences demonstrates NonBDNAFinder's 3.2× detection advantage (308 vs. 96 motifs), with particular strengths in novel class detection (R-loops, i-motifs, hybrids, clusters) representing 74 additional motifs absent from NBST analysis. Position concordance analysis (63.6% for G4, 16.7% for Z-DNA) reveals methodological trade-offs between sensitivity and specificity.
+
+10. **Optimal detection strategy combines multiple tools**: The complementary strengths of NonBDNAFinder (comprehensive coverage, quantitative scoring, subclass resolution) and NBST (speed, established standards, validated STR detection) recommend a two-stage approach: NonBDNAFinder for initial comprehensive analysis, followed by NBST cross-validation for canonical structures.
+
+These findings establish non-B DNA structures as significant features of bacterial genome organization that evolve in response to compositional pressures and likely influence chromosome maintenance, transcription regulation, and evolutionary potential. The subclass-level analysis reveals previously unappreciated complexity that should inform future functional studies. The rigorous tool validation provides researchers with evidence-based guidance for selecting appropriate detection methods based on specific research objectives.
+
+**For complete validation details**, including algorithmic comparisons, limitations analysis, applications guidance, and best practices, see the supplementary document: **NBST_Validation_Extended_Analysis.md** in the Genomes directory.
 
 ---
 
@@ -649,6 +745,18 @@ Stacked bar chart showing the distribution of 8 G4 subclasses (Two-tetrad weak P
 
 ### Figure 10. Curved DNA Local:Global curvature ratio across genomes
 Ratio of Local Curvature to Global Curvature motifs plotted against GC content, showing inverse relationship between GC content and preference for localized bending.
+
+### Figure V1. NBST vs NonBDNAFinder detection comparison
+Bar chart comparing motif detection counts between NBST and NonBDNAFinder on standardized validation sequence (40,523 bp). Shows 7.2× G4 advantage for NonBDNAFinder, 46× curved DNA advantage, and 2× Z-DNA advantage for NBST. Demonstrates complementary detection capabilities.
+
+### Figure V2. Novel motif classes detected exclusively by NonBDNAFinder
+Pie chart showing distribution of 74 novel motifs across 5 classes not detected by NBST: Non-B DNA clusters (35.1%), R-loops (32.4%), i-motifs (13.5%), A-philic DNA (12.2%), and hybrid structures (6.8%).
+
+### Figure V3. G-Quadruplex subclass resolution
+Distribution of NonBDNAFinder's 159 G4 detections across 8 structural subclasses, with two-tetrad weak PQS dominating (80.5%). Demonstrates importance of subclass-level analysis for functional interpretation.
+
+### Figure V4. Genome-wide motif track visualization
+Six-track visualization showing spatial distribution of NonBDNAFinder motif detections across validation sequence. Tracks for G4, Z-DNA, curved DNA, R-loops, i-motifs, and other classes reveal complementary genomic localizations.
 
 ---
 
