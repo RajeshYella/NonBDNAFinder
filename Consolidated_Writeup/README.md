@@ -1,19 +1,34 @@
 # Consolidated Writeup for NonBDNAFinder Analysis
 
-This folder contains the consolidated writeup, figures, and tables from the comprehensive analysis of disease-associated repeat expansion loci using the NonBDNAFinder computational platform.
+This folder contains the consolidated writeup, figures, and tables from comprehensive analyses using the NonBDNAFinder computational platform.
 
-## Contents
+## 📚 Master Document
 
-### Documents
+**[NonBDNAFinder_Consolidated_Documentation.md](NonBDNAFinder_Consolidated_Documentation.md)** - **START HERE**
 
-1. **NonBDNA_Repeat_Expansion_Analysis.md** - Comprehensive analysis of 153 disease-associated repeat expansion loci, including:
+The comprehensive consolidated document that integrates all writeups, validation results, methodology descriptions, and analysis findings. This document includes:
+- Complete tool overview and architecture
+- All 11 non-B DNA structure definitions with detection parameters
+- Canonical motif taxonomy (11 classes, 24 subclasses)
+- Genome validation results (8 bacterial species)
+- NBST vs NonBDNAFinder comparison study
+- Repeat expansion disease analysis (153 genes)
+- Comparative genomics findings
+- Performance benchmarks
+- Complete figures and tables reference
+
+## 📄 Component Documents
+
+### Primary Analysis Documents
+
+1. **NonBDNA_Repeat_Expansion_Analysis.md** - Detailed analysis of 153 disease-associated repeat expansion loci:
    - Analysis of 5,721 non-B DNA structural motifs
    - Disease category classification and motif distribution
    - Top genes by motif density
    - Clinically significant findings
    - Discussion of implications for repeat expansion disorders
 
-2. **NonBDNAFinder_Tool_Documentation.md** - Complete documentation of the NonBDNAFinder tool, including:
+2. **NonBDNAFinder_Tool_Documentation.md** - Complete documentation of the NonBDNAFinder tool:
    - Tool architecture and design
    - Motif detection algorithms
    - Performance benchmarking
@@ -40,16 +55,38 @@ This folder contains the consolidated writeup, figures, and tables from the comp
 | Table2_Detailed_Motifs.csv | Detailed listing of all 5,721 motifs | CSV |
 | Table3_Disease_Motif_Matrix.csv | Disease category vs motif class matrix | CSV |
 
+## 🔬 Related Documentation
+
+### In Genomes/ Directory
+
+- **NonBDNA_Comparative_Genomics_Article.md** - Comprehensive comparative analysis of 8 bacterial genomes
+- **NBST_Validation_Extended_Analysis.md** - Head-to-head comparison with NBST (Non-B GFA)
+- **validation_results/** - Figures and data from tool validation study
+- **analysis_results/** - JSON files with per-genome motif data
+
+### In Root Directory
+
+- **MOTIF_CLASSIFICATION.md** - Detailed guide to motif taxonomy system
+- **TAXONOMY_ENFORCEMENT_SUMMARY.md** - Implementation of canonical naming
+- **PERFORMANCE_OPTIMIZATIONS.md** - Performance optimization documentation
+- **OPTIMIZATION_VALIDATION_SUMMARY.md** - Validation of performance improvements
+
 ## Key Findings
 
-### Summary Statistics
+### Summary Statistics (Repeat Expansion Analysis)
 - **Total Sequences Analyzed:** 153
 - **Total Non-B DNA Motifs:** 5,721
-- **Total Base Pairs:** 791,842
+- **Total Base Pairs:** 903,722
 - **Average Motifs per Gene:** 37.4
-- **Average Motifs per kb:** 7.2
+- **Average Motifs per kb:** 7.02
 
-### Motif Class Distribution
+### Summary Statistics (Bacterial Genome Analysis)
+- **Total Genomes Analyzed:** 8
+- **Total Motifs Detected:** 133,434
+- **GC Range:** 17.6% - 76.2%
+- **Motif Density Range:** 1.09 - 12.16 per kb
+
+### Motif Class Distribution (Disease Loci)
 1. G-Quadruplex: 2,341 (40.9%)
 2. Curved DNA: 954 (16.7%)
 3. Non-B DNA Clusters: 480 (8.4%)
@@ -80,9 +117,13 @@ This folder contains the consolidated writeup, figures, and tables from the comp
 4. **HRAS** (17.8/kb) - Thyroid carcinoma susceptibility
 5. **KRT10** (17.3/kb) - Ichthyosis with epidermolytic hyperkeratosis
 
-## Data Source
+## Data Sources
 
-Analysis was performed on the `repeat_expansion_loci_annotated.fa` file containing 153 disease-associated repeat expansion loci from OMIM (Online Mendelian Inheritance in Man).
+### Repeat Expansion Analysis
+Analysis performed on `repeat_expansion_loci_annotated.fa` containing 153 disease-associated loci from OMIM.
+
+### Bacterial Genome Analysis
+Eight complete genomes from NCBI GenBank representing three phyla (Proteobacteria, Actinobacteria, Firmicutes).
 
 ## Tool Information
 
