@@ -263,7 +263,8 @@ CORE_OUTPUT_COLUMNS = [
     'Length',         # Genomics: Feature size (bp)
     'Sequence',       # Sequence: Always visible motif sequence (publication-grade requirement)
     'Strand',         # Strand: DNA strand orientation (+/- indicates forward/reverse)
-    'Score',          # Confidence: 0-3 normalized, cross-motif comparability
+    'Score',          # Confidence: 1-3 normalized, cross-motif comparability
+    'Raw_Score',      # Confidence: Original detector score (class-specific scale, for reproducibility)
     'Method',         # Evidence: Reproducibility (Regex/k-mer/ΔG/Hyperscan)
     'Pattern_ID',     # Evidence: Pattern identifier for traceability
 ]
@@ -291,7 +292,8 @@ DEFAULT_COLUMN_VALUES = {
     'Strand': '+',
     'Method': 'Pattern_detection',
     'Pattern_ID': 'Unknown',
-    'Score': 0.0
+    'Score': 0.0,
+    'Raw_Score': 0.0
 }
 
 # =============================================================================
@@ -2866,7 +2868,10 @@ def export_to_csv(motifs: List[Dict[str, Any]], filename: Optional[str] = None,
     Export motifs to CSV format with CORE fields only (Task 1 & 2 requirements).
     
     Output tables use minimal, high-value features per Nature/NAR/Genome Research standards:
-    - Sequence_Name, Class, Subclass, Start, End, Length, Strand, Score, Method, Pattern_ID
+    - Sequence_Name, Class, Subclass, Start, End, Length, Sequence, Strand, Score, Raw_Score, Method, Pattern_ID
+    
+    Raw_Score preserves the original detector score (class-specific scale) for scientific 
+    reproducibility, while Score provides the normalized 1-3 scale for cross-motif comparison.
     
     Motif-specific columns (Repeat_Unit, Loop_Length, etc.) are only included in 
     Excel downloads class-specific sheets, not in CSV exports for clarity.
