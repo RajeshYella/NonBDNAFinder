@@ -686,7 +686,7 @@ Genomic tracks showing spatial distribution of NonBDNAFinder-detected motifs acr
 
 ## 5. Conclusions
 
-This comprehensive comparative analysis of non-B DNA motifs across eight diverse bacterial genomes, combined with rigorous validation against the NBST reference tool, reveals that:
+This comprehensive comparative analysis of non-B DNA motifs across eight diverse bacterial genomes reveals fundamental patterns of genome organization. Rigorous validation against the NBST reference tool further establishes that:
 
 1. **Genomic GC content is the primary determinant** of non-B DNA landscape composition, with high-GC genomes dominated by G-quadruplexes and Z-DNA, while low-GC genomes are enriched in curved DNA structures.
 

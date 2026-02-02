@@ -1,11 +1,11 @@
 Motif_Class,NBST_Count,NonBDNAFinder_Count,Fold_Difference,Detection_Method_NBST,Detection_Method_NBF
-G-Quadruplex,22,159,7.2272727272727275,G-island scanning,G4Hunter scoring
-Z-DNA,6,3,0.5,KV-score threshold,Thermodynamic modeling
-Mirror_Repeats/Triplex,9,16,1.7777777777777777,Palindrome matching,Hoogsteen bond prediction
-STR/Slipped_DNA,50,10,0.2,Repeat unit scanning,Hairpin-forming subset
-Curved/A-Phased_DNA,1,46,46.0,A-tract phasing only,Global+local curvature
-R-Loop,0,24,inf,Not detected,Novel detection
-i-Motif,0,10,inf,Not detected,Novel detection
-A-philic_DNA,0,9,inf,Not detected,Novel detection
-Hybrid,0,5,inf,Not detected,Novel detection
-Non-B_DNA_Clusters,0,26,inf,Not detected,Novel detection
+G-Quadruplex,22,159,7.23,G-island scanning,G4Hunter scoring
+Z-DNA,6,3,0.50,KV-score threshold,Thermodynamic modeling
+Mirror_Repeats/Triplex,9,16,1.78,Palindrome matching,Hoogsteen bond prediction
+STR/Slipped_DNA,50,10,0.20,Repeat unit scanning,Hairpin-forming subset
+Curved/A-Phased_DNA,1,46,46.00,A-tract phasing only,Global+local curvature
+R-Loop,0,24,∞,Not detected,Novel detection
+i-Motif,0,10,∞,Not detected,Novel detection
+A-philic_DNA,0,9,∞,Not detected,Novel detection
+Hybrid,0,5,∞,Not detected,Novel detection
+Non-B_DNA_Clusters,0,26,∞,Not detected,Novel detection

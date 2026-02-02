@@ -400,7 +400,7 @@ def create_validation_visualizations(comparison_df, nbf_df):
     axes[1].spines['top'].set_visible(False)
     
     # Track 3: Curved DNA
-    curved_motifs = nbf_df[nbf_df['Class'] == 'Curved']
+    curved_motifs = nbf_df[nbf_df['Class'] == 'Curved_DNA']
     for _, motif in curved_motifs.iterrows():
         axes[2].plot([motif['Start'], motif['End']], [0, 0], 'g-', linewidth=2, alpha=0.7)
     axes[2].set_ylabel('Curved', fontweight='bold', fontsize=10)
@@ -433,7 +433,7 @@ def create_validation_visualizations(comparison_df, nbf_df):
     axes[4].spines['top'].set_visible(False)
     
     # Track 6: All other classes
-    other_classes = ['Triplex', 'Slipped', 'A-philic', 'Hybrid', 'Non-B_DNA_Cluster']
+    other_classes = ['Triplex', 'Slipped_DNA', 'A-philic_DNA', 'Hybrid', 'Non-B_DNA_Clusters']
     colors_other = ['orange', 'purple', 'brown', 'pink', 'gray']
     for cls, color in zip(other_classes, colors_other):
         cls_motifs = nbf_df[nbf_df['Class'] == cls]

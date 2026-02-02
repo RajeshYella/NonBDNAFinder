@@ -281,9 +281,9 @@
     "Motif_Count": 6,
     "Class_Diversity": 3,
     "Component_Classes": [
+      "Curved_DNA",
       "G-Quadruplex",
-      "Triplex",
-      "Curved_DNA"
+      "Triplex"
     ],
     "Raw_Score": 0.575
   },
@@ -835,8 +835,8 @@
     "Class_Diversity": 3,
     "Component_Classes": [
       "Slipped_DNA",
-      "G-Quadruplex",
-      "Curved_DNA"
+      "Curved_DNA",
+      "G-Quadruplex"
     ],
     "Raw_Score": 1.025
   },
@@ -1355,10 +1355,10 @@
     "Motif_Count": 4,
     "Class_Diversity": 4,
     "Component_Classes": [
+      "Curved_DNA",
       "Slipped_DNA",
-      "G-Quadruplex",
       "Triplex",
-      "Curved_DNA"
+      "G-Quadruplex"
     ],
     "Raw_Score": 1.006
   },
@@ -1557,8 +1557,8 @@
     "Class_Diversity": 3,
     "Component_Classes": [
       "Slipped_DNA",
-      "R-Loop",
-      "G-Quadruplex"
+      "G-Quadruplex",
+      "R-Loop"
     ],
     "Raw_Score": 1.696
   },
@@ -2179,10 +2179,10 @@
     "Motif_Count": 5,
     "Class_Diversity": 4,
     "Component_Classes": [
-      "R-Loop",
-      "G-Quadruplex",
+      "Curved_DNA",
       "Triplex",
-      "Curved_DNA"
+      "G-Quadruplex",
+      "R-Loop"
     ],
     "Raw_Score": 0.626
   },
@@ -2235,9 +2235,9 @@
     "Motif_Count": 4,
     "Class_Diversity": 3,
     "Component_Classes": [
-      "R-Loop",
+      "Curved_DNA",
       "G-Quadruplex",
-      "Curved_DNA"
+      "R-Loop"
     ],
     "Raw_Score": 0.699
   },
@@ -2465,8 +2465,8 @@
     "Class_Diversity": 3,
     "Component_Classes": [
       "A-philic_DNA",
-      "G-Quadruplex",
-      "Curved_DNA"
+      "Curved_DNA",
+      "G-Quadruplex"
     ],
     "Raw_Score": 1.283
   },
@@ -2683,11 +2683,11 @@
     "Motif_Count": 6,
     "Class_Diversity": 5,
     "Component_Classes": [
-      "A-philic_DNA",
-      "Z-DNA",
+      "Triplex",
       "i-Motif",
       "G-Quadruplex",
-      "Triplex"
+      "Z-DNA",
+      "A-philic_DNA"
     ],
     "Raw_Score": 28.001
   },
@@ -2782,8 +2782,8 @@
     "Component_Classes": [
       "A-philic_DNA",
       "Z-DNA",
-      "G-Quadruplex",
-      "i-Motif"
+      "i-Motif",
+      "G-Quadruplex"
     ],
     "Raw_Score": 33.565
   },
@@ -2978,8 +2978,8 @@
     "Component_Classes": [
       "A-philic_DNA",
       "Z-DNA",
-      "R-Loop",
-      "G-Quadruplex"
+      "G-Quadruplex",
+      "R-Loop"
     ],
     "Raw_Score": 84.251
   },
@@ -3788,8 +3788,8 @@
     "Class_Diversity": 3,
     "Component_Classes": [
       "G-Quadruplex",
-      "R-Loop",
-      "A-philic_DNA"
+      "A-philic_DNA",
+      "R-Loop"
     ],
     "Raw_Score": 1.652
   },
@@ -4094,9 +4094,9 @@
     "Motif_Count": 5,
     "Class_Diversity": 3,
     "Component_Classes": [
-      "G-Quadruplex",
+      "Curved_DNA",
       "i-Motif",
-      "Curved_DNA"
+      "G-Quadruplex"
     ],
     "Raw_Score": 0.711
   },
@@ -4468,8 +4468,8 @@
     "Class_Diversity": 3,
     "Component_Classes": [
       "Slipped_DNA",
-      "G-Quadruplex",
-      "Triplex"
+      "Triplex",
+      "G-Quadruplex"
     ],
     "Raw_Score": 0.882
   },
@@ -5002,9 +5002,9 @@
     "Motif_Count": 4,
     "Class_Diversity": 3,
     "Component_Classes": [
-      "R-Loop",
       "G-Quadruplex",
-      "i-Motif"
+      "i-Motif",
+      "R-Loop"
     ],
     "Raw_Score": 0.922
   },
@@ -6292,9 +6292,9 @@
     "Motif_Count": 5,
     "Class_Diversity": 3,
     "Component_Classes": [
-      "G-Quadruplex",
+      "Curved_DNA",
       "Triplex",
-      "Curved_DNA"
+      "G-Quadruplex"
     ],
     "Raw_Score": 0.564
   },
@@ -6456,9 +6456,9 @@
     "Motif_Count": 4,
     "Class_Diversity": 3,
     "Component_Classes": [
+      "Curved_DNA",
       "G-Quadruplex",
-      "Triplex",
-      "Curved_DNA"
+      "Triplex"
     ],
     "Raw_Score": 0.62
   },
@@ -6885,8 +6885,8 @@
     "Class_Diversity": 3,
     "Component_Classes": [
       "A-philic_DNA",
-      "R-Loop",
-      "G-Quadruplex"
+      "G-Quadruplex",
+      "R-Loop"
     ],
     "Raw_Score": 1.379
   },
@@ -6949,9 +6949,9 @@
     "Class_Diversity": 4,
     "Component_Classes": [
       "G-Quadruplex",
-      "R-Loop",
+      "i-Motif",
       "A-philic_DNA",
-      "i-Motif"
+      "R-Loop"
     ],
     "Raw_Score": 1.434
   },
@@ -7734,9 +7734,9 @@
     "Motif_Count": 4,
     "Class_Diversity": 3,
     "Component_Classes": [
-      "G-Quadruplex",
+      "Curved_DNA",
       "Triplex",
-      "Curved_DNA"
+      "G-Quadruplex"
     ],
     "Raw_Score": 0.531
   },
@@ -8664,8 +8664,8 @@
     "Motif_Count": 4,
     "Class_Diversity": 3,
     "Component_Classes": [
-      "G-Quadruplex",
       "A-philic_DNA",
+      "G-Quadruplex",
       "i-Motif"
     ],
     "Raw_Score": 1.129
@@ -9150,9 +9150,9 @@
     "Motif_Count": 4,
     "Class_Diversity": 3,
     "Component_Classes": [
-      "R-Loop",
+      "Curved_DNA",
       "G-Quadruplex",
-      "Curved_DNA"
+      "R-Loop"
     ],
     "Raw_Score": 0.835
   },
@@ -9824,9 +9824,9 @@
     "Motif_Count": 6,
     "Class_Diversity": 3,
     "Component_Classes": [
+      "Curved_DNA",
       "G-Quadruplex",
-      "Triplex",
-      "Curved_DNA"
+      "Triplex"
     ],
     "Raw_Score": 0.528
   },
@@ -10007,9 +10007,9 @@
     "Motif_Count": 4,
     "Class_Diversity": 3,
     "Component_Classes": [
-      "R-Loop",
+      "Triplex",
       "G-Quadruplex",
-      "Triplex"
+      "R-Loop"
     ],
     "Raw_Score": 0.798
   },
@@ -10417,9 +10417,9 @@
     "Motif_Count": 4,
     "Class_Diversity": 3,
     "Component_Classes": [
-      "R-Loop",
+      "Curved_DNA",
       "G-Quadruplex",
-      "Curved_DNA"
+      "R-Loop"
     ],
     "Raw_Score": 0.788
   },
