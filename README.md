@@ -187,12 +187,27 @@ See `archive/README.md` for details on archived content.
 
 ## 📖 Documentation
 
-- **[Benchmark Executive Summary](./BENCHMARK_EXECUTIVE_SUMMARY.md)**: ⭐ **NEW** - Performance comparison vs. competitors
-- **[Benchmarking Comparison](./BENCHMARKING_COMPARISON.md)**: ⭐ **NEW** - Comprehensive 9-section analysis
+### 📚 Master Documentation
+- **[Consolidated Writeup](./Consolidated_Writeup/NonBDNAFinder_Consolidated_Documentation.md)**: ⭐ **COMPREHENSIVE** - Complete reference integrating all documentation, validation results, and methodology
+  - Tool architecture and definitions for all 11 motif classes
+  - Detection algorithms and parameters from actual code
+  - Genome validation results (8 bacterial species, 133,434 motifs)
+  - NBST comparison study (3.2× more comprehensive)
+  - Repeat expansion disease analysis (153 genes, 5,721 motifs)
+  - Performance benchmarks and quick reference
+
+### Analysis Results
+- **[Comparative Genomics Article](./Genomes/NonBDNA_Comparative_Genomics_Article.md)**: Full comparative analysis across bacterial phyla
+- **[NBST Validation Analysis](./Genomes/NBST_Validation_Extended_Analysis.md)**: Head-to-head tool comparison
+- **[Repeat Expansion Analysis](./Consolidated_Writeup/NonBDNA_Repeat_Expansion_Analysis.md)**: Disease loci analysis
+- **[Tool Documentation](./Consolidated_Writeup/NonBDNAFinder_Tool_Documentation.md)**: Technical documentation
+
+### Technical Guides
+- **[Benchmark Executive Summary](./BENCHMARK_EXECUTIVE_SUMMARY.md)**: Performance comparison vs. competitors
+- **[Benchmarking Comparison](./BENCHMARKING_COMPARISON.md)**: Comprehensive 9-section analysis
 - **[Output Schema](./OUTPUT_SCHEMA.md)**: Minimal reporting format
-- **[API Documentation](./app.py)**: Complete function reference
-- **[JSON Registry](./consolidated_registry.json)**: Pattern database
-- **[Performance Guide](./PERFORMANCE_GUIDE.md)**: Optimization tips
+- **[Motif Classification](./MOTIF_CLASSIFICATION.md)**: Canonical taxonomy system (11 classes, 24 subclasses)
+- **[Performance Optimizations](./PERFORMANCE_OPTIMIZATIONS.md)**: Speed and memory improvements
 - **[Improvements Summary](./IMPROVEMENTS_SUMMARY.md)**: What's new in 2025.1
 
 ## 🔬 Scientific Accuracy
