@@ -187,6 +187,15 @@ See `archive/README.md` for details on archived content.
 
 ## 📖 Documentation
 
+### 📄 Publication
+- **[Nature-Level Publication](./publications/NonBDNAFinder_Nature_Publication.md)**: 🏆 **PUBLICATION-READY** - Comprehensive Nature-format manuscript
+  - Complete platform description with 11 classes, 24 subclasses
+  - Validation against NBST/Non-B DB (3.2× detection advantage)
+  - Bacterial comparative genomics (8 species, 133,434 motifs)
+  - Disease-associated repeat expansion loci (153 genes, 5,721 motifs)
+  - Performance benchmarks and methods
+  - 27 peer-reviewed references
+
 ### 📚 Master Documentation
 - **[Consolidated Writeup](./Consolidated_Writeup/NonBDNAFinder_Consolidated_Documentation.md)**: ⭐ **COMPREHENSIVE** - Complete reference integrating all documentation, validation results, and methodology
   - Tool architecture and definitions for all 11 motif classes
