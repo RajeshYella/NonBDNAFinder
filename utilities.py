@@ -2868,7 +2868,7 @@ def export_to_csv(motifs: List[Dict[str, Any]], filename: Optional[str] = None,
     Export motifs to CSV format with CORE fields only (Task 1 & 2 requirements).
     
     Output tables use minimal, high-value features per Nature/NAR/Genome Research standards:
-    - Sequence_Name, Class, Subclass, Start, End, Length, Strand, Score, Raw_Score, Method, Pattern_ID
+    - Sequence_Name, Class, Subclass, Start, End, Length, Sequence, Strand, Score, Raw_Score, Method, Pattern_ID
     
     Raw_Score preserves the original detector score (class-specific scale) for scientific 
     reproducibility, while Score provides the normalized 1-3 scale for cross-motif comparison.
