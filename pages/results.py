@@ -19,6 +19,7 @@ from config.text import UI_TEXT
 from config.themes import TAB_THEMES
 from config.analysis import MAX_OVERLAP_DISPLAY
 from ui.css import load_css
+from ui.headers import render_section_heading
 from utilities import (
     get_basic_stats, 
     export_results_to_dataframe, 
@@ -89,6 +90,9 @@ def render():
     """Render the Results tab content."""
     # Apply Results tab theme
     load_css(TAB_THEMES.get('Results', 'genomic_purple'))
+    
+    # Uniform section heading (no caption)
+    render_section_heading("Analysis Results & Visualization")
     
     # No results - show info and stop
     if not st.session_state.results:
