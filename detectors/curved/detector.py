@@ -1,13 +1,7 @@
-"""
-Curved DNA Detector
-Dr. Venkata Rajesh Yella | 2024.1 | MIT License
-
-Detects curved DNA motifs using A-tract and T-tract phasing patterns.
-"""
+"""Curved DNA detector: A-tract and T-tract phasing patterns (Koo 1986, Olson 1998)."""
 
 import re
 from typing import List, Dict, Any, Tuple
-
 from ..base.base_detector import BaseMotifDetector
 from detectors_utils import revcomp
 from .patterns import _generate_phased_repeat_patterns
@@ -15,31 +9,20 @@ from core.motif_normalizer import normalize_class_subclass
 
 
 class CurvedDNADetector(BaseMotifDetector):
-    """
-    Detects curved DNA motifs using A-tract and T-tract phasing patterns.
-    
-    # Motif Structure:
-    """
-    
-    def get_motif_class_name(self) -> str: return "Curved_DNA"
+    """Curved DNA detector using A-tract and T-tract phasing patterns."""
 
     # Tunable parameters
     MIN_AT_TRACT = 3; MAX_AT_WINDOW = None; PHASING_CENTER_SPACING = 11.0
-    PHASING_TOL_LOW = 9.9; PHASING_TOL_HIGH = 11.1
-    MIN_APR_TRACTS = 3; LOCAL_LONG_TRACT = 7
+    PHASING_TOL_LOW = 9.9; PHASING_TOL_HIGH = 11.1; MIN_APR_TRACTS = 3; LOCAL_LONG_TRACT = 7; SCORE_THRESHOLD = 0.1
+
+    def get_motif_class_name(self) -> str: return "Curved_DNA"
 
     def get_patterns(self) -> Dict[str, List[Tuple]]:
         """Generate curved DNA patterns programmatically."""
-        patterns = {
-            'local_curved': [
-                (r'A{7,}', 'CRV_002', 'Long A-tract', 'Local Curvature', 7, 
-                 'curvature_score', 0.95, 'A-tract curvature', 'Olson 1998'),
-                (r'T{7,}', 'CRV_003', 'Long T-tract', 'Local Curvature', 7, 
-                 'curvature_score', 0.95, 'T-tract curvature', 'Olson 1998'),
-            ]
-        }
-        
-        # Generate A/T-phased repeats programmatically (3-, 4-, and 5-tract)
+        patterns = {'local_curved': [
+            (r'A{7,}', 'CRV_002', 'Long A-tract', 'Local Curvature', 7, 'curvature_score', 0.95, 'A-tract curvature', 'Olson 1998'),
+            (r'T{7,}', 'CRV_003', 'Long T-tract', 'Local Curvature', 7, 'curvature_score', 0.95, 'T-tract curvature', 'Olson 1998'),
+        ]}
         tract_range = range(3, 10)
         patterns['global_curved_a_3tract'] = _generate_phased_repeat_patterns('A', 3, tract_range, 8)
         patterns['global_curved_a_4tract'] = _generate_phased_repeat_patterns('A', 4, tract_range, 15)
@@ -47,128 +30,52 @@ class CurvedDNADetector(BaseMotifDetector):
         patterns['global_curved_t_3tract'] = _generate_phased_repeat_patterns('T', 3, tract_range, 29)
         patterns['global_curved_t_4tract'] = _generate_phased_repeat_patterns('T', 4, tract_range, 36)
         patterns['global_curved_t_5tract'] = _generate_phased_repeat_patterns('T', 5, tract_range, 43)
-        
         return patterns
 
     def detect_motifs(self, sequence: str, sequence_name: str = "sequence") -> List[Dict[str, Any]]:
-        """Override base method to use sophisticated curved DNA detection with component details"""
-        sequence = sequence.upper().strip()
-        motifs = []
-        
-        # Use the sophisticated annotation method
+        """Detect curved DNA motifs using A/T-tract phasing patterns."""
+        sequence = sequence.upper().strip(); motifs = []
         annotation = self.annotate_sequence(sequence)
-        
+
         for i, apr in enumerate(annotation.get('aprs', [])):
-            if apr.get('score', 0) > 0.1:  # Lower threshold for sensitivity
-                start_pos = int(min(apr['center_positions'])) - 10  # Estimate start
-                end_pos = int(max(apr['center_positions'])) + 10    # Estimate end
-                start_pos = max(0, start_pos)
-                end_pos = min(len(sequence), end_pos)
-                
+            if apr.get('score', 0) > self.SCORE_THRESHOLD:
+                start_pos = max(0, int(min(apr['center_positions'])) - 10)
+                end_pos = min(len(sequence), int(max(apr['center_positions'])) + 10)
                 motif_seq = sequence[start_pos:end_pos]
-                
-                a_tracts = re.findall(r'A{3,}', motif_seq)
-                t_tracts = re.findall(r'T{3,}', motif_seq)
-                
+                a_tracts = re.findall(r'A{3,}', motif_seq); t_tracts = re.findall(r'T{3,}', motif_seq)
                 gc_total = self._calc_gc(motif_seq); at_content = self._calc_at(motif_seq)
-                
-                # Normalize class/subclass using canonical taxonomy
-                canonical_class, canonical_subclass = normalize_class_subclass(
-                    self.get_motif_class_name(),
-                    'Global Curvature',
-                    strict=False,
-                    auto_correct=True
-                )
-                
+                canonical_class, canonical_subclass = normalize_class_subclass(self.get_motif_class_name(), 'Global Curvature', strict=False, auto_correct=True)
                 motifs.append({
-                    'ID': f"{sequence_name}_CRV_APR_{start_pos+1}",
-                    'Sequence_Name': sequence_name,
-                    'Class': canonical_class,
-                    'Subclass': canonical_subclass,
-                    'Start': start_pos + 1,  # 1-based coordinates
-                    'End': end_pos,
-                    'Length': end_pos - start_pos,
-                    'Sequence': motif_seq,
-                    'Score': round(apr.get('score', 0), 3),
-                    'Strand': '+',
-                    'Method': 'Curved_DNA_detection',
-                    'Pattern_ID': f'CRV_APR_{i+1}',
-                    # Component details
-                    'A_Tracts': a_tracts,
-                    'T_Tracts': t_tracts,
-                    'Num_A_Tracts': len(a_tracts),
-                    'Num_T_Tracts': len(t_tracts),
-                    'A_Tract_Lengths': [len(t) for t in a_tracts],
-                    'T_Tract_Lengths': [len(t) for t in t_tracts],
-                    'GC_Content': round(gc_total, 2),
-                    'AT_Content': round(at_content, 2),
-                    'Center_Positions': apr.get('center_positions', [])
+                    'ID': f"{sequence_name}_CRV_APR_{start_pos+1}", 'Sequence_Name': sequence_name, 'Class': canonical_class,
+                    'Subclass': canonical_subclass, 'Start': start_pos + 1, 'End': end_pos, 'Length': end_pos - start_pos,
+                    'Sequence': motif_seq, 'Score': round(apr.get('score', 0), 3), 'Strand': '+', 'Method': 'Curved_DNA_detection',
+                    'Pattern_ID': f'CRV_APR_{i+1}', 'A_Tracts': a_tracts, 'T_Tracts': t_tracts, 'Num_A_Tracts': len(a_tracts),
+                    'Num_T_Tracts': len(t_tracts), 'A_Tract_Lengths': [len(t) for t in a_tracts],
+                    'T_Tract_Lengths': [len(t) for t in t_tracts], 'GC_Content': round(gc_total, 2),
+                    'AT_Content': round(at_content, 2), 'Center_Positions': apr.get('center_positions', [])
                 })
-        
+
         for i, tract in enumerate(annotation.get('long_tracts', [])):
-            if tract.get('score', 0) > 0.1:  # Lower threshold for sensitivity
-                start_pos = tract['start']
-                end_pos = tract['end']
-                motif_seq = sequence[start_pos:end_pos]
-                
-                # Identify tract type
+            if tract.get('score', 0) > self.SCORE_THRESHOLD:
+                start_pos, end_pos = tract['start'], tract['end']; motif_seq = sequence[start_pos:end_pos]
                 tract_type = 'A-tract' if motif_seq.count('A') > motif_seq.count('T') else 'T-tract'
-                
                 gc_total = self._calc_gc(motif_seq); at_content = self._calc_at(motif_seq)
-                
-                # Normalize class/subclass using canonical taxonomy
-                canonical_class, canonical_subclass = normalize_class_subclass(
-                    self.get_motif_class_name(),
-                    'Local Curvature',
-                    strict=False,
-                    auto_correct=True
-                )
-                
+                canonical_class, canonical_subclass = normalize_class_subclass(self.get_motif_class_name(), 'Local Curvature', strict=False, auto_correct=True)
                 motifs.append({
-                    'ID': f"{sequence_name}_CRV_TRACT_{start_pos+1}",
-                    'Sequence_Name': sequence_name,
-                    'Class': canonical_class,
-                    'Subclass': canonical_subclass,
-                    'Start': start_pos + 1,  # 1-based coordinates
-                    'End': end_pos,
-                    'Length': end_pos - start_pos,
-                    'Sequence': motif_seq,
-                    'Score': round(tract.get('score', 0), 3),
-                    'Strand': '+',
-                    'Method': 'Curved_DNA_detection',
-                    'Pattern_ID': f'CRV_TRACT_{i+1}',
-                    # Component details
-                    'Tract_Type': tract_type,
-                    'Tract_Length': end_pos - start_pos,
-                    'GC_Content': round(gc_total, 2),
-                    'AT_Content': round(at_content, 2)
+                    'ID': f"{sequence_name}_CRV_TRACT_{start_pos+1}", 'Sequence_Name': sequence_name, 'Class': canonical_class,
+                    'Subclass': canonical_subclass, 'Start': start_pos + 1, 'End': end_pos, 'Length': end_pos - start_pos,
+                    'Sequence': motif_seq, 'Score': round(tract.get('score', 0), 3), 'Strand': '+', 'Method': 'Curved_DNA_detection',
+                    'Pattern_ID': f'CRV_TRACT_{i+1}', 'Tract_Type': tract_type, 'Tract_Length': end_pos - start_pos,
+                    'GC_Content': round(gc_total, 2), 'AT_Content': round(at_content, 2)
                 })
-        
-        # Remove overlaps within each subclass using base class method
-        motifs = self._remove_overlaps(motifs, by_subclass=True)
-        
         return motifs
 
-    # -------------------------
-    # Top-level scoring API
-    # -------------------------
     def calculate_score(self, sequence: str, pattern_info: Tuple = None) -> float:
-        """
-        Returns a combined raw score reflecting:
-          - phasing_score for APRs (sum of APR phasing scores)
-          - local curvature contribution (sum of local A/T tract scores)
-        The sum reflects both number and quality of hits.
-        """
-        seq = sequence.upper()
-        ann = self.annotate_sequence(seq)
-        # Sum APR scores
+        seq = sequence.upper(); ann = self.annotate_sequence(seq)
         apr_sum = sum(a['score'] for a in ann.get('aprs', []))
         local_sum = sum(l['score'] for l in ann.get('long_tracts', []))
         return float(apr_sum + local_sum)
 
-    # -------------------------
-    # A-tract detection (core)
-    # -------------------------
     def find_a_tracts(self, sequence: str, minAT: int = None, max_window: int = None) -> List[Dict[str, Any]]:
         """Detect A-tract candidates using AT-window analysis. Returns dicts with start/end, maxATlen, maxTlen, a_center, call, window info."""
         seq = sequence.upper()
