@@ -30,8 +30,9 @@ def render_section_heading(title: str, subtitle: str = None, icon: str = None):
     # Escape HTML to prevent XSS
     safe_title = html.escape(title)
     safe_subtitle = html.escape(subtitle) if subtitle else None
+    safe_icon = html.escape(icon) if icon else None
     
-    icon_html = f'<span style="margin-right: 8px; font-size: 1.4rem;">{icon}</span>' if icon else ''
+    icon_html = f'<span style="margin-right: 8px; font-size: 1.4rem;">{safe_icon}</span>' if safe_icon else ''
     subtitle_html = f'''
         <p style="
             margin: 4px 0 0 0;
@@ -85,7 +86,8 @@ def render_subsection_heading(title: str, icon: str = None):
         icon: Optional emoji icon
     """
     safe_title = html.escape(title)
-    icon_html = f'<span style="margin-right: 6px;">{icon}</span>' if icon else ''
+    safe_icon = html.escape(icon) if icon else None
+    icon_html = f'<span style="margin-right: 6px;">{safe_icon}</span>' if safe_icon else ''
     
     st.markdown(f"""
     <div style="

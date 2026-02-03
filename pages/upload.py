@@ -544,17 +544,6 @@ def render():
                 key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
 
                 with col:
-                    # Use CSS styling via container with complete HTML
-                    st.markdown(f"""
-                    <style>
-                        .submotif-{_sanitize_key(class_name)}-{_sanitize_key(subclass)} {{
-                            border-left: 4px solid {color};
-                            padding-left: 6px;
-                            margin-bottom: 6px;
-                        }}
-                    </style>
-                    """, unsafe_allow_html=True)
-
                     st.checkbox(
                         f"**:{color_name}[{subclass}]**",
                         key=key,
