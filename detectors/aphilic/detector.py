@@ -26,7 +26,7 @@ class APhilicDetector(BaseMotifDetector):
     """A-philic DNA detector using 10-mer scoring table."""
 
     # Tunable parameters
-    MIN_SUM_LOG2 = 10.0  # Minimum sum_log2 for A-philic regions
+    MIN_SUM_LOG2 = 0.5  # Minimum sum_log2 for A-philic regions
 
     def get_motif_class_name(self) -> str: return "A-philic_DNA"
 
