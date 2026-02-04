@@ -48,14 +48,12 @@ def render():
         
         if selected_classes_used:
             st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); 
-                        padding: 1rem; border-radius: 12px; margin-bottom: 1.25rem;
-                        border-left: 4px solid #eab308;
-                        box-shadow: 0 4px 12px rgba(234, 179, 8, 0.15);'>
-                <p style='color: #713f12; margin: 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;'>
-                    <span style='font-size: 1.2rem;'>⚠️</span>
-                    <span><strong>Data Filter:</strong> Exports contain only selected classes ({len(selected_classes_used)}) and subclasses ({len(selected_subclasses_used)}) 
-                    from {analysis_mode_used} analysis</span>
+            <div style='background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); 
+                        padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem;
+                        border-left: 3px solid #ca8a04;'>
+                <p style='color: #713f12; margin: 0; font-size: 0.9rem;'>
+                    <strong>Data Filter:</strong> Exports contain only selected classes ({len(selected_classes_used)}) and subclasses ({len(selected_subclasses_used)}) 
+                    from {analysis_mode_used} analysis
                 </p>
             </div>
             """, unsafe_allow_html=True)
@@ -78,13 +76,11 @@ def render():
         # Individual file downloads as main option
         st.markdown("### Export Options")
         st.markdown("""
-        <div style='background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); 
-                    padding: 1.25rem; border-radius: 14px; margin-bottom: 1.5rem;
-                    border-left: 4px solid #0ea5e9; 
-                    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);'>
-            <p style='color: #0c4a6e; margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;'>
-                <span style='font-size: 1.3rem;'>💾</span>
-                <span><strong>Quick Export:</strong> Choose your preferred format below. All exports include complete motif data.</span>
+        <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+                    padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem;
+                    border-left: 4px solid #0ea5e9; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);'>
+            <p style='color: #0c4a6e; margin: 0; font-size: 0.95rem;'>
+                <strong>Quick Export:</strong> Choose your preferred format below. All exports include complete motif data.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -178,14 +174,12 @@ def render():
         st.markdown("---")
         st.markdown("### Statistical Analysis Tables")
         st.markdown("""
-        <div style='background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); 
-                    padding: 1.25rem; border-radius: 14px; margin-bottom: 1.5rem;
-                    border-left: 4px solid #22c55e; 
-                    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);'>
-            <p style='color: #14532d; margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;'>
-                <span style='font-size: 1.3rem;'>📊</span>
-                <span><strong>Advanced Analytics:</strong> Detailed distribution and density statistics 
-                for publication-quality analysis and reporting</span>
+        <div style='background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
+                    padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem;
+                    border-left: 4px solid #22c55e; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);'>
+            <p style='color: #14532d; margin: 0; font-size: 0.95rem;'>
+                <strong>Advanced Analytics:</strong> Detailed distribution and density statistics 
+                for publication-quality analysis and reporting
             </p>
         </div>
         """, unsafe_allow_html=True)
