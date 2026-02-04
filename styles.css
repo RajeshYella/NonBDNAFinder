@@ -1,46 +1,8 @@
-/* styles.css - Elegant, Colorful, and Consistent Typography for NonBDNAFinder */
+/* styles.css - Compact, Bold, and Vibrant Typography for Tabs and Headings */
 
 /* NOTE: !important declarations are required throughout this file to override
    Streamlit's inline styles and default styling. While not ideal, this is necessary
    for custom styling in Streamlit applications. */
-
-/* ═══════════════════════════════════════════════════════════════
-   CSS CUSTOM PROPERTIES - DESIGN SYSTEM TOKENS
-   ═══════════════════════════════════════════════════════════════ */
-:root {
-    /* Primary Brand Colors - Vibrant Scientific Palette */
-    --brand-primary: #6366f1;
-    --brand-secondary: #8b5cf6;
-    --brand-accent: #06b6d4;
-    --brand-highlight: #f59e0b;
-    
-    /* Gradient Definitions */
-    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-    --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-    --gradient-info: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #14b8a6 100%);
-    --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
-    --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
-    --gradient-dark: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    --gradient-elegant: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    
-    /* Shadows with color tints */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 12px rgba(99, 102, 241, 0.15), 0 2px 4px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 10px 30px rgba(99, 102, 241, 0.2), 0 4px 6px rgba(0, 0, 0, 0.05);
-    --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
-    
-    /* Border radius system */
-    --radius-sm: 6px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
-    --radius-full: 9999px;
-    
-    /* Transitions */
-    --transition-fast: 0.15s ease;
-    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
 
 /* ═══════════════════════════════════════════════════════════════
    HIDE SIDEBAR NAVIGATION
@@ -52,63 +14,56 @@ section[data-testid="stSidebar"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   STREAMLIT TAB STYLING - ELEGANT GRADIENT DESIGN
+   STREAMLIT TAB STYLING - COMPACT, BOLD, AND VIBRANT
    ═══════════════════════════════════════════════════════════════ */
 
 /* Tab Container - Ensure Tabs Are Fully Visible Without Clipping */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 4px !important;
+    gap: 0 !important;
     width: 100% !important;
     display: flex !important;
     justify-content: space-evenly !important;
     overflow: visible !important;
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
-    padding: 6px !important;
-    border-radius: var(--radius-lg) !important;
-    border: 1px solid #e2e8f0 !important;
 }
 
-/* Individual Tab Buttons - Elegant with Gradient Effects */
+/* Individual Tab Buttons - Compact, Bold, and Fully Visible */
 .stTabs [data-baseweb="tab"] {
-    height: 52px !important;
-    padding: 10px 24px !important;
-    background: transparent !important;
+    height: 48px !important;
+    padding: 8px 20px !important;
+    background-color: #f0f4f8 !important;
     border: none !important;
-    border-radius: var(--radius-md) !important;
-    font-size: 1.05rem !important;
-    font-weight: 700 !important;
+    border-radius: 8px 8px 0 0 !important;
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
     letter-spacing: -0.01em !important;
-    transition: var(--transition-smooth) !important;
+    transition: all 0.25s ease !important;
     flex: 1 1 0 !important;
     min-width: 0 !important;
     margin: 0 2px !important;
     white-space: nowrap !important;
     overflow: visible !important;
-    color: #475569 !important;
-    position: relative !important;
 }
 
-/* Tab Hover State - Elegant Lift Effect */
+/* Tab Hover State - Vibrant Accent */
 .stTabs [data-baseweb="tab"]:hover {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%) !important;
-    color: #6366f1 !important;
-    transform: translateY(-2px) !important;
-    box-shadow: var(--shadow-md) !important;
-}
-
-/* Active Tab - Bold Gradient Background with Glow */
-.stTabs [data-baseweb="tab"][aria-selected="true"] {
-    background: var(--gradient-primary) !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     color: white !important;
-    font-weight: 800 !important;
-    box-shadow: var(--shadow-lg), var(--shadow-glow) !important;
-    border-bottom: none !important;
-    transform: translateY(-1px) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
 }
 
-/* Tab Panel - Clean Spacing */
+/* Active Tab - Bold Gradient Background */
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+    background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%) !important;
+    color: #1a202c !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 16px rgba(0, 201, 255, 0.5) !important;
+    border-bottom: 4px solid #00A3CC !important;
+}
+
+/* Tab Panel - Minimal Top Padding for Compactness */
 .stTabs [data-baseweb="tab-panel"] {
-    padding-top: 1.5rem !important;
+    padding-top: 1rem !important;
 }
 
 /* Tab Underline - Remove Default */
@@ -117,51 +72,50 @@ section[data-testid="stSidebar"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   HEADING STYLING - ELEGANT GRADIENT TEXT
+   HEADING STYLING - BOLD, ENLARGED, AND VIBRANT
    ═══════════════════════════════════════════════════════════════ */
 
-/* All Headings - Base Styles with Modern Typography */
+/* All Headings - Base Styles */
 h1, h2, h3, h4, h5, h6 {
     font-weight: 800 !important;
-    letter-spacing: -0.025em !important;
+    letter-spacing: -0.02em !important;
     line-height: 1.2 !important;
     margin-top: 0.5rem !important;
     margin-bottom: 0.75rem !important;
 }
 
-/* H1 - Largest and Most Prominent with Gradient */
+/* H1 - Largest and Most Prominent */
 h1 {
-    font-size: 2.75rem !important;
+    font-size: 3rem !important;
     font-weight: 900 !important;
-    background: var(--gradient-elegant);
+    color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: none;
 }
 
-/* H2 - Section Headers with Accent Bar */
+/* H2 - Section Headers */
 h2 {
-    font-size: 2rem !important;
+    font-size: 2.25rem !important;
     font-weight: 800 !important;
-    color: #1e293b !important;
-    border-left: 5px solid;
-    border-image: var(--gradient-primary) 1;
+    color: #2d3748 !important;
+    border-left: 6px solid #00C9FF;
     padding-left: 1rem !important;
 }
 
 /* H3 - Subsection Headers */
 h3 {
-    font-size: 1.5rem !important;
-    font-weight: 700 !important;
-    color: #334155 !important;
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    color: #2d3748 !important;
 }
 
 /* H4 - Smaller Headers */
 h4 {
-    font-size: 1.25rem !important;
-    font-weight: 600 !important;
-    color: #475569 !important;
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
+    color: #4a5568 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -174,56 +128,15 @@ h4 {
     overflow: visible !important;
 }
 
-/* Main container with subtle background pattern */
+/* Reduce Streamlit Default Padding - Combined rules for clarity */
 .main .block-container {
     max-width: 100% !important;
-    padding: 2rem 2.5rem 1.5rem 2.5rem !important;
-    background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+    padding: 2rem 2rem 1rem 2rem !important;
 }
 
 /* Compact Element Spacing */
 .element-container {
     margin-bottom: 0.75rem !important;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   BUTTON STYLING - CONSISTENT GRADIENT DESIGN
-   ═══════════════════════════════════════════════════════════════ */
-
-/* Primary buttons with gradient */
-.stButton > button[kind="primary"],
-.stButton > button[type="primary"] {
-    background: var(--gradient-primary) !important;
-    border: none !important;
-    border-radius: var(--radius-md) !important;
-    font-weight: 700 !important;
-    letter-spacing: -0.01em !important;
-    transition: var(--transition-smooth) !important;
-    box-shadow: var(--shadow-md) !important;
-}
-
-.stButton > button[kind="primary"]:hover,
-.stButton > button[type="primary"]:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: var(--shadow-lg), var(--shadow-glow) !important;
-}
-
-/* Secondary buttons */
-.stButton > button:not([kind="primary"]):not([type="primary"]) {
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: var(--radius-md) !important;
-    font-weight: 600 !important;
-    color: #475569 !important;
-    transition: var(--transition-smooth) !important;
-}
-
-.stButton > button:not([kind="primary"]):not([type="primary"]):hover {
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
-    border-color: #6366f1 !important;
-    color: #6366f1 !important;
-    transform: translateY(-1px) !important;
-    box-shadow: var(--shadow-sm) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -314,12 +227,11 @@ h4 {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    padding: 20px;
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #3730a3 100%);
-    border-radius: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-radius: 12px;
     margin: 16px 0;
     justify-content: space-between;
-    box-shadow: 0 10px 40px rgba(30, 27, 75, 0.3);
 }
 
 /* Individual metric card - compact horizontal */
@@ -327,51 +239,41 @@ h4 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 14px 18px;
+    padding: 12px 16px;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 8px;
     min-width: 100px;
     flex: 1;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.25s ease;
-}
-
-.metric-card:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
 }
 
 /* Metric icon */
 .metric-card__icon {
-    font-size: 1.4rem;
-    margin-bottom: 6px;
+    font-size: 1.25rem;
+    margin-bottom: 4px;
 }
 
 /* Metric value */
 .metric-card__value {
-    font-size: 1.2rem;
-    font-weight: 800;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: white;
     text-align: center;
 }
 
 /* Metric label */
 .metric-card__label {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     text-align: center;
-    margin-top: 4px;
-    font-weight: 600;
+    margin-top: 2px;
 }
 
 /* Success state for metrics strip */
 .metrics-strip--success {
-    background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
     border: 2px solid #10b981;
-    box-shadow: 0 10px 40px rgba(16, 185, 129, 0.25);
 }
 
 /* Responsive: Stack on very small screens (mobile portrait) */

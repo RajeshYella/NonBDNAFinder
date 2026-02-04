@@ -48,9 +48,9 @@ CLUSTER_CLASSES = ['Hybrid', 'Non-B_DNA_Clusters']
 def _render_section_divider(emoji: str) -> None:
     """Render a minimal section divider with emoji only."""
     st.markdown(f"""
-    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; margin-top: 12px;">
-        <span style="font-size: 1.2rem;">{emoji}</span>
-        <div style="flex: 1; height: 2px; background: linear-gradient(90deg, #6366f1 0%, #a855f7 30%, transparent 100%); border-radius: 1px;"></div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 4px 0; margin-top: 8px;">
+        <span style="font-size: 1rem;">{emoji}</span>
+        <div style="flex: 1; height: 1px; background: linear-gradient(90deg, #a855f7 0%, transparent 100%);"></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -58,30 +58,29 @@ def _render_section_divider(emoji: str) -> None:
 def _render_analysis_summary_box(coverage_pct: float, density: float, motif_count: int, seq_length: int) -> None:
     """Render compact horizontal analysis summary box with icons only."""
     st.markdown(f"""
-    <div style="display: flex; flex-wrap: wrap; gap: 12px; padding: 14px 18px; 
-                background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-                border-radius: 14px; border: 1px solid #c4b5fd; margin-bottom: 16px;
-                justify-content: space-around; align-items: center;
-                box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);">
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 4px 16px;">
-            <span style="font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px; 
+                background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+                border-radius: 8px; border: 1px solid #e9d5ff; margin-bottom: 12px;
+                justify-content: space-around; align-items: center;">
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
+            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{coverage_pct:.2f}%</span>
-            <span style="font-size: 0.75rem; color: #5b21b6; text-transform: uppercase; font-weight: 600; margin-top: 2px;">📊 Coverage</span>
+            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">📊 Coverage</span>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 4px 16px;">
-            <span style="font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
+            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{density:.2f}</span>
-            <span style="font-size: 0.75rem; color: #5b21b6; text-transform: uppercase; font-weight: 600; margin-top: 2px;">📈 Motifs/kb</span>
+            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">📈 Motifs/kb</span>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 4px 16px;">
-            <span style="font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
+            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{motif_count:,}</span>
-            <span style="font-size: 0.75rem; color: #5b21b6; text-transform: uppercase; font-weight: 600; margin-top: 2px;">🔬 Motifs</span>
+            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">🔬 Motifs</span>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 4px 16px;">
-            <span style="font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
+            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{seq_length:,}</span>
-            <span style="font-size: 0.75rem; color: #5b21b6; text-transform: uppercase; font-weight: 600; margin-top: 2px;">🧬 bp</span>
+            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">🧬 bp</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -323,12 +322,9 @@ def render():
                     st.error(f"Cluster size error: {e}")
         else:
             st.markdown("""
-            <div style="padding: 16px; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); 
-                        border-radius: 12px; 
-                        color: #0369a1; font-size: 0.95rem; text-align: center;
-                        border: 1px solid #7dd3fc;
-                        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.15);">
-                <span style='font-size: 1.2rem;'>ℹ️</span> No clusters or hybrids detected in this sequence
+            <div style="padding: 12px; background: #f0f9ff; border-radius: 8px; 
+                        color: #0369a1; font-size: 0.9rem; text-align: center;">
+                ℹ️ No clusters or hybrids detected in this sequence
             </div>
             """, unsafe_allow_html=True)
         

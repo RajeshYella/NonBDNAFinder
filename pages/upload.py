@@ -196,12 +196,10 @@ def render():
     with left_col:
         st.markdown("""
         <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
-                    padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1rem;
-                    border-left: 4px solid #10b981;
-                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);'>
-            <h4 style='margin: 0; color: #065f46; font-size: 1.1rem; font-weight: 700; 
-                       display: flex; align-items: center; gap: 8px;'>
-                <span style='font-size: 1.2rem;'>📂</span> Sequence Input
+                    padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
+                    border-left: 4px solid #10b981;'>
+            <h4 style='margin: 0; color: #065f46; font-size: 1rem; font-weight: 600;'>
+                Sequence Input
             </h4>
         </div>
         """, unsafe_allow_html=True)
@@ -232,20 +230,18 @@ def render():
                 
                     # Compact File Card
                     st.markdown(f"""
-                    <div style='background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); 
-                                border-radius: 16px; padding: 16px; margin: 12px 0; color: white; 
-                                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);'>
+                    <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
+                                border-radius: 12px; padding: 12px; margin: 8px 0; color: white; 
+                                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
                         <div style='display: flex; justify-content: space-between; align-items: center;'>
                             <div>
-                                <div style='font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px;'>
-                                    <span style='font-size: 1.2rem;'>📄</span> {fasta_file.name}
-                                </div>
-                                <div style='font-size: 0.9rem; opacity: 0.9; margin-top: 6px;'>
+                                <div style='font-weight: 600; font-size: 0.95rem;'>File: {fasta_file.name}</div>
+                                <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
                                     {preview_info['num_sequences']} sequences | {preview_info['total_bp']:,} bp | {file_size_mb:.2f} MB
                                 </div>
                             </div>
-                            <div style='background: rgba(255,255,255,0.2); border-radius: 10px; padding: 10px 16px; font-weight: 700;'>
-                                ✓ {UI_TEXT['label_valid']}
+                            <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
+                                {UI_TEXT['label_valid']}
                             </div>
                         </div>
                     </div>
@@ -333,20 +329,18 @@ def render():
                     # Compact validation card
                     total_bp = sum(len(s) for s in seqs)
                     st.markdown(f"""
-                    <div style='background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); 
-                                border-radius: 16px; padding: 16px; margin: 12px 0; color: white;
-                                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);'>
+                    <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
+                                border-radius: 12px; padding: 12px; margin: 8px 0; color: white;
+                                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
                         <div style='display: flex; justify-content: space-between; align-items: center;'>
                             <div>
-                                <div style='font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px;'>
-                                    <span style='font-size: 1.2rem;'>📋</span> Pasted Sequences
-                                </div>
-                                <div style='font-size: 0.9rem; opacity: 0.9; margin-top: 6px;'>
+                                <div style='font-weight: 600; font-size: 0.95rem;'>Pasted Sequences</div>
+                                <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
                                     {len(seqs)} sequences | {total_bp:,} bp
                                 </div>
                             </div>
-                            <div style='background: rgba(255,255,255,0.2); border-radius: 10px; padding: 10px 16px; font-weight: 700;'>
-                                ✓ Valid
+                            <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
+                                Valid
                             </div>
                         </div>
                     </div>
@@ -447,13 +441,11 @@ def render():
     # ============================================================
     with right_col:
         st.markdown("""
-        <div style='background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
-                    padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1rem;
-                    border-left: 4px solid #6366f1;
-                    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);'>
-            <h4 style='margin: 0; color: #3730a3; font-size: 1.1rem; font-weight: 700;
-                       display: flex; align-items: center; gap: 8px;'>
-                <span style='font-size: 1.2rem;'>⚙️</span> Analysis Configuration
+        <div style='background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); 
+                    padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
+                    border-left: 4px solid #3b82f6;'>
+            <h4 style='margin: 0; color: #1e3a8a; font-size: 1rem; font-weight: 600;'>
+                Analysis Configuration
             </h4>
         </div>
         """, unsafe_allow_html=True)
@@ -475,12 +467,11 @@ def render():
         # ============================================================
 
         st.markdown("""
-        <div style="font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 10px;
-                    display: flex; align-items: center; gap: 8px;">
-            <span style='font-size: 1.1rem;'>🧬</span> Submotif Selector
-            <span style="font-weight: 500; color: #64748b; font-size: 0.85rem; margin-left: 8px;">
-            — All enabled by default. Uncheck to exclude.
-            </span>
+        <div style="font-size: 0.95rem; font-weight: 600; color: #374151; margin-bottom: 8px;">
+        🧬 Submotif Selector
+        <span style="font-weight: 400; color: #6b7280; font-size: 0.8rem;">
+        — All enabled by default. Uncheck to exclude.
+        </span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -544,11 +535,22 @@ def render():
                 key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
 
                 with col:
+                    st.markdown(f"""
+                    <div style="
+                        border-left: 4px solid {color};
+                        padding-left: 6px;
+                        margin-bottom: 6px;
+                        font-size: 0.82rem;
+                    ">
+                    """, unsafe_allow_html=True)
+
                     st.checkbox(
                         f"**:{color_name}[{subclass}]**",
                         key=key,
                         help=f"{subclass} ({class_name.replace('_', ' ')})"
                     )
+
+                    st.markdown("</div>", unsafe_allow_html=True)
 
         # ------------------------------------------------------------------
         # Build enabled class & subclass lists (for downstream analysis)
@@ -585,11 +587,10 @@ def render():
         if enabled_classes:
             st.markdown(f"""
             <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-                        padding: 10px 14px; border-radius: 10px; margin: 10px 0;
-                        display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem;
-                        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);'>
-                <span style='font-size: 1.1rem;'>✓</span>
-                <span style='font-weight: 700; color: #065f46;'>
+                        padding: 6px 10px; border-radius: 6px; margin: 6px 0;
+                        display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem;'>
+                <span style='font-size: 1rem;'>✓</span>
+                <span style='font-weight: 600; color: #065f46;'>
                     {len(enabled_classes)} classes, {num_enabled}/{total_submotifs} submotifs enabled
                 </span>
             </div>
@@ -654,10 +655,10 @@ def render():
                 st.markdown(f"""
                 <div role="status" aria-label="Analysis Complete"
                      style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-                            color: white; padding: 16px; 
-                            border-radius: 14px; text-align: center; font-weight: 700;
-                            font-size: 1.1rem; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);'>
-                    ✅ Analysis Complete - View results in 'Results' tab
+                            color: white; padding: 12px; 
+                            border-radius: 12px; text-align: center; font-weight: 600;
+                            font-size: 1.1rem;'>
+                    Analysis Complete - View results in 'Results' tab
                 </div>
                 """, unsafe_allow_html=True)
                 run_button = False
@@ -665,13 +666,12 @@ def render():
                 # Disabled button appearance with accessibility
                 st.markdown(f"""
                 <div role="button" aria-disabled="true" aria-label="Run NBDScanner Analysis - Disabled: Please upload or paste a valid sequence first"
-                     style='background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); 
-                            color: #64748b; padding: 16px; 
-                            border-radius: 14px; text-align: center; font-weight: 700;
-                            font-size: 1.1rem; cursor: not-allowed; opacity: 0.7;'>
+                     style='background: #e0e0e0; color: #9e9e9e; padding: 12px; 
+                            border-radius: 12px; text-align: center; font-weight: 600;
+                            font-size: 1.1rem; cursor: not-allowed; opacity: 0.6;'>
                     {UI_TEXT['analysis_run_button_disabled']}
                 </div>
-                <p style='text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: 10px;' role="status">
+                <p style='text-align: center; color: #9e9e9e; font-size: 0.85rem; margin-top: 8px;' role="status">
                     {UI_TEXT['label_note']}: {UI_TEXT['analysis_run_button_disabled_note']}
                 </p>
                 """, unsafe_allow_html=True)
