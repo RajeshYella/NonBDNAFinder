@@ -8,7 +8,7 @@ import pandas as pd
 from config.text import UI_TEXT
 from config.typography import FONT_CONFIG
 from config.themes import TAB_THEMES
-from ui.css import load_css, get_page_colors
+from ui.css import load_css
 from ui.headers import render_section_heading
 
 
@@ -100,7 +100,6 @@ def render():
     """Render the Documentation page content."""
     # Apply Documentation tab theme - use scientific_blue for better readability
     load_css(TAB_THEMES.get('Documentation', 'scientific_blue'))
-    colors = get_page_colors('Home')  # Use Home colors for consistent light theme
     
     # Section heading
     render_section_heading("Scientific Documentation & References")
@@ -108,7 +107,7 @@ def render():
     # ═══════════════════════════════════════════════════════════
     # TOOL OVERVIEW CARD
     # ═══════════════════════════════════════════════════════════
-    st.markdown(f"""
+    st.markdown("""
     <div style='background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); 
                 padding: 2rem; border-radius: 16px; margin-bottom: 2rem;
                 box-shadow: 0 8px 32px rgba(30, 64, 175, 0.3);'>
@@ -136,9 +135,9 @@ def render():
     # ═══════════════════════════════════════════════════════════
     # MOTIF CLASSES - DETAILED CARDS
     # ═══════════════════════════════════════════════════════════
-    st.markdown(f"""
-    <h3 style='color: {colors['text']}; font-size: 1.5rem; margin: 2rem 0 1rem 0; font-weight: 700;
-               border-left: 4px solid {colors['primary']}; padding-left: 1rem;'>
+    st.markdown("""
+    <h3 style='color: #003D82; font-size: 1.5rem; margin: 2rem 0 1rem 0; font-weight: 700;
+               border-left: 4px solid #0091FF; padding-left: 1rem;'>
         🔬 Detected Non-B DNA Motif Classes
     </h3>
     """, unsafe_allow_html=True)
@@ -178,9 +177,9 @@ def render():
     # ═══════════════════════════════════════════════════════════
     # ALGORITHM PARAMETERS TABLE
     # ═══════════════════════════════════════════════════════════
-    st.markdown(f"""
-    <h3 style='color: {colors['text']}; font-size: 1.5rem; margin: 2rem 0 1rem 0; font-weight: 700;
-               border-left: 4px solid {colors['primary']}; padding-left: 1rem;'>
+    st.markdown("""
+    <h3 style='color: #003D82; font-size: 1.5rem; margin: 2rem 0 1rem 0; font-weight: 700;
+               border-left: 4px solid #0091FF; padding-left: 1rem;'>
         ⚙️ Detection Parameters & Algorithms
     </h3>
     """, unsafe_allow_html=True)
@@ -213,9 +212,9 @@ def render():
     # ═══════════════════════════════════════════════════════════
     # PEER-REVIEWED REFERENCES
     # ═══════════════════════════════════════════════════════════
-    st.markdown(f"""
-    <h3 style='color: {colors['text']}; font-size: 1.5rem; margin: 2rem 0 1rem 0; font-weight: 700;
-               border-left: 4px solid {colors['primary']}; padding-left: 1rem;'>
+    st.markdown("""
+    <h3 style='color: #003D82; font-size: 1.5rem; margin: 2rem 0 1rem 0; font-weight: 700;
+               border-left: 4px solid #0091FF; padding-left: 1rem;'>
         📚 Peer-Reviewed References
     </h3>
     <p style='color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;'>
