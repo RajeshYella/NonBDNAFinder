@@ -1,8 +1,39 @@
-/* styles.css - Compact, Bold, and Vibrant Typography for Tabs and Headings */
+/* styles.css - Publication-Quality Scientific UI for NonBDNAFinder 2025.1 */
+/* Designed to meet Nature/Science/Cell journal visualization standards */
 
 /* NOTE: !important declarations are required throughout this file to override
    Streamlit's inline styles and default styling. While not ideal, this is necessary
    for custom styling in Streamlit applications. */
+
+/* ═══════════════════════════════════════════════════════════════
+   SCIENTIFIC TYPOGRAPHY - Publication Grade
+   Reference: Nature Methods style guidelines
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+    /* Scientific color palette - colorblind-safe */
+    --sci-blue: #0072B2;
+    --sci-orange: #E69F00;
+    --sci-green: #009E73;
+    --sci-purple: #7C3AED;
+    --sci-red: #CC79A7;
+    --sci-cyan: #56B4E9;
+    --sci-dark: #1e293b;
+    --sci-gray: #64748b;
+    
+    /* UI colors */
+    --gradient-primary: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+    --gradient-success: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    --gradient-accent: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%);
+    
+    /* Shadows for depth */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+    --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.15);
+}
 
 /* ═══════════════════════════════════════════════════════════════
    HIDE SIDEBAR NAVIGATION
