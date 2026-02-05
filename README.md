@@ -114,7 +114,7 @@ print(f'Found {len(motifs)} motifs')
 - Reproducibility guarantees
 
 ### Visualization Improvements
-- New `visualization_enhancements.py` module
+- Consolidated `visualization/` module with Nature-ready standards
 - Nobel-quality color palettes
 - Enhanced plot aesthetics (thicker spines, better fonts)
 - Professional colormaps (density, heatmap, diverging)
@@ -146,44 +146,35 @@ See **[OUTPUT_SCHEMA.md](./OUTPUT_SCHEMA.md)** for complete documentation with e
 
 ## 📁 Project Structure
 
-The application is unified into **4 core scripts** for clarity and maintainability:
+The application uses a clean, modular architecture with clear separation of concerns:
 
-### Core Files
-1. **`app.py`** (192 KB) - Streamlit web application
-   - User interface and interaction
-   - File upload and parsing
-   - Results display and export
-   
-2. **`utilities.py`** (311 KB) - Utilities, export, and visualization
-   - Sequence processing functions
-   - Data export (CSV, BED, JSON, Excel)
-   - 25+ publication-quality visualization functions
-   - Memory management and optimization
-   
-3. **`nonbscanner.py`** (75 KB) - Main scanner API
-   - Analysis orchestration
-   - Hybrid and cluster detection
-   - Score normalization (1-3 scale)
-   - Progress tracking
-   
-4. **`detectors.py`** (195 KB) - All detector classes
-   - 9 motif detector classes consolidated
-   - Pattern matching and scoring
-   - Component extraction
+### Primary Entry Points
+- **`app.py`** - Streamlit web application and main UI entry point
+- **`nonbscanner.py`** - Main scanner API for programmatic analysis
 
-### Data Files
+### Core Modules
+- **`core/`** - Core logic modules
+  - `motif_normalizer.py` - Class/subclass validation and normalization
+- **`detectors/`** - Modular detector classes (one per motif type)
+  - `base/` - Base detector class and shared functionality
+  - `aphilic/`, `curved/`, `gquad/`, `imotif/`, `zdna/`, `rloop/`, `cruciform/`, `triplex/`, `slipped/` - Individual detector implementations
+- **`detectors_utils.py`** - Shared utility functions for detectors
+
+### Configuration & UI
+- **`config/`** - Configuration modules (colors, themes, layout, text, motif taxonomy)
+- **`ui/`** - UI utility modules (CSS, headers, formatters, guards, cache)
+- **`pages/`** - Streamlit page modules (home, upload, results, download, documentation)
+
+### Visualization & Export
+- **`visualization/`** - Visualization standards and functions
+- **`export/`** - Export validation and formatting
+- **`utilities.py`** - Consolidated utility functions (25+ visualization functions, data export, memory optimization)
+
+### Supporting Files
+- `scanner_agent.py` - Parallel scanning with Hyperscan acceleration
+- `job_manager.py` - Job persistence and retrieval
 - `consolidated_registry.json` - Pattern database
-- `pattern_registry2.xlsx` - Pattern registry with scores
 - `requirements.txt` - Python dependencies
-
-### Archived Files
-Development and experimental files have been moved to `archive/` directory:
-- Legacy detector implementations
-- Experimental optimization code
-- Development tests and validation scripts
-- Historical documentation
-
-See `archive/README.md` for details on archived content.
 
 ## 📖 Documentation
 
