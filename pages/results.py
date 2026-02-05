@@ -37,7 +37,7 @@ from utilities import (
     plot_motif_length_kde,
     plot_score_distribution
 )
-from visualization_standards import NATURE_MOTIF_COLORS
+from visualization import NATURE_MOTIF_COLORS
 
 logger = logging.getLogger(__name__)
 
