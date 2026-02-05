@@ -201,6 +201,23 @@ def format_time_compact(seconds: float) -> str:
     return f"{minutes:02d}:{secs:02d}"
 
 
+def calculate_gc_percentage(sequences: list) -> float:
+    """
+    Calculate average GC percentage across multiple sequences.
+    
+    Args:
+        sequences: List of DNA sequence strings
+        
+    Returns:
+        Average GC percentage (0.0 if no sequences/base pairs)
+    """
+    total_bp = sum(len(s) for s in sequences)
+    if total_bp == 0:
+        return 0.0
+    total_gc_count = sum(s.upper().count('G') + s.upper().count('C') for s in sequences)
+    return (total_gc_count / total_bp) * 100
+
+
 # Example FASTA data
 EXAMPLE_FASTA = """>Example Sequence
 ATCGATCGATCGAAAATTTTATTTAAATTTAAATTTGGGTTAGGGTTAGGGTTAGGGCCCCCTCCCCCTCCCCCTCCCC
@@ -385,9 +402,7 @@ def render():
                 if seqs:
                     # Compact QC summary strip for pasted sequences
                     total_bp = sum(len(s) for s in seqs)
-                    # Calculate GC for pasted sequences
-                    total_gc_count = sum(s.upper().count('G') + s.upper().count('C') for s in seqs)
-                    avg_gc = (total_gc_count / total_bp * 100) if total_bp > 0 else 0.0
+                    avg_gc = calculate_gc_percentage(seqs)
                     st.markdown(f"""
                     <div style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
                                 border-radius: 8px; padding: 10px 14px; margin: 8px 0; color: white;
