@@ -101,86 +101,82 @@ def render():
     # Apply Documentation tab theme - use scientific_blue for better readability
     load_css(TAB_THEMES.get('Documentation', 'scientific_blue'))
     
-    # Section heading
+    # Section heading (thin blue box with white glowing text)
     render_section_heading("Scientific Documentation & References")
     
     # ═══════════════════════════════════════════════════════════
-    # TOOL OVERVIEW CARD
+    # TOOL OVERVIEW CARD (compact, no emoji)
     # ═══════════════════════════════════════════════════════════
     st.markdown("""
     <div style='background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); 
-                padding: 2rem; border-radius: 16px; margin-bottom: 2rem;
-                box-shadow: 0 8px 32px rgba(30, 64, 175, 0.3);'>
-        <h2 style='color: white; margin: 0 0 1rem 0; font-size: 1.8rem; font-weight: 700;'>
-            🧬 NonBDNAFinder v2025.1
+                padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;
+                box-shadow: 0 4px 16px rgba(30, 64, 175, 0.3);'>
+        <h2 style='color: white; margin: 0 0 0.75rem 0; font-size: 1.4rem; font-weight: 700;'>
+            NonBDNAFinder v2025.1
         </h2>
-        <p style='color: rgba(255,255,255,0.95); font-size: 1rem; line-height: 1.7; margin: 0;'>
+        <p style='color: rgba(255,255,255,0.95); font-size: 0.95rem; line-height: 1.6; margin: 0;'>
             A comprehensive computational platform for <strong>genome-wide detection and analysis</strong> of 
             Non-B DNA structures. Implements <strong>11 motif classes</strong> with <strong>24 subclasses</strong>, 
             validated against peer-reviewed algorithms including G4Hunter, QmRLFS, and Z-Seeker.
         </p>
-        <div style='display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;'>
-            <span style='background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px; 
-                         color: white; font-size: 0.85rem; font-weight: 600;'>📊 24,674 bp/s</span>
-            <span style='background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px; 
-                         color: white; font-size: 0.85rem; font-weight: 600;'>📈 200MB+ sequences</span>
-            <span style='background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px; 
-                         color: white; font-size: 0.85rem; font-weight: 600;'>🎨 25+ visualizations</span>
-            <span style='background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px; 
-                         color: white; font-size: 0.85rem; font-weight: 600;'>📄 Nature-ready output</span>
+        <div style='display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;'>
+            <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 16px; 
+                         color: white; font-size: 0.8rem; font-weight: 600;'>24,674 bp/s</span>
+            <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 16px; 
+                         color: white; font-size: 0.8rem; font-weight: 600;'>200MB+ sequences</span>
+            <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 16px; 
+                         color: white; font-size: 0.8rem; font-weight: 600;'>25+ visualizations</span>
+            <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 16px; 
+                         color: white; font-size: 0.8rem; font-weight: 600;'>Nature-ready output</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
     # ═══════════════════════════════════════════════════════════
-    # MOTIF CLASSES - DETAILED CARDS
+    # MOTIF CLASSES - DETAILED CARDS (compact, no emoji)
     # ═══════════════════════════════════════════════════════════
     st.markdown("""
-    <h3 style='color: #003D82; font-size: 1.5rem; margin: 2rem 0 1rem 0; font-weight: 700;
-               border-left: 4px solid #0091FF; padding-left: 1rem;'>
-        🔬 Detected Non-B DNA Motif Classes
+    <h3 style='color: #003D82; font-size: 1.3rem; margin: 1.5rem 0 0.75rem 0; font-weight: 700;
+               border-left: 4px solid #0091FF; padding-left: 0.75rem;'>
+        Detected Non-B DNA Motif Classes
     </h3>
     """, unsafe_allow_html=True)
     
-    # Create motif cards in a grid
+    # Create motif cards in a grid (no emoji icons)
     motif_info = [
-        ("🔵", "Curved DNA", "A-tract mediated bending", "#06b6d4", "Intrinsic DNA curvature from phased A-tracts"),
-        ("🟠", "Slipped DNA", "Direct repeats & STRs", "#f59e0b", "Slippage-mediated repeat expansions"),
-        ("🔴", "Cruciform", "Inverted repeats", "#ef4444", "Hairpin structures from palindromic sequences"),
-        ("🟣", "R-Loop", "RNA:DNA hybrids", "#8b5cf6", "Co-transcriptional R-loop formation sites"),
-        ("💖", "Triplex", "H-DNA structures", "#ec4899", "Triple-stranded DNA from mirror repeats"),
-        ("🟢", "G-Quadruplex", "G4 structures", "#10b981", "Four-stranded G-rich secondary structures"),
-        ("💚", "i-Motif", "C-rich structures", "#22c55e", "Intercalated cytosine structures"),
-        ("🔷", "Z-DNA", "Left-handed helix", "#6366f1", "Alternating purine-pyrimidine sequences"),
-        ("🟧", "A-philic DNA", "Protein-binding", "#f97316", "High nucleosome positioning potential"),
-        ("⬜", "Hybrid", "Multi-class overlaps", "#64748b", "Regions with multiple motif types"),
-        ("⬛", "Clusters", "Hotspots", "#334155", "High-density Non-B DNA regions"),
+        ("Curved DNA", "A-tract mediated bending", "#06b6d4", "Intrinsic DNA curvature from phased A-tracts"),
+        ("Slipped DNA", "Direct repeats & STRs", "#f59e0b", "Slippage-mediated repeat expansions"),
+        ("Cruciform", "Inverted repeats", "#ef4444", "Hairpin structures from palindromic sequences"),
+        ("R-Loop", "RNA:DNA hybrids", "#8b5cf6", "Co-transcriptional R-loop formation sites"),
+        ("Triplex", "H-DNA structures", "#ec4899", "Triple-stranded DNA from mirror repeats"),
+        ("G-Quadruplex", "G4 structures", "#10b981", "Four-stranded G-rich secondary structures"),
+        ("i-Motif", "C-rich structures", "#22c55e", "Intercalated cytosine structures"),
+        ("Z-DNA", "Left-handed helix", "#6366f1", "Alternating purine-pyrimidine sequences"),
+        ("A-philic DNA", "Protein-binding", "#f97316", "High nucleosome positioning potential"),
+        ("Hybrid", "Multi-class overlaps", "#64748b", "Regions with multiple motif types"),
+        ("Clusters", "Hotspots", "#334155", "High-density Non-B DNA regions"),
     ]
     
-    cards_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;">'
-    for icon, name, subtitle, color, description in motif_info:
+    cards_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">'
+    for name, subtitle, color, description in motif_info:
         cards_html += f'''
-        <div style='background: white; padding: 1.2rem; border-radius: 12px; 
-                    box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-left: 4px solid {color};
-                    transition: transform 0.2s ease;'>
-            <div style='display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;'>
-                <span style='font-size: 1.2rem;'>{icon}</span>
-                <strong style='color: #1e293b; font-size: 1rem;'>{name}</strong>
-            </div>
-            <div style='color: {color}; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.4rem;'>{subtitle}</div>
-            <div style='color: #64748b; font-size: 0.85rem; line-height: 1.5;'>{description}</div>
+        <div style='background: white; padding: 1rem; border-radius: 10px; 
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid {color};'>
+            <strong style='color: #1e293b; font-size: 0.95rem;'>{name}</strong>
+            <div style='color: {color}; font-size: 0.75rem; font-weight: 600; margin: 0.2rem 0;'>{subtitle}</div>
+            <div style='color: #64748b; font-size: 0.8rem; line-height: 1.4;'>{description}</div>
         </div>
         '''
     cards_html += '</div>'
     st.markdown(cards_html, unsafe_allow_html=True)
     
     # ═══════════════════════════════════════════════════════════
-    # ALGORITHM PARAMETERS TABLE
+    # ALGORITHM PARAMETERS TABLE (no emoji)
     # ═══════════════════════════════════════════════════════════
     st.markdown("""
-    <h3 style='color: #003D82; font-size: 1.5rem; margin: 2rem 0 1rem 0; font-weight: 700;
-               border-left: 4px solid #0091FF; padding-left: 1rem;'>
-        ⚙️ Detection Parameters & Algorithms
+    <h3 style='color: #003D82; font-size: 1.3rem; margin: 1.5rem 0 0.75rem 0; font-weight: 700;
+               border-left: 4px solid #0091FF; padding-left: 0.75rem;'>
+        Detection Parameters & Algorithms
     </h3>
     """, unsafe_allow_html=True)
     
@@ -210,30 +206,30 @@ def render():
     )
     
     # ═══════════════════════════════════════════════════════════
-    # PEER-REVIEWED REFERENCES
+    # PEER-REVIEWED REFERENCES (no emoji)
     # ═══════════════════════════════════════════════════════════
     st.markdown("""
-    <h3 style='color: #003D82; font-size: 1.5rem; margin: 2rem 0 1rem 0; font-weight: 700;
-               border-left: 4px solid #0091FF; padding-left: 1rem;'>
-        📚 Peer-Reviewed References
+    <h3 style='color: #003D82; font-size: 1.3rem; margin: 1.5rem 0 0.75rem 0; font-weight: 700;
+               border-left: 4px solid #0091FF; padding-left: 0.75rem;'>
+        Peer-Reviewed References
     </h3>
-    <p style='color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;'>
+    <p style='color: #64748b; font-size: 0.85rem; margin-bottom: 0.75rem;'>
         NonBDNAFinder implements algorithms validated in the following peer-reviewed publications:
     </p>
     """, unsafe_allow_html=True)
     
-    # Reference cards
-    refs_html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">'
+    # Reference cards (compact)
+    refs_html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">'
     for ref in REFERENCES:
         refs_html += f'''
-        <div style='background: #f8fafc; padding: 1rem; border-radius: 8px; border-left: 3px solid #3b82f6;'>
-            <div style='font-weight: 600; color: #1e293b; font-size: 0.9rem; margin-bottom: 0.3rem;'>
+        <div style='background: #f8fafc; padding: 0.75rem; border-radius: 6px; border-left: 3px solid #3b82f6;'>
+            <div style='font-weight: 600; color: #1e293b; font-size: 0.85rem; margin-bottom: 0.2rem;'>
                 {ref["authors"]} ({ref["year"]})
             </div>
-            <div style='color: #334155; font-size: 0.85rem; font-style: italic; margin-bottom: 0.2rem;'>
+            <div style='color: #334155; font-size: 0.8rem; font-style: italic; margin-bottom: 0.15rem;'>
                 {ref["title"]}
             </div>
-            <div style='color: #64748b; font-size: 0.8rem;'>
+            <div style='color: #64748b; font-size: 0.75rem;'>
                 <strong>{ref["journal"]}</strong> {ref["volume"]} · 
                 <a href="https://doi.org/{ref["doi"]}" target="_blank" style="color: #3b82f6;">DOI: {ref["doi"]}</a>
             </div>
@@ -243,28 +239,28 @@ def render():
     st.markdown(refs_html, unsafe_allow_html=True)
     
     # ═══════════════════════════════════════════════════════════
-    # CITATION & AUTHOR INFO
+    # CITATION & AUTHOR INFO (compact, no emoji)
     # ═══════════════════════════════════════════════════════════
     st.markdown(f"""
     <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
-                padding: 2rem; border-radius: 16px; margin-top: 2rem;
+                padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem;
                 border: 1px solid #bae6fd;'>
-        <h3 style='color: #0c4a6e; margin: 0 0 1rem 0; font-size: 1.3rem; font-weight: 700;'>
-            📖 How to Cite
+        <h3 style='color: #0c4a6e; margin: 0 0 0.75rem 0; font-size: 1.1rem; font-weight: 700;'>
+            How to Cite
         </h3>
-        <div style='background: white; padding: 1.2rem; border-radius: 8px; font-family: "Courier New", monospace;
-                    font-size: 0.85rem; line-height: 1.7; color: #334155; border-left: 4px solid #0284c7;'>
+        <div style='background: white; padding: 1rem; border-radius: 6px; font-family: "Courier New", monospace;
+                    font-size: 0.8rem; line-height: 1.6; color: #334155; border-left: 4px solid #0284c7;'>
             <strong>Yella VR</strong> (2025). NonBDNAFinder: Comprehensive Detection and Analysis of Non-B DNA Forming Motifs.<br>
             GitHub: <a href="https://github.com/VRYella/NonBDNAFinder" style="color: #0284c7;">https://github.com/VRYella/NonBDNAFinder</a>
         </div>
-        <div style='margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #bae6fd;'>
-            <div style='font-weight: 700; color: #0c4a6e; font-size: 1rem; margin-bottom: 0.5rem;'>
+        <div style='margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #bae6fd;'>
+            <div style='font-weight: 700; color: #0c4a6e; font-size: 0.9rem; margin-bottom: 0.4rem;'>
                 Developed by
             </div>
-            <div style='color: #334155; font-size: 0.95rem;'>
+            <div style='color: #334155; font-size: 0.85rem;'>
                 <strong>{UI_TEXT['author']}</strong><br>
-                📧 <a href='mailto:{UI_TEXT["author_email"]}' style='color: #0284c7;'>{UI_TEXT['author_email']}</a><br>
-                🔗 <a href='https://github.com/VRYella' target='_blank' style='color: #0284c7;'>GitHub: VRYella</a>
+                Email: <a href='mailto:{UI_TEXT["author_email"]}' style='color: #0284c7;'>{UI_TEXT['author_email']}</a><br>
+                <a href='https://github.com/VRYella' target='_blank' style='color: #0284c7;'>GitHub: VRYella</a>
             </div>
         </div>
     </div>
