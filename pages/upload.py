@@ -201,6 +201,23 @@ def format_time_compact(seconds: float) -> str:
     return f"{minutes:02d}:{secs:02d}"
 
 
+def calculate_gc_percentage(sequences: list) -> float:
+    """
+    Calculate average GC percentage across multiple sequences.
+    
+    Args:
+        sequences: List of DNA sequence strings
+        
+    Returns:
+        Average GC percentage (0.0 if no sequences/base pairs)
+    """
+    total_bp = sum(len(s) for s in sequences)
+    if total_bp == 0:
+        return 0.0
+    total_gc_count = sum(s.upper().count('G') + s.upper().count('C') for s in sequences)
+    return (total_gc_count / total_bp) * 100
+
+
 # Example FASTA data
 EXAMPLE_FASTA = """>Example Sequence
 ATCGATCGATCGAAAATTTTATTTAAATTTAAATTTGGGTTAGGGTTAGGGTTAGGGCCCCCTCCCCCTCCCCCTCCCC
@@ -244,13 +261,16 @@ def render():
     render_section_heading("Upload & Analyze Sequences")
 
     # ============================================================
-    # TWO-COLUMN LAYOUT: INPUT (LEFT) | ANALYSIS (RIGHT)
+    # TWO-COLUMN LAYOUT: SEQUENCE CONTEXT (LEFT) | DETECTION SCOPE (RIGHT)
+    # Clean scientific layout: sequence input left, motif selection right
+    # Analysis execution moves to full-width section below
     # ============================================================
 
-    left_col, right_col = st.columns([0.6, 1.9])
+    left_col, right_col = st.columns([1, 1.5])
 
     # ============================================================
-    # LEFT COLUMN — SEQUENCE INPUT
+    # LEFT COLUMN — SEQUENCE CONTEXT
+    # Compact input + QC summary for scientific workflow
     # ============================================================
     with left_col:
         st.markdown("""
@@ -258,7 +278,7 @@ def render():
                     padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
                     border-left: 4px solid #10b981;'>
             <h4 style='margin: 0; color: #065f46; font-size: 1rem; font-weight: 600;'>
-                Sequence Input
+                Sequence Context
             </h4>
         </div>
         """, unsafe_allow_html=True)
@@ -287,40 +307,35 @@ def render():
                     # Get preview first (lightweight operation)
                     preview_info = get_file_preview(fasta_file, max_sequences=3)
                 
-                    # Compact File Card
+                    # Calculate aggregate QC stats for compact summary
+                    total_gc = sum(p['gc_percent'] * p['length'] for p in preview_info['previews'])
+                    total_len = sum(p['length'] for p in preview_info['previews'])
+                    avg_gc = total_gc / total_len if total_len > 0 else 0.0
+                
+                    # Compact QC Summary Strip (replaces individual cards)
                     st.markdown(f"""
-                    <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
-                                border-radius: 12px; padding: 12px; margin: 8px 0; color: white; 
-                                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
-                        <div style='display: flex; justify-content: space-between; align-items: center;'>
-                            <div>
-                                <div style='font-weight: 600; font-size: 0.95rem;'>File: {fasta_file.name}</div>
-                                <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
-                                    {preview_info['num_sequences']} sequences | {preview_info['total_bp']:,} bp | {file_size_mb:.2f} MB
-                                </div>
-                            </div>
-                            <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
-                                {UI_TEXT['label_valid']}
-                            </div>
+                    <div style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                                border-radius: 8px; padding: 10px 14px; margin: 8px 0; color: white;
+                                box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);'>
+                        <div style='font-weight: 600; font-size: 0.9rem; margin-bottom: 6px;'>
+                            {fasta_file.name}
+                        </div>
+                        <div style='display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem;'>
+                            <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                                <strong>{preview_info['num_sequences']}</strong> sequences
+                            </span>
+                            <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                                <strong>{preview_info['total_bp']:,}</strong> bp
+                            </span>
+                            <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                                GC: <strong>{avg_gc:.1f}%</strong>
+                            </span>
+                            <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                                ✓ Valid
+                            </span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
-                
-                    # Show preview of first few sequences inline (compact)
-                    st.markdown("**Sequence Preview:**")
-                    for idx, prev in enumerate(preview_info['previews'], 1):
-                        # Use pre-calculated stats from preview (calculated from full sequence)
-                        card_html = render_sequence_stats_card(
-                            idx=idx,
-                            name=prev['name'],
-                            length=prev['length'],
-                            gc_pct=prev['gc_percent'],
-                            at_pct=prev['at_percent']
-                        )
-                        st.markdown(card_html, unsafe_allow_html=True)
-                
-                    if preview_info['num_sequences'] > 3:
-                        st.info(f"Showing 3 of {preview_info['num_sequences']} sequences. All sequences will be analyzed.")
                 
                     # Now parse all sequences using chunked parsing for memory efficiency
                     seqs, names = [], []
@@ -366,7 +381,7 @@ def render():
 
         elif input_method == UI_TEXT['upload_method_paste']:
             seq_input = st.text_area(UI_TEXT['upload_paste_prompt'], 
-                                    height=150, 
+                                    height=120, 
                                     placeholder=UI_TEXT['upload_paste_placeholder'],
                                     help=UI_TEXT['upload_paste_help'])
             if seq_input:
@@ -385,22 +400,29 @@ def render():
                     seqs.append(cur_seq)
                     names.append(cur_name if cur_name else f"Seq{len(seqs)}")
                 if seqs:
-                    # Compact validation card
+                    # Compact QC summary strip for pasted sequences
                     total_bp = sum(len(s) for s in seqs)
+                    avg_gc = calculate_gc_percentage(seqs)
                     st.markdown(f"""
-                    <div style='background: linear-gradient(135deg, #4A90E2 0%, #6AA5F2 100%); 
-                                border-radius: 12px; padding: 12px; margin: 8px 0; color: white;
-                                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);'>
-                        <div style='display: flex; justify-content: space-between; align-items: center;'>
-                            <div>
-                                <div style='font-weight: 600; font-size: 0.95rem;'>Pasted Sequences</div>
-                                <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 4px;'>
-                                    {len(seqs)} sequences | {total_bp:,} bp
-                                </div>
-                            </div>
-                            <div style='background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-weight: 600;'>
-                                Valid
-                            </div>
+                    <div style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                                border-radius: 8px; padding: 10px 14px; margin: 8px 0; color: white;
+                                box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);'>
+                        <div style='font-weight: 600; font-size: 0.9rem; margin-bottom: 6px;'>
+                            Pasted Input
+                        </div>
+                        <div style='display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem;'>
+                            <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                                <strong>{len(seqs)}</strong> sequences
+                            </span>
+                            <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                                <strong>{total_bp:,}</strong> bp
+                            </span>
+                            <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                                GC: <strong>{avg_gc:.1f}%</strong>
+                            </span>
+                            <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                                ✓ Valid
+                            </span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -464,10 +486,8 @@ def render():
             st.session_state.names = names
             st.session_state.results = []
 
-        # Compact sequence validation indicator - inline display (no emoji)
+        # Compact sequence validation summary (single strip, no individual cards)
         if st.session_state.get('seqs'):
-            st.markdown("**Sequences Loaded:**")
-        
             # Cache sequence stats with validation key to handle sequence changes
             cache_key = f"stats_cache_{len(st.session_state.seqs)}"
             if cache_key not in st.session_state:
@@ -478,25 +498,35 @@ def render():
                     stats_list.append(stats)
                 st.session_state[cache_key] = stats_list
         
-            # Use cached stats - show compact summary
+            # Use cached stats - show single compact summary strip
             cached_stats = st.session_state[cache_key]
-            for i, stats in enumerate(cached_stats[:3]):
-                # Use helper function with green gradient for validation success
-                card_html = render_sequence_stats_card(
-                    idx=i+1,
-                    name=st.session_state.names[i],
-                    length=len(st.session_state.seqs[i]),
-                    gc_pct=stats['GC%'],
-                    at_pct=stats['AT%'],
-                    gradient_colors="135deg, #11998e 0%, #38ef7d 100%"
-                )
-                st.markdown(card_html, unsafe_allow_html=True)
-        
-            if len(st.session_state.seqs) > 3:
-                st.info(f"Showing 3 of {len(st.session_state.seqs)} loaded sequences. All are validated and ready for analysis.")
+            total_bp = sum(len(s) for s in st.session_state.seqs)
+            avg_gc = sum(s['GC%'] for s in cached_stats) / len(cached_stats) if cached_stats else 0.0
+            
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #059669 0%, #047857 100%); 
+                        border-radius: 8px; padding: 10px 14px; margin: 8px 0; color: white;
+                        box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);'>
+                <div style='font-weight: 600; font-size: 0.85rem; margin-bottom: 6px;'>
+                    ✓ Ready for Analysis
+                </div>
+                <div style='display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.75rem;'>
+                    <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                        <strong>{len(st.session_state.seqs)}</strong> sequences
+                    </span>
+                    <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                        <strong>{total_bp:,}</strong> bp total
+                    </span>
+                    <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                        GC: <strong>{avg_gc:.1f}%</strong> avg
+                    </span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
     
     # ============================================================
-    # RIGHT COLUMN — ANALYSIS CONFIGURATION
+    # RIGHT COLUMN — DETECTION SCOPE
+    # All 24 classes + submotifs visible via color-encoded grid
     # ============================================================
     with right_col:
         st.markdown("""
@@ -504,8 +534,11 @@ def render():
                     padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
                     border-left: 4px solid #3b82f6;'>
             <h4 style='margin: 0; color: #1e3a8a; font-size: 1rem; font-weight: 600;'>
-                Analysis Configuration
+                Detection Scope
             </h4>
+            <p style='margin: 4px 0 0 0; color: #1e40af; font-size: 0.75rem;'>
+                Non-B DNA elements to analyze
+            </p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -518,21 +551,12 @@ def render():
         st.session_state.analysis_mode_used = "Submotif Level"
     
         # ============================================================
-        # FLAT SUBMOTIF SELECTOR (COLOR-ENCODED, COMPACT GRID)
+        # 24-CLASS SUBMOTIF SELECTOR (COLOR-ENCODED, HIGH-DENSITY GRID)
         # ============================================================
-        # Flat subclass-first selector: users reason in submotifs, not abstract classes.
-        # Color already encodes class identity, so headers are redundant.
-        # Flat layout improves: scan speed, cognitive load, visual compactness.
+        # All 24 submotifs always visible via compact grid layout.
+        # Color-encoding provides implicit class identity (via CLASS_COLORS).
+        # No scrolling required - all detection targets visible at once.
         # ============================================================
-
-        st.markdown("""
-        <div style="font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 4px;">
-        Submotif Selector
-        <span style="font-weight: 400; color: #6b7280; font-size: 0.75rem;">
-        — All enabled by default. Uncheck to exclude.
-        </span>
-        </div>
-        """, unsafe_allow_html=True)
 
         # ------------------------------------------------------------------
         # Use CLASS_COLORS from config.colors for color encoding
@@ -559,12 +583,12 @@ def render():
                 st.session_state[key] = True
 
         # ------------------------------------------------------------------
-        # Global controls (compact buttons)
+        # Global controls (compact inline buttons)
         # ------------------------------------------------------------------
-        col_all, col_none, _ = st.columns([1, 1, 4])
+        col_all, col_none, col_spacer = st.columns([1, 1, 6])
 
         with col_all:
-            if st.button("All", use_container_width=True, key="select_all_submotifs"):
+            if st.button("Select All", use_container_width=True, key="select_all_submotifs"):
                 for class_name, subclass in flat_submotifs:
                     st.session_state[
                         f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
@@ -572,7 +596,7 @@ def render():
                 st.rerun()
 
         with col_none:
-            if st.button("None", use_container_width=True, key="deselect_all_submotifs"):
+            if st.button("Clear All", use_container_width=True, key="deselect_all_submotifs"):
                 for class_name, subclass in flat_submotifs:
                     st.session_state[
                         f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
@@ -580,9 +604,10 @@ def render():
                 st.rerun()
 
         # ------------------------------------------------------------------
-        # Render compact 8-column grid with abbreviated labels
+        # Render high-density 6-column grid for full 24-class visibility
+        # (6 columns × 4 rows = 24 submotifs visible without scrolling)
         # ------------------------------------------------------------------
-        NUM_COLUMNS = 8
+        NUM_COLUMNS = 6
         rows = [flat_submotifs[i:i + NUM_COLUMNS]
                 for i in range(0, len(flat_submotifs), NUM_COLUMNS)]
 
@@ -602,9 +627,9 @@ def render():
                     st.markdown(f"""
                     <div style="
                         border-left: 3px solid {color};
-                        padding-left: 3px;
-                        margin-bottom: 1px;
-                        font-size: 0.7rem;
+                        padding-left: 2px;
+                        margin-bottom: 0;
+                        font-size: 0.65rem;
                     ">
                     """, unsafe_allow_html=True)
 
@@ -646,22 +671,22 @@ def render():
                     'Submotif': subclass
                 })
 
-        # Show compact summary (no emoji)
+        # Compact summary with publication-grade terminology
         num_enabled = len(enabled_subclasses)
         total_submotifs = len(flat_submotifs)
 
         if enabled_classes:
             st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-                        padding: 4px 8px; border-radius: 4px; margin: 4px 0;
-                        display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem;'>
-                <span style='font-weight: 600; color: #065f46;'>
-                    {len(enabled_classes)} classes, {num_enabled}/{total_submotifs} submotifs enabled
+            <div style='background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+                        padding: 6px 10px; border-radius: 6px; margin-top: 8px;
+                        border: 1px solid #bfdbfe; font-size: 0.78rem;'>
+                <span style='font-weight: 600; color: #1e40af;'>
+                    {len(enabled_classes)} classes · {num_enabled}/{total_submotifs} submotifs
                 </span>
             </div>
             """, unsafe_allow_html=True)
         else:
-            st.warning("Please enable at least one submotif to run analysis.")
+            st.warning("Select at least one submotif to enable analysis.")
     
         # ============================================================
         # ANALYSIS OPTIONS - Always ON, Hidden from UI
@@ -689,7 +714,10 @@ def render():
         nonoverlap = True
         overlap_option = "Remove overlaps within subclasses"
     
-    # ----- RUN BUTTON -----
+    # ============================================================
+    # ANALYSIS EXECUTION - Full-Width Section Below Two Columns
+    # Clear visual and spatial separation from configuration
+    # ============================================================
     st.markdown("---")
     
     # Initialize analysis_done flag if not present (idempotent run button)
@@ -703,48 +731,48 @@ def render():
     run_button_container = st.container()
     with run_button_container:
         # Create two columns for Run and Reset buttons
-        col_run, col_reset = st.columns([3, 1])
+        col_run, col_reset = st.columns([4, 1])
         
         with col_run:
-            # Sticky-ish styling with disabled state
+            # Primary action button with clear scientific terminology
             if has_valid_input and not st.session_state.analysis_done:
                 run_button = st.button(
-                    UI_TEXT['analysis_run_button'],
+                    "Run Non-B DNA Analysis",
                     type="primary",
                     use_container_width=True,
                     key="run_motif_analysis_main",
-                    help="Start analyzing uploaded sequences for Non-B DNA motifs"
+                    help="Start analyzing uploaded sequences for Non-B DNA elements"
                 )
             elif st.session_state.analysis_done:
                 # Show analysis complete status
-                st.markdown(f"""
+                st.markdown("""
                 <div role="status" aria-label="Analysis Complete"
                      style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-                            color: white; padding: 12px; 
-                            border-radius: 12px; text-align: center; font-weight: 600;
-                            font-size: 1.1rem;'>
-                    Analysis Complete - View results in 'Results' tab
+                            color: white; padding: 14px; 
+                            border-radius: 8px; text-align: center; font-weight: 600;
+                            font-size: 1rem;'>
+                    ✓ Analysis Complete — View results in 'Results' tab
                 </div>
                 """, unsafe_allow_html=True)
                 run_button = False
             else:
                 # Disabled button appearance with accessibility
                 st.markdown(f"""
-                <div role="button" aria-disabled="true" aria-label="Run NBDScanner Analysis - Disabled: Please upload or paste a valid sequence first"
-                     style='background: #e0e0e0; color: #9e9e9e; padding: 12px; 
-                            border-radius: 12px; text-align: center; font-weight: 600;
-                            font-size: 1.1rem; cursor: not-allowed; opacity: 0.6;'>
-                    {UI_TEXT['analysis_run_button_disabled']}
+                <div role="button" aria-disabled="true" aria-label="Run Analysis - Disabled"
+                     style='background: #e5e7eb; color: #9ca3af; padding: 14px; 
+                            border-radius: 8px; text-align: center; font-weight: 600;
+                            font-size: 1rem; cursor: not-allowed;'>
+                    Run Non-B DNA Analysis
                 </div>
-                <p style='text-align: center; color: #9e9e9e; font-size: 0.85rem; margin-top: 8px;' role="status">
-                    {UI_TEXT['label_note']}: {UI_TEXT['analysis_run_button_disabled_note']}
+                <p style='text-align: center; color: #9ca3af; font-size: 0.8rem; margin-top: 6px;'>
+                    Upload sequences and select submotifs to enable
                 </p>
                 """, unsafe_allow_html=True)
                 run_button = False
         
         with col_reset:
             # Reset button to allow re-running analysis
-            if st.button("Reset", use_container_width=True, help="Clear analysis results and reset for new run"):
+            if st.button("Reset", use_container_width=True, help="Clear results and reset"):
                 st.session_state.analysis_done = False
                 st.session_state.results = []
                 st.session_state.performance_metrics = None

@@ -196,7 +196,7 @@ h4 {
 
 /* ═══════════════════════════════════════════════════════════════
    COMPACT SUBMOTIF SELECTOR GRID
-   Abbreviated labels for compactness and uniform spacing
+   High-density 24-class visibility without scrolling
    ═══════════════════════════════════════════════════════════════ */
 
 /* Compact checkbox styling for submotif selector grid */
@@ -206,20 +206,25 @@ h4 {
 }
 
 .submotif-grid .stCheckbox label {
-    font-size: 0.7rem !important;
-    line-height: 1.2 !important;
-    padding: 2px 0 !important;
+    font-size: 0.65rem !important;
+    line-height: 1.1 !important;
+    padding: 1px 0 !important;
 }
 
 .submotif-grid .stCheckbox label p {
     margin-bottom: 0 !important;
-    font-size: 0.7rem !important;
+    font-size: 0.65rem !important;
 }
 
-/* Tighter column spacing specifically for submotif selector grid */
+/* High-density column spacing for submotif selector grid */
 .submotif-grid [data-testid="column"] {
-    padding-left: 2px !important;
-    padding-right: 2px !important;
+    padding-left: 1px !important;
+    padding-right: 1px !important;
+}
+
+/* Reduce vertical gaps in submotif grid rows */
+.submotif-grid [data-testid="stHorizontalBlock"] {
+    gap: 0.25rem !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
