@@ -459,18 +459,17 @@ def render():
         st.session_state.analysis_mode_used = "Submotif Level"
     
         # ============================================================
-        # FLAT SUBMOTIF SELECTOR (COLOR-ENCODED, COMPACT GRID)
+        # COMPACT TAGGED LABELS MOTIF SELECTOR
         # ============================================================
-        # Flat subclass-first selector: users reason in submotifs, not abstract classes.
-        # Color already encodes class identity, so headers are redundant.
-        # Flat layout improves: scan speed, cognitive load, visual compactness.
+        # Organized by category with abbreviated tags and tooltips.
+        # Compact design for improved visual scanning and usability.
         # ============================================================
 
         st.markdown("""
         <div style="font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 4px;">
-        Submotif Selector
+        Motif Selector
         <span style="font-weight: 400; color: #6b7280; font-size: 0.75rem;">
-        — All enabled by default. Uncheck to exclude.
+        — Click tags to toggle. All enabled by default.
         </span>
         </div>
         """, unsafe_allow_html=True)
@@ -484,7 +483,91 @@ def render():
             return name.replace(' ', '_').replace('-', '_').replace('/', '_')
 
         # ------------------------------------------------------------------
-        # Build flat ordered list of all subclasses (taxonomy order)
+        # Abbreviated label mappings with full descriptions
+        # ------------------------------------------------------------------
+        TAG_LABELS = {
+            # Curvature & Repeats
+            'Global Curvature': ('Global Curv', 'Global Curvature - Large-scale DNA bending'),
+            'Local Curvature': ('Local Curv', 'Local Curvature - Small-scale DNA bending'),
+            'Direct Repeat': ('Dir. Repeat', 'Direct Repeat - Tandem repeated sequences'),
+            'STR': ('STR', 'Short Tandem Repeat - Microsatellite sequences'),
+            # Structural Motifs
+            'Cruciform forming IRs': ('Cruciform IR', 'Cruciform forming Inverted Repeats'),
+            'R-loop formation sites': ('R-loop Sites', 'R-loop formation sites - RNA-DNA hybrids'),
+            'Triplex': ('Triplex', 'Triplex - Triple-stranded DNA structures'),
+            'Sticky DNA': ('Sticky DNA', 'Sticky DNA - Slipped-strand structures'),
+            # G-Quadruplex-Related
+            'Telomeric G4': ('Telo G4', 'Telomeric G-Quadruplex'),
+            'Stacked canonical G4s': ('Stacked G4', 'Stacked canonical G-Quadruplexes'),
+            'Stacked G4s with linker': ('G4 + Linker', 'Stacked G4s with linker regions'),
+            'Canonical intramolecular G4': ('Intra G4', 'Canonical intramolecular G-Quadruplex'),
+            'Extended-loop canonical': ('Ext. Loop G4', 'Extended-loop canonical G-Quadruplex'),
+            'Higher-order G4 array/G4-wire': ('G4 Array', 'Higher-order G4 array/G4-wire'),
+            'Intramolecular G-triplex': ('Intra G-triplex', 'Intramolecular G-triplex'),
+            'Two-tetrad weak PQS': ('Weak PQS', 'Two-tetrad weak Potential Quadruplex Sequence'),
+            # Other Non-B Motifs
+            'Canonical i-motif': ('i-Motif', 'Canonical i-Motif - C-rich quadruplex'),
+            'Relaxed i-motif': ('Relaxed iM', 'Relaxed i-Motif - Less stringent C-rich'),
+            'AC-motif': ('AC Motif', 'AC-Motif - Alternating AC sequences'),
+            'Z-DNA': ('Z-DNA', 'Z-DNA - Left-handed double helix'),
+            'eGZ': ('eGZ', 'eGZ - Extended Z-DNA forming sequences'),
+            'A-philic DNA': ('A-DNA', 'A-philic DNA - A-form adopting sequences'),
+            'Dynamic overlaps': ('Dyn. Overlaps', 'Dynamic overlaps - Overlapping motif regions'),
+            'Dynamic clusters': ('Dyn. Clusters', 'Dynamic clusters - Clustered motif regions'),
+        }
+
+        # ------------------------------------------------------------------
+        # Category definitions with their subclasses
+        # ------------------------------------------------------------------
+        CATEGORIES = {
+            'Curvature & Repeats': {
+                'color': '#06b6d4',  # Cyan
+                'motifs': [
+                    ('Curved_DNA', 'Global Curvature'),
+                    ('Curved_DNA', 'Local Curvature'),
+                    ('Slipped_DNA', 'Direct Repeat'),
+                    ('Slipped_DNA', 'STR'),
+                ]
+            },
+            'Structural Motifs': {
+                'color': '#ef4444',  # Red
+                'motifs': [
+                    ('Cruciform', 'Cruciform forming IRs'),
+                    ('R-Loop', 'R-loop formation sites'),
+                    ('Triplex', 'Triplex'),
+                    ('Triplex', 'Sticky DNA'),
+                ]
+            },
+            'G-Quadruplex-Related': {
+                'color': '#10b981',  # Emerald
+                'motifs': [
+                    ('G-Quadruplex', 'Telomeric G4'),
+                    ('G-Quadruplex', 'Stacked canonical G4s'),
+                    ('G-Quadruplex', 'Stacked G4s with linker'),
+                    ('G-Quadruplex', 'Canonical intramolecular G4'),
+                    ('G-Quadruplex', 'Extended-loop canonical'),
+                    ('G-Quadruplex', 'Higher-order G4 array/G4-wire'),
+                    ('G-Quadruplex', 'Intramolecular G-triplex'),
+                    ('G-Quadruplex', 'Two-tetrad weak PQS'),
+                ]
+            },
+            'Other Non-B Motifs': {
+                'color': '#6366f1',  # Indigo
+                'motifs': [
+                    ('i-Motif', 'Canonical i-motif'),
+                    ('i-Motif', 'Relaxed i-motif'),
+                    ('i-Motif', 'AC-motif'),
+                    ('Z-DNA', 'Z-DNA'),
+                    ('Z-DNA', 'eGZ'),
+                    ('A-philic_DNA', 'A-philic DNA'),
+                    ('Hybrid', 'Dynamic overlaps'),
+                    ('Non-B_DNA_Clusters', 'Dynamic clusters'),
+                ]
+            },
+        }
+
+        # ------------------------------------------------------------------
+        # Build flat ordered list of all subclasses (for session state)
         # ------------------------------------------------------------------
         flat_submotifs = []
         for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
@@ -521,36 +604,54 @@ def render():
                 st.rerun()
 
         # ------------------------------------------------------------------
-        # Render compact 8-column grid (more compact layout)
+        # Render compact tagged labels by category
         # ------------------------------------------------------------------
-        NUM_COLUMNS = 8
-        rows = [flat_submotifs[i:i + NUM_COLUMNS]
-                for i in range(0, len(flat_submotifs), NUM_COLUMNS)]
-
-        for row in rows:
-            cols = st.columns(NUM_COLUMNS)
-            for col, (class_name, subclass) in zip(cols, row):
-                color = CLASS_COLORS.get(class_name, "#cbd5e1")
-                color_name = CLASS_COLOR_NAMES.get(class_name, "gray")
+        for category_name, category_data in CATEGORIES.items():
+            cat_color = category_data['color']
+            motifs = category_data['motifs']
+            
+            # Build tags HTML for this category
+            tags_html = []
+            for class_name, subclass in motifs:
                 key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-
-                with col:
-                    st.markdown(f"""
-                    <div style="
-                        border-left: 3px solid {color};
-                        padding-left: 4px;
-                        margin-bottom: 2px;
-                        font-size: 0.75rem;
-                    ">
-                    """, unsafe_allow_html=True)
-
+                is_enabled = st.session_state.get(key, True)
+                label_info = TAG_LABELS.get(subclass, (subclass, subclass))
+                short_label, tooltip = label_info
+                
+                # Style based on enabled state
+                if is_enabled:
+                    bg_color = cat_color
+                    text_color = '#ffffff'
+                    opacity = '1'
+                else:
+                    bg_color = '#e5e7eb'
+                    text_color = '#9ca3af'
+                    opacity = '0.6'
+                
+                tag_style = f"display:inline-block;padding:2px 8px;margin:2px;background:{bg_color};color:{text_color};opacity:{opacity};border-radius:12px;font-size:0.7rem;font-weight:500;"
+                tags_html.append(f'<span style="{tag_style}" title="{tooltip}">{short_label}</span>')
+            
+            # Render category with inline tags
+            category_html = f'<div style="margin-bottom:2px;"><span style="font-size:0.75rem;font-weight:600;color:{cat_color};margin-right:6px;">{category_name}:</span>{"".join(tags_html)}</div>'
+            st.markdown(category_html, unsafe_allow_html=True)
+            
+            # Create compact inline checkboxes for state management
+            # Use CSS to make checkboxes more compact
+            st.markdown('<div style="margin-top:-8px;margin-bottom:4px;">', unsafe_allow_html=True)
+            num_motifs = len(motifs)
+            cols = st.columns(num_motifs)
+            for idx, (class_name, subclass) in enumerate(motifs):
+                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                label_info = TAG_LABELS.get(subclass, (subclass, subclass))
+                short_label, tooltip = label_info
+                with cols[idx]:
                     st.checkbox(
-                        f"**:{color_name}[{subclass}]**",
+                        short_label,
                         key=key,
-                        help=f"{subclass} ({class_name.replace('_', ' ')})"
+                        help=tooltip,
+                        label_visibility="collapsed"
                     )
-
-                    st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
         # ------------------------------------------------------------------
         # Build enabled class & subclass lists (for downstream analysis)
