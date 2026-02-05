@@ -604,8 +604,21 @@ def render():
                 st.rerun()
 
         # ------------------------------------------------------------------
+        # Style helper for tag elements
+        # ------------------------------------------------------------------
+        def get_tag_style(bg_color: str, text_color: str, opacity: str) -> str:
+            """Generate consistent CSS style for motif tags."""
+            return (
+                f"display:inline-block;padding:2px 8px;margin:2px;"
+                f"background:{bg_color};color:{text_color};opacity:{opacity};"
+                f"border-radius:12px;font-size:0.7rem;font-weight:500;"
+            )
+
+        # ------------------------------------------------------------------
         # Render compact tagged labels by category
         # ------------------------------------------------------------------
+        MAX_COLS_PER_ROW = 8  # Maximum columns per row for responsiveness
+        
         for category_name, category_data in CATEGORIES.items():
             cat_color = category_data['color']
             motifs = category_data['motifs']
@@ -628,7 +641,7 @@ def render():
                     text_color = '#9ca3af'
                     opacity = '0.6'
                 
-                tag_style = f"display:inline-block;padding:2px 8px;margin:2px;background:{bg_color};color:{text_color};opacity:{opacity};border-radius:12px;font-size:0.7rem;font-weight:500;"
+                tag_style = get_tag_style(bg_color, text_color, opacity)
                 tags_html.append(f'<span style="{tag_style}" title="{tooltip}">{short_label}</span>')
             
             # Render category with inline tags
@@ -636,19 +649,22 @@ def render():
             st.markdown(category_html, unsafe_allow_html=True)
             
             # Create compact inline checkboxes for state management
-            # Use CSS to make checkboxes more compact
+            # Limit columns per row for better responsiveness
             st.markdown('<div style="margin-top:-8px;margin-bottom:4px;">', unsafe_allow_html=True)
             num_motifs = len(motifs)
-            cols = st.columns(num_motifs)
+            num_cols = min(num_motifs, MAX_COLS_PER_ROW)
+            cols = st.columns(num_cols)
             for idx, (class_name, subclass) in enumerate(motifs):
                 key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
                 label_info = TAG_LABELS.get(subclass, (subclass, subclass))
                 short_label, tooltip = label_info
-                with cols[idx]:
+                col_idx = idx % num_cols
+                with cols[col_idx]:
+                    # Help tooltip provides accessibility info for screen readers
                     st.checkbox(
                         short_label,
                         key=key,
-                        help=tooltip,
+                        help=f"Toggle {tooltip}",
                         label_visibility="collapsed"
                     )
             st.markdown('</div>', unsafe_allow_html=True)
