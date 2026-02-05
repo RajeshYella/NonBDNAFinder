@@ -45,8 +45,12 @@ logger = logging.getLogger(__name__)
 CLUSTER_CLASSES = ['Hybrid', 'Non-B_DNA_Clusters']
 
 
-def _render_section_divider(label: str = "") -> None:
-    """Render a minimal section divider (no emoji)."""
+def _render_section_divider(label: str) -> None:
+    """Render a minimal section divider with a label.
+    
+    Args:
+        label: Required text label for the section (e.g., 'Track', 'Density')
+    """
     st.markdown(f"""
     <div style="display: flex; align-items: center; gap: 8px; padding: 2px 0; margin-top: 6px;">
         <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">{label}</span>
