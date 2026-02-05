@@ -83,79 +83,54 @@ def render():
         """, unsafe_allow_html=True)
     
     with right:
-        # NOTE: Motif Classes visualization uses specific color gradients per motif type
-        # These match the VISUALIZATION_PALETTE defined in centralized tokens but must
-        # be literal values here due to Streamlit's inline HTML constraints.
-        # Colors are carefully coordinated with the centralized token system.
+        # NOTE: Compact motif display with abbreviated labels organized by category
+        # Each tag has a tooltip (title attribute) with full description
+        # Colors are coordinated with the centralized token system
+        # Using inline styles to ensure proper rendering in Streamlit
+        tag_base_style = "display: inline-block; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 500; margin: 0.15rem; cursor: help;"
+        category_style = f"font-weight: 600; font-size: 0.85rem; margin: 0.6rem 0 0.3rem 0; padding-bottom: 0.2rem; border-bottom: 1px solid {colors['neutral_200']};"
+        
         st.markdown(f"""
-        <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
+        <div style='background: {colors['white']}; padding: 1.5rem; border-radius: 16px; 
                     box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; margin-bottom: 1.5rem;'>
-            <h2 style='color: {colors['text']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
+            <h2 style='color: {colors['text']}; font-size: 1.4rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
                 Detected Motif Classes
             </h2>
-            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 1rem;'>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, {SEMANTIC_COLORS['warning_light']} 0%, {SEMANTIC_COLORS['warning_border']} 100%); 
-                            border-radius: 8px; border-left: 4px solid {SEMANTIC_COLORS['warning']};'>
-                    <div style='font-weight: 600; color: {SEMANTIC_COLORS['warning_dark']}; font-size: 0.9rem;'>1. Curved DNA</div>
-                    <div style='color: {SEMANTIC_COLORS['warning_dark']}; font-size: 0.75rem; margin-top: 0.2rem;'>A-tract curvature</div>
-                </div>
-                <!-- NOTE: Motif class visualization cards use semantic gradients for visual distinction.
-                     Cards 1-2 use SEMANTIC_COLORS from centralized tokens.
-                     Cards 3-11 use specific Tailwind-inspired gradients - this is intentional:
-                     - Each motif type requires a unique, visually distinct gradient
-                     - These form a carefully designed visual vocabulary for motif recognition
-                     - Adding 9 × 4 gradient variations to centralized tokens would decrease maintainability
-                     All colors follow semantic principles. This is an explicit design decision. -->
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, {SEMANTIC_COLORS['info_light']} 0%, {SEMANTIC_COLORS['info_border']} 100%); 
-                            border-radius: 8px; border-left: 4px solid {SEMANTIC_COLORS['info']};'>
-                    <div style='font-weight: 600; color: {SEMANTIC_COLORS['info_dark']}; font-size: 0.9rem;'>2. Slipped DNA</div>
-                    <div style='color: {SEMANTIC_COLORS['info_dark']}; font-size: 0.75rem; margin-top: 0.2rem;'>Direct repeats, STRs</div>
-                </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); 
-                            border-radius: 8px; border-left: 4px solid #ec4899;'>
-                    <div style='font-weight: 600; color: #9f1239; font-size: 0.9rem;'>3. Cruciform</div>
-                    <div style='color: #831843; font-size: 0.75rem; margin-top: 0.2rem;'>Palindromic IRs</div>
-                </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
-                            border-radius: 8px; border-left: 4px solid #10b981;'>
-                    <div style='font-weight: 600; color: #065f46; font-size: 0.9rem;'>4. R-Loop</div>
-                    <div style='color: #064e3b; font-size: 0.75rem; margin-top: 0.2rem;'>RNA-DNA hybrids</div>
-                </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); 
-                            border-radius: 8px; border-left: 4px solid #eab308;'>
-                    <div style='font-weight: 600; color: #713f12; font-size: 0.9rem;'>5. Triplex</div>
-                    <div style='color: #713f12; font-size: 0.75rem; margin-top: 0.2rem;'>Mirror repeats</div>
-                </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); 
-                            border-radius: 8px; border-left: 4px solid #8b5cf6;'>
-                    <div style='font-weight: 600; color: #5b21b6; font-size: 0.9rem;'>6. G-Quadruplex</div>
-                    <div style='color: #4c1d95; font-size: 0.75rem; margin-top: 0.2rem;'>7 subtypes</div>
-                </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); 
-                            border-radius: 8px; border-left: 4px solid #f97316;'>
-                    <div style='font-weight: 600; color: #7c2d12; font-size: 0.9rem;'>7. i-Motif</div>
-                    <div style='color: #7c2d12; font-size: 0.75rem; margin-top: 0.2rem;'>C-rich structures</div>
-                </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
-                            border-radius: 8px; border-left: 4px solid #6366f1;'>
-                    <div style='font-weight: 600; color: #3730a3; font-size: 0.9rem;'>8. Z-DNA</div>
-                    <div style='color: #312e81; font-size: 0.75rem; margin-top: 0.2rem;'>Left-handed helix</div>
-                </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); 
-                            border-radius: 8px; border-left: 4px solid #14b8a6;'>
-                    <div style='font-weight: 600; color: #134e4a; font-size: 0.9rem;'>9. A-philic DNA</div>
-                    <div style='color: #134e4a; font-size: 0.75rem; margin-top: 0.2rem;'>A/T-rich regions</div>
-                </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); 
-                            border-radius: 8px; border-left: 4px solid #a855f7;'>
-                    <div style='font-weight: 600; color: #6b21a8; font-size: 0.9rem;'>10. Hybrid</div>
-                    <div style='color: #581c87; font-size: 0.75rem; margin-top: 0.2rem;'>Multi-class overlap</div>
-                </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); 
-                            border-radius: 8px; border-left: 4px solid #6b7280;'>
-                    <div style='font-weight: 600; color: #1f2937; font-size: 0.9rem;'>11. Clusters</div>
-                    <div style='color: #374151; font-size: 0.75rem; margin-top: 0.2rem;'>Motif hotspots</div>
-                </div>
+            <div style="{category_style} color: {SEMANTIC_COLORS['warning_dark']};">Curvature &amp; Repeats</div>
+            <div style='display: flex; flex-wrap: wrap; gap: 0.2rem;'>
+                <span style="{tag_base_style} background: linear-gradient(135deg, {SEMANTIC_COLORS['warning_light']} 0%, {SEMANTIC_COLORS['warning_border']} 100%); color: {SEMANTIC_COLORS['warning_dark']}; border: 1px solid {SEMANTIC_COLORS['warning']};" title="Global Curvature: Overall DNA bending across the entire sequence">Global Curv</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, {SEMANTIC_COLORS['warning_light']} 0%, {SEMANTIC_COLORS['warning_border']} 100%); color: {SEMANTIC_COLORS['warning_dark']}; border: 1px solid {SEMANTIC_COLORS['warning']};" title="Local Curvature: Region-specific DNA bending patterns">Local Curv</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, {SEMANTIC_COLORS['info_light']} 0%, {SEMANTIC_COLORS['info_border']} 100%); color: {SEMANTIC_COLORS['info_dark']}; border: 1px solid {SEMANTIC_COLORS['info']};" title="Direct Repeat: Tandem repeated sequences in the same orientation">Dir. Repeat</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, {SEMANTIC_COLORS['info_light']} 0%, {SEMANTIC_COLORS['info_border']} 100%); color: {SEMANTIC_COLORS['info_dark']}; border: 1px solid {SEMANTIC_COLORS['info']};" title="Short Tandem Repeat: Microsatellite sequences with repeated units">STR</span>
+            </div>
+            <div style="{category_style} color: #9f1239;">Structural Motifs</div>
+            <div style='display: flex; flex-wrap: wrap; gap: 0.2rem;'>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); color: #9f1239; border: 1px solid #ec4899;" title="Cruciform forming Inverted Repeats: Palindromic sequences that can form cross-shaped structures">Cruciform IR</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; border: 1px solid #10b981;" title="R-loop formation sites: Regions prone to RNA-DNA hybrid formation with displaced single-stranded DNA">R-loop Sites</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); color: #713f12; border: 1px solid #eab308;" title="Triplex: Triple-stranded DNA structures formed by mirror repeats">Triplex</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); color: #713f12; border: 1px solid #eab308;" title="Sticky DNA: Triplex-mediated structures that cause DNA to self-associate">Sticky DNA</span>
+            </div>
+            <div style="{category_style} color: #5b21b6;">G-Quadruplex-Related</div>
+            <div style='display: flex; flex-wrap: wrap; gap: 0.2rem;'>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); color: #5b21b6; border: 1px solid #8b5cf6;" title="Telomeric G4: G-quadruplex structures found in telomeric repeat sequences">Telo G4</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); color: #5b21b6; border: 1px solid #8b5cf6;" title="Stacked canonical G4s: Multiple G-quadruplex units stacked without intervening sequences">Stacked G4</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); color: #5b21b6; border: 1px solid #8b5cf6;" title="Stacked G4s with linker: Multiple G-quadruplex units connected by linker sequences">G4 + Linker</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); color: #5b21b6; border: 1px solid #8b5cf6;" title="Canonical intramolecular G4: Single-strand G-quadruplex with standard G3+ runs and loops">Intra G4</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); color: #5b21b6; border: 1px solid #8b5cf6;" title="Extended-loop canonical G4: G-quadruplex with longer loop sequences">Ext. Loop G4</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); color: #5b21b6; border: 1px solid #8b5cf6;" title="Higher-order G4 array / G4-wire: Large-scale G-quadruplex assemblies">G4 Array</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); color: #5b21b6; border: 1px solid #8b5cf6;" title="Intramolecular G-triplex: Three G-tract structures that may fold into partial G4">Intra G-triplex</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); color: #5b21b6; border: 1px solid #8b5cf6;" title="Two-tetrad weak PQS: Putative G-quadruplex with only two G-tetrads">Weak PQS</span>
+            </div>
+            <div style="{category_style} color: #7c2d12;">Other Non-B Motifs</div>
+            <div style='display: flex; flex-wrap: wrap; gap: 0.2rem;'>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); color: #7c2d12; border: 1px solid #f97316;" title="Canonical i-motif: C-rich structures forming intercalated C-C+ base pairs at acidic pH">i-Motif</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); color: #7c2d12; border: 1px solid #f97316;" title="Relaxed i-motif: i-motif variants with longer loops or fewer C-tracts">Relaxed iM</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); color: #7c2d12; border: 1px solid #f97316;" title="AC-motif: Alternating adenine-cytosine rich sequences">AC Motif</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #3730a3; border: 1px solid #6366f1;" title="Z-DNA: Left-handed double helix formed by alternating purine-pyrimidine sequences">Z-DNA</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #3730a3; border: 1px solid #6366f1;" title="Extended Z-DNA (eGZ): Z-DNA with extended recognition patterns">eGZ</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); color: #134e4a; border: 1px solid #14b8a6;" title="A-philic DNA: A/T-rich sequences favoring A-form DNA conformation">A-DNA</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #6b21a8; border: 1px solid #a855f7;" title="Dynamic overlaps: Regions where multiple motif types overlap">Dyn. Overlaps</span>
+                <span style="{tag_base_style} background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); color: #1f2937; border: 1px solid #6b7280;" title="Dynamic clusters: Genomic hotspots with high density of non-B DNA motifs">Dyn. Clusters</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
