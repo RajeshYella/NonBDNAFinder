@@ -57,39 +57,39 @@ def render():
         </div>
         """, unsafe_allow_html=True)
     
-    # ========== MAIN CONTENT GRID ==========
+    # ========== SCIENTIFIC FOUNDATION (FULL WIDTH) ==========
+    st.markdown(f"""
+    <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; margin-bottom: 1.5rem;'>
+        <h2 style='color: {colors['text']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
+            Scientific Foundation
+        </h2>
+        <p style='color: {colors['neutral_700']}; font-size: 1rem; line-height: 1.8; margin-bottom: 1.2rem;'>
+            <b style='color: {colors['primary']};'>Non-canonical DNA structures</b> are critical regulatory elements 
+            implicated in genome stability, transcriptional regulation, replication, and disease mechanisms. 
+            These structures deviate from the canonical B-form DNA helix and play essential roles in:
+        </p>
+        <ul style='color: {colors['neutral_700']}; font-size: 0.95rem; line-height: 1.7; padding-left: 1.5rem;'>
+            <li><b>Genome Instability:</b> Hotspots for mutations and chromosomal rearrangements</li>
+            <li><b>Gene Regulation:</b> Promoter and enhancer activity modulation</li>
+            <li><b>DNA Replication:</b> Origins of replication and fork progression</li>
+            <li><b>Disease Association:</b> Cancer, neurological disorders, and aging</li>
+        </ul>
+        
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # ========== TWO-COLUMN SECTION: MOTIF CLASSES & CALL TO ACTION ==========
     left, right = st.columns([1, 1], gap="large")
     
     with left:
-        st.markdown(f"""
-        <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; height: 100%;'>
-            <h2 style='color: {colors['text']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
-                Scientific Foundation
-            </h2>
-            <p style='color: {colors['neutral_700']}; font-size: 1rem; line-height: 1.8; margin-bottom: 1.2rem;'>
-                <b style='color: {colors['primary']};'>Non-canonical DNA structures</b> are critical regulatory elements 
-                implicated in genome stability, transcriptional regulation, replication, and disease mechanisms. 
-                These structures deviate from the canonical B-form DNA helix and play essential roles in:
-            </p>
-            <ul style='color: {colors['neutral_700']}; font-size: 0.95rem; line-height: 1.7; padding-left: 1.5rem;'>
-                <li><b>Genome Instability:</b> Hotspots for mutations and chromosomal rearrangements</li>
-                <li><b>Gene Regulation:</b> Promoter and enhancer activity modulation</li>
-                <li><b>DNA Replication:</b> Origins of replication and fork progression</li>
-                <li><b>Disease Association:</b> Cancer, neurological disorders, and aging</li>
-            </ul>
-            
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with right:
         # NOTE: Motif Classes visualization uses specific color gradients per motif type
         # These match the VISUALIZATION_PALETTE defined in centralized tokens but must
         # be literal values here due to Streamlit's inline HTML constraints.
         # Colors are carefully coordinated with the centralized token system.
         st.markdown(f"""
         <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; margin-bottom: 1.5rem;'>
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; height: 100%;'>
             <h2 style='color: {colors['text']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
                 Detected Motif Classes
             </h2>
@@ -160,11 +160,13 @@ def render():
         </div>
         """, unsafe_allow_html=True)
         
+    with right:
         # Call to Action - Using page-specific colors
         st.markdown(f"""
         <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
                     padding: 1.5rem; border-radius: 12px; text-align: center; 
-                    box-shadow: 0 4px 12px {colors['shadow']};'>
+                    box-shadow: 0 4px 12px {colors['shadow']}; height: 100%;
+                    display: flex; flex-direction: column; justify-content: center;'>
             <h3 style='color: {colors['white']}; margin: 0 0 0.5rem 0; font-size: 1.2rem;'>
                 {UI_TEXT['home_call_to_action_title']}
             </h3>
@@ -172,7 +174,7 @@ def render():
                 {UI_TEXT['home_call_to_action_text']}
             </p>
             <div style='background: {colors['white']}; color: {colors['primary']}; padding: 0.7rem 1.5rem; 
-                        border-radius: 8px; display: inline-block; font-weight: 600; font-size: 1rem;'>
+                        border-radius: 8px; display: inline-block; font-weight: 600; font-size: 1rem; margin: 0 auto;'>
                 {UI_TEXT['home_call_to_action_button']}
             </div>
         </div>
