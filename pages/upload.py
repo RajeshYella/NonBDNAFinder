@@ -61,6 +61,65 @@ logger = logging.getLogger(__name__)
 # Configuration availability flag
 CONFIG_AVAILABLE = False
 
+# =============================================================================
+# ABBREVIATED SUBMOTIF LABELS FOR COMPACT DISPLAY
+# Maps full subclass names to short labels for the upload page grid
+# Full names preserved in tooltips for scientific accuracy
+# =============================================================================
+SUBMOTIF_ABBREVIATIONS = {
+    # Curved DNA
+    'Global Curvature': 'Global Curv',
+    'Local Curvature': 'Local Curv',
+    # Slipped DNA
+    'Direct Repeat': 'Dir. Repeat',
+    'STR': 'STR',
+    # Cruciform
+    'Cruciform forming IRs': 'Cruciform IR',
+    # R-Loop
+    'R-loop formation sites': 'R-loop Sites',
+    # Triplex
+    'Triplex': 'Triplex',
+    'Sticky DNA': 'Sticky DNA',
+    # G-Quadruplex
+    'Telomeric G4': 'Telo G4',
+    'Stacked canonical G4s': 'Stacked G4',
+    'Stacked G4s with linker': 'G4 + Linker',
+    'Canonical intramolecular G4': 'Intra G4',
+    'Extended-loop canonical': 'Ext. Loop G4',
+    'Higher-order G4 array/G4-wire': 'G4 Array',
+    'Intramolecular G-triplex': 'Intra G-triplex',
+    'Two-tetrad weak PQS': 'Weak PQS',
+    # i-Motif
+    'Canonical i-motif': 'i-Motif',
+    'Relaxed i-motif': 'Relaxed iM',
+    'AC-motif': 'AC Motif',
+    # Z-DNA
+    'Z-DNA': 'Z-DNA',
+    'eGZ': 'eGZ',
+    # A-philic DNA
+    'A-philic DNA': 'A-DNA',
+    # Hybrid
+    'Dynamic overlaps': 'Dyn. Overlaps',
+    # Clusters
+    'Dynamic clusters': 'Dyn. Clusters',
+}
+
+
+def get_abbreviated_label(subclass: str) -> str:
+    """
+    Get abbreviated label for display in the submotif selector grid.
+    
+    Returns the abbreviated label for a given subclass name if a mapping exists
+    in SUBMOTIF_ABBREVIATIONS, otherwise returns the original subclass name.
+    
+    Args:
+        subclass: Full canonical subclass name from MOTIF_CLASSIFICATION
+        
+    Returns:
+        Abbreviated label for compact display, or original name if not mapped
+    """
+    return SUBMOTIF_ABBREVIATIONS.get(subclass, subclass)
+
 
 def ensure_subclass(motif):
     """Guarantee every motif has a string 'Subclass'"""
@@ -521,36 +580,43 @@ def render():
                 st.rerun()
 
         # ------------------------------------------------------------------
-        # Render compact 8-column grid (more compact layout)
+        # Render compact 8-column grid with abbreviated labels
         # ------------------------------------------------------------------
         NUM_COLUMNS = 8
         rows = [flat_submotifs[i:i + NUM_COLUMNS]
                 for i in range(0, len(flat_submotifs), NUM_COLUMNS)]
 
+        # Wrap grid in container with CSS class for targeted styling
+        st.markdown('<div class="submotif-grid">', unsafe_allow_html=True)
+        
         for row in rows:
-            cols = st.columns(NUM_COLUMNS)
+            cols = st.columns(NUM_COLUMNS, gap="small")
             for col, (class_name, subclass) in zip(cols, row):
                 color = CLASS_COLORS.get(class_name, "#cbd5e1")
                 color_name = CLASS_COLOR_NAMES.get(class_name, "gray")
                 key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                # Use abbreviated label for display, full name in tooltip
+                abbrev_label = get_abbreviated_label(subclass)
 
                 with col:
                     st.markdown(f"""
                     <div style="
                         border-left: 3px solid {color};
-                        padding-left: 4px;
-                        margin-bottom: 2px;
-                        font-size: 0.75rem;
+                        padding-left: 3px;
+                        margin-bottom: 1px;
+                        font-size: 0.7rem;
                     ">
                     """, unsafe_allow_html=True)
 
                     st.checkbox(
-                        f"**:{color_name}[{subclass}]**",
+                        f"**:{color_name}[{abbrev_label}]**",
                         key=key,
                         help=f"{subclass} ({class_name.replace('_', ' ')})"
                     )
 
                     st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # ------------------------------------------------------------------
         # Build enabled class & subclass lists (for downstream analysis)

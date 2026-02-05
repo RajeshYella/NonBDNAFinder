@@ -195,6 +195,34 @@ h4 {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   COMPACT SUBMOTIF SELECTOR GRID
+   Abbreviated labels for compactness and uniform spacing
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Compact checkbox styling for submotif selector grid */
+.submotif-grid .stCheckbox {
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+}
+
+.submotif-grid .stCheckbox label {
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
+    padding: 2px 0 !important;
+}
+
+.submotif-grid .stCheckbox label p {
+    margin-bottom: 0 !important;
+    font-size: 0.7rem !important;
+}
+
+/* Tighter column spacing specifically for submotif selector grid */
+.submotif-grid [data-testid="column"] {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    INLINE TOGGLE BAR - Analysis Options
    ═══════════════════════════════════════════════════════════════ */
 
