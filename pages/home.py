@@ -17,87 +17,91 @@ def render():
     # This ensures all colors are still managed centrally even in inline styles.
     colors = get_page_colors('Home')
     
-    # ========== THIN BLUE BOX WITH WHITE GLOWING TEXT ==========
-    st.markdown(f"""
-    <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
-                padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; 
-                border: 2px solid {colors['primary']}; text-align: center;
-                box-shadow: 0 0 15px rgba(30, 64, 175, 0.4);'>
-        <p style='color: {colors['white']}; font-size: 1.1rem; font-weight: 600; 
-                  margin: 0; text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.6);'>
-            Non-B DNA Motif Detection System: Comprehensive Analysis of Non-B DNA Structures in Genomic Sequences
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    # ========== HEADER SECTION: TITLE AND IMAGE SIDE BY SIDE ==========
+    header_left, header_right = st.columns([2, 1], gap="medium")
     
-
-    
-    # ========== NBD CIRCLE IMAGE (ABOVE SCIENTIFIC FOUNDATION) ==========
-    try:
-        # Display NBD Circle logo
-        possible_paths = ["nbdcircle.JPG", "archive/nbdcircle.JPG", "./nbdcircle.JPG"]
-        image_found = False
-        for img_path in possible_paths:
-            if os.path.exists(img_path):
-                col_img1, col_img2, col_img3 = st.columns([1, 2, 1])
-                with col_img2:
-                    st.image(img_path, caption=UI_TEXT['home_image_caption'], use_container_width=True)
-                image_found = True
-                break
-        if not image_found:
-            raise FileNotFoundError("Image not found")  # Intentional: triggers fallback
-    except Exception:
-        # Placeholder if image not found - using page colors
+    with header_left:
+        # Title box on the left (2/3 width)
         st.markdown(f"""
         <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
-                    border-radius: 15px; padding: 40px; text-align: center; color: {colors['white']}; margin-bottom: 1rem;'>
-            <h2 style='margin: 0; color: {colors['white']}; font-size: 2rem;'>{UI_TEXT['home_image_fallback_title']}</h2>
-            <h3 style='margin: 10px 0 0 0; color: {colors['white']};'>{UI_TEXT['home_image_fallback_subtitle']}</h3>
-            <p style='margin: 5px 0 0 0; color: rgba(255,255,255,0.9);'>{UI_TEXT['home_image_fallback_caption']}</p>
+                    padding: 1.2rem 1.5rem; border-radius: 8px; height: 100%;
+                    border: 2px solid {colors['primary']}; text-align: center;
+                    box-shadow: 0 0 15px rgba(30, 64, 175, 0.4); display: flex; align-items: center; justify-content: center;'>
+            <p style='color: {colors['white']}; font-size: 1.05rem; font-weight: 600; 
+                      margin: 0; text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.6);'>
+                Non-B DNA Motif Detection System: Comprehensive Analysis of Non-B DNA Structures in Genomic Sequences
+            </p>
         </div>
         """, unsafe_allow_html=True)
     
-    # ========== MAIN CONTENT GRID ==========
-    left, right = st.columns([1, 1], gap="large")
+    with header_right:
+        # NBD Circle image on the right (1/3 width)
+        try:
+            possible_paths = ["nbdcircle.JPG", "archive/nbdcircle.JPG", "./nbdcircle.JPG"]
+            image_found = False
+            for img_path in possible_paths:
+                if os.path.exists(img_path):
+                    st.image(img_path, use_container_width=True)
+                    image_found = True
+                    break
+            if not image_found:
+                raise FileNotFoundError("Image not found")
+        except Exception:
+            # Placeholder if image not found
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
+                        border-radius: 8px; padding: 20px; text-align: center; color: {colors['white']}; height: 100%;
+                        display: flex; align-items: center; justify-content: center;'>
+                <div>
+                    <h3 style='margin: 0; color: {colors['white']}; font-size: 1.2rem;'>DNA</h3>
+                    <p style='margin: 5px 0 0 0; color: rgba(255,255,255,0.9); font-size: 0.8rem;'>Non-B Structures</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
     
-    with left:
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # ========== MAIN CONTENT: THREE EQUAL COLUMNS ==========
+    col1, col2, col3 = st.columns([1, 1, 1], gap="medium")
+    
+    with col1:
+        # Column 1: Scientific Foundation (more compact)
         st.markdown(f"""
-        <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
+        <div style='background: {colors['white']}; padding: 1.5rem; border-radius: 12px; 
                     box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; height: 100%;'>
-            <h2 style='color: {colors['text']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
+            <h2 style='color: {colors['text']}; font-size: 1.3rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
                 Scientific Foundation
             </h2>
-            <p style='color: {colors['neutral_700']}; font-size: 1rem; line-height: 1.8; margin-bottom: 1.2rem;'>
+            <p style='color: {colors['neutral_700']}; font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.8rem;'>
                 <b style='color: {colors['primary']};'>Non-canonical DNA structures</b> are critical regulatory elements 
-                implicated in genome stability, transcriptional regulation, replication, and disease mechanisms. 
-                These structures deviate from the canonical B-form DNA helix and play essential roles in:
+                implicated in genome stability, transcriptional regulation, replication, and disease mechanisms.
             </p>
-            <ul style='color: {colors['neutral_700']}; font-size: 0.95rem; line-height: 1.7; padding-left: 1.5rem;'>
+            <ul style='color: {colors['neutral_700']}; font-size: 0.85rem; line-height: 1.5; padding-left: 1.3rem; margin: 0;'>
                 <li><b>Genome Instability:</b> Hotspots for mutations and chromosomal rearrangements</li>
                 <li><b>Gene Regulation:</b> Promoter and enhancer activity modulation</li>
                 <li><b>DNA Replication:</b> Origins of replication and fork progression</li>
                 <li><b>Disease Association:</b> Cancer, neurological disorders, and aging</li>
             </ul>
-            
         </div>
         """, unsafe_allow_html=True)
     
-    with right:
+    with col2:
+        # Column 2: Detected Motif Classes (all 11 in compact 2-column grid)
         # NOTE: Motif Classes visualization uses specific color gradients per motif type
         # These match the VISUALIZATION_PALETTE defined in centralized tokens but must
         # be literal values here due to Streamlit's inline HTML constraints.
         # Colors are carefully coordinated with the centralized token system.
         st.markdown(f"""
-        <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; margin-bottom: 1.5rem;'>
-            <h2 style='color: {colors['text']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
+        <div style='background: {colors['white']}; padding: 1.5rem; border-radius: 12px; 
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; height: 100%;'>
+            <h2 style='color: {colors['text']}; font-size: 1.3rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
                 Detected Motif Classes
             </h2>
-            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 1rem;'>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, {SEMANTIC_COLORS['warning_light']} 0%, {SEMANTIC_COLORS['warning_border']} 100%); 
-                            border-radius: 8px; border-left: 4px solid {SEMANTIC_COLORS['warning']};'>
-                    <div style='font-weight: 600; color: {SEMANTIC_COLORS['warning_dark']}; font-size: 0.9rem;'>1. Curved DNA</div>
-                    <div style='color: {SEMANTIC_COLORS['warning_dark']}; font-size: 0.75rem; margin-top: 0.2rem;'>A-tract curvature</div>
+            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;'>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, {SEMANTIC_COLORS['warning_light']} 0%, {SEMANTIC_COLORS['warning_border']} 100%); 
+                            border-radius: 6px; border-left: 3px solid {SEMANTIC_COLORS['warning']};'>
+                    <div style='font-weight: 600; color: {SEMANTIC_COLORS['warning_dark']}; font-size: 0.8rem;'>1. Curved DNA</div>
+                    <div style='color: {SEMANTIC_COLORS['warning_dark']}; font-size: 0.7rem; margin-top: 0.1rem;'>A-tract curvature</div>
                 </div>
                 <!-- NOTE: Motif class visualization cards use semantic gradients for visual distinction.
                      Cards 1-2 use SEMANTIC_COLORS from centralized tokens.
@@ -106,94 +110,95 @@ def render():
                      - These form a carefully designed visual vocabulary for motif recognition
                      - Adding 9 × 4 gradient variations to centralized tokens would decrease maintainability
                      All colors follow semantic principles. This is an explicit design decision. -->
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, {SEMANTIC_COLORS['info_light']} 0%, {SEMANTIC_COLORS['info_border']} 100%); 
-                            border-radius: 8px; border-left: 4px solid {SEMANTIC_COLORS['info']};'>
-                    <div style='font-weight: 600; color: {SEMANTIC_COLORS['info_dark']}; font-size: 0.9rem;'>2. Slipped DNA</div>
-                    <div style='color: {SEMANTIC_COLORS['info_dark']}; font-size: 0.75rem; margin-top: 0.2rem;'>Direct repeats, STRs</div>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, {SEMANTIC_COLORS['info_light']} 0%, {SEMANTIC_COLORS['info_border']} 100%); 
+                            border-radius: 6px; border-left: 3px solid {SEMANTIC_COLORS['info']};'>
+                    <div style='font-weight: 600; color: {SEMANTIC_COLORS['info_dark']}; font-size: 0.8rem;'>2. Slipped DNA</div>
+                    <div style='color: {SEMANTIC_COLORS['info_dark']}; font-size: 0.7rem; margin-top: 0.1rem;'>Direct repeats, STRs</div>
                 </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); 
-                            border-radius: 8px; border-left: 4px solid #ec4899;'>
-                    <div style='font-weight: 600; color: #9f1239; font-size: 0.9rem;'>3. Cruciform</div>
-                    <div style='color: #831843; font-size: 0.75rem; margin-top: 0.2rem;'>Palindromic IRs</div>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); 
+                            border-radius: 6px; border-left: 3px solid #ec4899;'>
+                    <div style='font-weight: 600; color: #9f1239; font-size: 0.8rem;'>3. Cruciform</div>
+                    <div style='color: #831843; font-size: 0.7rem; margin-top: 0.1rem;'>Palindromic IRs</div>
                 </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
-                            border-radius: 8px; border-left: 4px solid #10b981;'>
-                    <div style='font-weight: 600; color: #065f46; font-size: 0.9rem;'>4. R-Loop</div>
-                    <div style='color: #064e3b; font-size: 0.75rem; margin-top: 0.2rem;'>RNA-DNA hybrids</div>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
+                            border-radius: 6px; border-left: 3px solid #10b981;'>
+                    <div style='font-weight: 600; color: #065f46; font-size: 0.8rem;'>4. R-Loop</div>
+                    <div style='color: #064e3b; font-size: 0.7rem; margin-top: 0.1rem;'>RNA-DNA hybrids</div>
                 </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); 
-                            border-radius: 8px; border-left: 4px solid #eab308;'>
-                    <div style='font-weight: 600; color: #713f12; font-size: 0.9rem;'>5. Triplex</div>
-                    <div style='color: #713f12; font-size: 0.75rem; margin-top: 0.2rem;'>Mirror repeats</div>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); 
+                            border-radius: 6px; border-left: 3px solid #eab308;'>
+                    <div style='font-weight: 600; color: #713f12; font-size: 0.8rem;'>5. Triplex</div>
+                    <div style='color: #713f12; font-size: 0.7rem; margin-top: 0.1rem;'>Mirror repeats</div>
                 </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); 
-                            border-radius: 8px; border-left: 4px solid #8b5cf6;'>
-                    <div style='font-weight: 600; color: #5b21b6; font-size: 0.9rem;'>6. G-Quadruplex</div>
-                    <div style='color: #4c1d95; font-size: 0.75rem; margin-top: 0.2rem;'>7 subtypes</div>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); 
+                            border-radius: 6px; border-left: 3px solid #8b5cf6;'>
+                    <div style='font-weight: 600; color: #5b21b6; font-size: 0.8rem;'>6. G-Quadruplex</div>
+                    <div style='color: #4c1d95; font-size: 0.7rem; margin-top: 0.1rem;'>7 subtypes</div>
                 </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); 
-                            border-radius: 8px; border-left: 4px solid #f97316;'>
-                    <div style='font-weight: 600; color: #7c2d12; font-size: 0.9rem;'>7. i-Motif</div>
-                    <div style='color: #7c2d12; font-size: 0.75rem; margin-top: 0.2rem;'>C-rich structures</div>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); 
+                            border-radius: 6px; border-left: 3px solid #f97316;'>
+                    <div style='font-weight: 600; color: #7c2d12; font-size: 0.8rem;'>7. i-Motif</div>
+                    <div style='color: #7c2d12; font-size: 0.7rem; margin-top: 0.1rem;'>C-rich structures</div>
                 </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
-                            border-radius: 8px; border-left: 4px solid #6366f1;'>
-                    <div style='font-weight: 600; color: #3730a3; font-size: 0.9rem;'>8. Z-DNA</div>
-                    <div style='color: #312e81; font-size: 0.75rem; margin-top: 0.2rem;'>Left-handed helix</div>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
+                            border-radius: 6px; border-left: 3px solid #6366f1;'>
+                    <div style='font-weight: 600; color: #3730a3; font-size: 0.8rem;'>8. Z-DNA</div>
+                    <div style='color: #312e81; font-size: 0.7rem; margin-top: 0.1rem;'>Left-handed helix</div>
                 </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); 
-                            border-radius: 8px; border-left: 4px solid #14b8a6;'>
-                    <div style='font-weight: 600; color: #134e4a; font-size: 0.9rem;'>9. A-philic DNA</div>
-                    <div style='color: #134e4a; font-size: 0.75rem; margin-top: 0.2rem;'>A/T-rich regions</div>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); 
+                            border-radius: 6px; border-left: 3px solid #14b8a6;'>
+                    <div style='font-weight: 600; color: #134e4a; font-size: 0.8rem;'>9. A-philic DNA</div>
+                    <div style='color: #134e4a; font-size: 0.7rem; margin-top: 0.1rem;'>A/T-rich regions</div>
                 </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); 
-                            border-radius: 8px; border-left: 4px solid #a855f7;'>
-                    <div style='font-weight: 600; color: #6b21a8; font-size: 0.9rem;'>10. Hybrid</div>
-                    <div style='color: #581c87; font-size: 0.75rem; margin-top: 0.2rem;'>Multi-class overlap</div>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); 
+                            border-radius: 6px; border-left: 3px solid #a855f7;'>
+                    <div style='font-weight: 600; color: #6b21a8; font-size: 0.8rem;'>10. Hybrid</div>
+                    <div style='color: #581c87; font-size: 0.7rem; margin-top: 0.1rem;'>Multi-class overlap</div>
                 </div>
-                <div style='padding: 0.8rem; background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); 
-                            border-radius: 8px; border-left: 4px solid #6b7280;'>
-                    <div style='font-weight: 600; color: #1f2937; font-size: 0.9rem;'>11. Clusters</div>
-                    <div style='color: #374151; font-size: 0.75rem; margin-top: 0.2rem;'>Motif hotspots</div>
+                <div style='padding: 0.6rem; background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); 
+                            border-radius: 6px; border-left: 3px solid #6b7280;'>
+                    <div style='font-weight: 600; color: #1f2937; font-size: 0.8rem;'>11. Clusters</div>
+                    <div style='color: #374151; font-size: 0.7rem; margin-top: 0.1rem;'>Motif hotspots</div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Call to Action - Using page-specific colors
+    
+    with col3:
+        # Column 3: Start an Analysis (call to action)
         st.markdown(f"""
         <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
-                    padding: 1.5rem; border-radius: 12px; text-align: center; 
-                    box-shadow: 0 4px 12px {colors['shadow']};'>
-            <h3 style='color: {colors['white']}; margin: 0 0 0.5rem 0; font-size: 1.2rem;'>
+                    padding: 1.5rem; border-radius: 12px; text-align: center; height: 100%;
+                    box-shadow: 0 4px 12px {colors['shadow']}; display: flex; flex-direction: column; justify-content: center;'>
+            <h3 style='color: {colors['white']}; margin: 0 0 0.8rem 0; font-size: 1.3rem; font-weight: 600;'>
                 {UI_TEXT['home_call_to_action_title']}
             </h3>
-            <p style='color: rgba(255,255,255,0.95); margin: 0 0 1rem 0; font-size: 0.95rem;'>
+            <p style='color: rgba(255,255,255,0.95); margin: 0 0 1.2rem 0; font-size: 0.9rem; line-height: 1.5;'>
                 {UI_TEXT['home_call_to_action_text']}
             </p>
-            <div style='background: {colors['white']}; color: {colors['primary']}; padding: 0.7rem 1.5rem; 
-                        border-radius: 8px; display: inline-block; font-weight: 600; font-size: 1rem;'>
+            <div style='background: {colors['white']}; color: {colors['primary']}; padding: 0.8rem 1.5rem; 
+                        border-radius: 8px; display: inline-block; font-weight: 600; font-size: 0.95rem;'>
                 {UI_TEXT['home_call_to_action_button']}
             </div>
         </div>
         """, unsafe_allow_html=True)
     
-    # ========== HOW TO CITE SECTION ==========
+    # ========== HOW TO CITE SECTION (MORE COMPACT) ==========
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(f"""
-    <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
-                box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; margin-top: 2rem;'>
-        <h2 style='color: {colors['primary']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
+    <div style='background: {colors['white']}; padding: 1.5rem; border-radius: 12px; 
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; margin-top: 1rem;'>
+        <h2 style='color: {colors['primary']}; font-size: 1.3rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
             How to Cite
         </h2>
-        <div style='background: {colors['neutral_50']}; padding: 1.2rem; border-radius: 8px; border-left: 4px solid {colors['primary']}; 
-                    font-family: "Courier New", monospace; font-size: 0.9rem; line-height: 1.7; color: {colors['neutral_700']};'>
+        <div style='background: {colors['neutral_50']}; padding: 1rem; border-radius: 8px; border-left: 4px solid {colors['primary']}; 
+                    font-family: "Courier New", monospace; font-size: 0.85rem; line-height: 1.6; color: {colors['neutral_700']};'>
             <b>NonBFinder: Comprehensive Detection and Analysis of Non-B DNA Motifs</b><br>
             Dr. Venkata Rajesh Yella<br>
             GitHub: <a href="https://github.com/VRYella/NonBFinder" style="color: {colors['primary']};">https://github.com/VRYella/NonBFinder</a><br>
             Email: yvrajesh_bt@kluniversity.in
         </div>
-        <p style='color: {colors['neutral_600']}; font-size: 0.9rem; margin-top: 1rem; line-height: 1.6;'>
+        <p style='color: {colors['neutral_600']}; font-size: 0.85rem; margin-top: 0.8rem; line-height: 1.5;'>
             If you use NonBFinder in your research, please cite this resource. 
             For methodology references, see the <b>Documentation</b> tab.
         </p>
