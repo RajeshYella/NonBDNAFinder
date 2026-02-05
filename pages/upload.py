@@ -71,23 +71,23 @@ SUBMOTIF_ABBREVIATIONS = {
     'Global Curvature': 'Global Curv',
     'Local Curvature': 'Local Curv',
     # Slipped DNA
-    'Direct Repeat': 'Dir. Repeat',
+    'Direct Repeat': 'DR',
     'STR': 'STR',
     # Cruciform
-    'Cruciform forming IRs': 'Cruciform IR',
+    'Cruciform forming IRs': 'Cruciform',
     # R-Loop
-    'R-loop formation sites': 'R-loop Sites',
+    'R-loop formation sites': 'R-loop',
     # Triplex
     'Triplex': 'Triplex',
     'Sticky DNA': 'Sticky DNA',
     # G-Quadruplex
     'Telomeric G4': 'Telo G4',
     'Stacked canonical G4s': 'Stacked G4',
-    'Stacked G4s with linker': 'G4 + Linker',
+    'Stacked G4s with linker': 'Stacked G4 + Linker',
     'Canonical intramolecular G4': 'Intra G4',
     'Extended-loop canonical': 'Ext. Loop G4',
     'Higher-order G4 array/G4-wire': 'G4 Array',
-    'Intramolecular G-triplex': 'Intra G-triplex',
+    'Intramolecular G-triplex': 'G-triplex',
     'Two-tetrad weak PQS': 'Weak PQS',
     # i-Motif
     'Canonical i-motif': 'i-Motif',
@@ -99,9 +99,9 @@ SUBMOTIF_ABBREVIATIONS = {
     # A-philic DNA
     'A-philic DNA': 'A-DNA',
     # Hybrid
-    'Dynamic overlaps': 'Dyn. Overlaps',
+    'Dynamic overlaps': 'Hybrid',
     # Clusters
-    'Dynamic clusters': 'Dyn. Clusters',
+    'Dynamic clusters': 'Cluster',
 }
 
 
@@ -247,7 +247,7 @@ def render():
     # TWO-COLUMN LAYOUT: INPUT (LEFT) | ANALYSIS (RIGHT)
     # ============================================================
 
-    left_col, right_col = st.columns([0.5, 2.0])
+    left_col, right_col = st.columns([0.8, 1.7])
 
     # ============================================================
     # LEFT COLUMN — SEQUENCE INPUT
