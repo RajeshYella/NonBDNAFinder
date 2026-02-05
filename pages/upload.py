@@ -405,9 +405,9 @@ def render():
             st.session_state.names = names
             st.session_state.results = []
 
-        # Compact sequence validation indicator - inline display
+        # Compact sequence validation indicator - inline display (no emoji)
         if st.session_state.get('seqs'):
-            st.markdown("**✓ Sequences Loaded:**")
+            st.markdown("**Sequences Loaded:**")
         
             # Cache sequence stats with validation key to handle sequence changes
             cache_key = f"stats_cache_{len(st.session_state.seqs)}"
@@ -459,7 +459,7 @@ def render():
         st.session_state.analysis_mode_used = "Submotif Level"
     
         # ============================================================
-        # FLAT SUBMOTIF SELECTOR (COLOR-ENCODED, 4 × 6 GRID)
+        # FLAT SUBMOTIF SELECTOR (COLOR-ENCODED, COMPACT GRID)
         # ============================================================
         # Flat subclass-first selector: users reason in submotifs, not abstract classes.
         # Color already encodes class identity, so headers are redundant.
@@ -467,9 +467,9 @@ def render():
         # ============================================================
 
         st.markdown("""
-        <div style="font-size: 0.95rem; font-weight: 600; color: #374151; margin-bottom: 8px;">
-        🧬 Submotif Selector
-        <span style="font-weight: 400; color: #6b7280; font-size: 0.8rem;">
+        <div style="font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 4px;">
+        Submotif Selector
+        <span style="font-weight: 400; color: #6b7280; font-size: 0.75rem;">
         — All enabled by default. Uncheck to exclude.
         </span>
         </div>
@@ -500,12 +500,12 @@ def render():
                 st.session_state[key] = True
 
         # ------------------------------------------------------------------
-        # Global controls
+        # Global controls (compact buttons)
         # ------------------------------------------------------------------
         col_all, col_none, _ = st.columns([1, 1, 4])
 
         with col_all:
-            if st.button("✓ All", use_container_width=True, key="select_all_submotifs"):
+            if st.button("All", use_container_width=True, key="select_all_submotifs"):
                 for class_name, subclass in flat_submotifs:
                     st.session_state[
                         f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
@@ -513,7 +513,7 @@ def render():
                 st.rerun()
 
         with col_none:
-            if st.button("✗ None", use_container_width=True, key="deselect_all_submotifs"):
+            if st.button("None", use_container_width=True, key="deselect_all_submotifs"):
                 for class_name, subclass in flat_submotifs:
                     st.session_state[
                         f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
@@ -521,9 +521,9 @@ def render():
                 st.rerun()
 
         # ------------------------------------------------------------------
-        # Render 4 × 6 grid
+        # Render compact 8-column grid (more compact layout)
         # ------------------------------------------------------------------
-        NUM_COLUMNS = 6
+        NUM_COLUMNS = 8
         rows = [flat_submotifs[i:i + NUM_COLUMNS]
                 for i in range(0, len(flat_submotifs), NUM_COLUMNS)]
 
@@ -537,10 +537,10 @@ def render():
                 with col:
                     st.markdown(f"""
                     <div style="
-                        border-left: 4px solid {color};
-                        padding-left: 6px;
-                        margin-bottom: 6px;
-                        font-size: 0.82rem;
+                        border-left: 3px solid {color};
+                        padding-left: 4px;
+                        margin-bottom: 2px;
+                        font-size: 0.75rem;
                     ">
                     """, unsafe_allow_html=True)
 
@@ -580,23 +580,22 @@ def render():
                     'Submotif': subclass
                 })
 
-        # Show compact summary
+        # Show compact summary (no emoji)
         num_enabled = len(enabled_subclasses)
         total_submotifs = len(flat_submotifs)
 
         if enabled_classes:
             st.markdown(f"""
             <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-                        padding: 6px 10px; border-radius: 6px; margin: 6px 0;
-                        display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem;'>
-                <span style='font-size: 1rem;'>✓</span>
+                        padding: 4px 8px; border-radius: 4px; margin: 4px 0;
+                        display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem;'>
                 <span style='font-weight: 600; color: #065f46;'>
                     {len(enabled_classes)} classes, {num_enabled}/{total_submotifs} submotifs enabled
                 </span>
             </div>
             """, unsafe_allow_html=True)
         else:
-            st.warning("⚠️ Please enable at least one submotif to run analysis.")
+            st.warning("Please enable at least one submotif to run analysis.")
     
         # ============================================================
         # ANALYSIS OPTIONS - Always ON, Hidden from UI

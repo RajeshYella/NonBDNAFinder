@@ -17,29 +17,45 @@ def render():
     # This ensures all colors are still managed centrally even in inline styles.
     colors = get_page_colors('Home')
     
-    # ========== PROFESSIONAL HEADER WITH ENHANCED STYLING ==========
+    # ========== THIN BLUE BOX WITH WHITE GLOWING TEXT ==========
     st.markdown(f"""
     <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
-                padding: 3rem 2rem; border-radius: 20px; margin-bottom: 2rem; 
-                box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center;
-                position: relative; overflow: hidden;'>
-        <div style='position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
-                    background: url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 20 Q10 10 20 20 T40 20\' stroke=\'rgba(255,255,255,0.1)\' fill=\'none\'/%3E%3C/svg%3E") repeat;
-                    opacity: 0.3;'></div>
-        <div style='position: relative; z-index: 1;'>
-            <h1 style='color: {colors['white']}; font-size: {FONT_CONFIG['h1_size']}; font-weight: {FONT_CONFIG['extrabold_weight']}; 
-                       margin: 0 0 0.8rem 0; font-family: {FONT_CONFIG['primary_font']}; 
-                       letter-spacing: -0.02em; text-shadow: 0 2px 10px rgba(0,0,0,0.2);'>
-                {UI_TEXT['home_title']}
-            </h1>
-            <p style='color: rgba(255,255,255,0.95); font-size: 1.1rem; margin: 0; font-weight: 500;'>
-                Comprehensive Analysis of Non-B DNA Structures in Genomic Sequences
-            </p>
-        </div>
+                padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; 
+                border: 2px solid {colors['primary']}; text-align: center;
+                box-shadow: 0 0 15px rgba(30, 64, 175, 0.4);'>
+        <p style='color: {colors['white']}; font-size: 1.1rem; font-weight: 600; 
+                  margin: 0; text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.6);'>
+            Non-B DNA Motif Detection System: Comprehensive Analysis of Non-B DNA Structures in Genomic Sequences
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
 
+    
+    # ========== NBD CIRCLE IMAGE (ABOVE SCIENTIFIC FOUNDATION) ==========
+    try:
+        # Display NBD Circle logo
+        possible_paths = ["nbdcircle.JPG", "archive/nbdcircle.JPG", "./nbdcircle.JPG"]
+        image_found = False
+        for img_path in possible_paths:
+            if os.path.exists(img_path):
+                col_img1, col_img2, col_img3 = st.columns([1, 2, 1])
+                with col_img2:
+                    st.image(img_path, caption=UI_TEXT['home_image_caption'], use_container_width=True)
+                image_found = True
+                break
+        if not image_found:
+            raise FileNotFoundError("Image not found")  # Intentional: triggers fallback
+    except Exception:
+        # Placeholder if image not found - using page colors
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
+                    border-radius: 15px; padding: 40px; text-align: center; color: {colors['white']}; margin-bottom: 1rem;'>
+            <h2 style='margin: 0; color: {colors['white']}; font-size: 2rem;'>{UI_TEXT['home_image_fallback_title']}</h2>
+            <h3 style='margin: 10px 0 0 0; color: {colors['white']};'>{UI_TEXT['home_image_fallback_subtitle']}</h3>
+            <p style='margin: 5px 0 0 0; color: rgba(255,255,255,0.9);'>{UI_TEXT['home_image_fallback_caption']}</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     # ========== MAIN CONTENT GRID ==========
     left, right = st.columns([1, 1], gap="large")
@@ -65,28 +81,6 @@ def render():
             
         </div>
         """, unsafe_allow_html=True)
-        
-        try:
-            # Display NBD Circle logo
-            possible_paths = ["nbdcircle.JPG", "archive/nbdcircle.JPG", "./nbdcircle.JPG"]
-            image_found = False
-            for img_path in possible_paths:
-                if os.path.exists(img_path):
-                    st.image(img_path, caption=UI_TEXT['home_image_caption'], use_container_width=True)
-                    image_found = True
-                    break
-            if not image_found:
-                raise FileNotFoundError("Image not found")  # Intentional: triggers fallback
-        except Exception:
-            # Placeholder if image not found - using page colors
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
-                        border-radius: 15px; padding: 40px; text-align: center; color: {colors['white']}; margin-top: 1rem;'>
-                <h2 style='margin: 0; color: {colors['white']}; font-size: 2rem;'>{UI_TEXT['home_image_fallback_title']}</h2>
-                <h3 style='margin: 10px 0 0 0; color: {colors['white']};'>{UI_TEXT['home_image_fallback_subtitle']}</h3>
-                <p style='margin: 5px 0 0 0; color: rgba(255,255,255,0.9);'>{UI_TEXT['home_image_fallback_caption']}</p>
-            </div>
-            """, unsafe_allow_html=True)
     
     with right:
         # NOTE: Motif Classes visualization uses specific color gradients per motif type
@@ -183,105 +177,6 @@ def render():
             </div>
         </div>
         """, unsafe_allow_html=True)
-    
-    # ========== KEY FEATURES SECTION WITH ENHANCED DESIGN ==========
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <div style='background: {colors['neutral_50']}; padding: 2.5rem; border-radius: 20px; margin-top: 2rem;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.08);'>
-        <h2 style='color: {colors['text']}; font-size: 2rem; margin: 0 0 2rem 0; text-align: center; 
-                   font-weight: 700; background: linear-gradient(135deg, {colors['primary']}, {colors['secondary']});
-                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
-            Key Features & Capabilities
-        </h2>
-        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;'>
-            <div style='background: {colors['white']}; padding: 1.8rem; border-radius: 16px; 
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']};
-                        transition: all 0.3s ease; position: relative; overflow: hidden;'>
-                <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
-                            background: linear-gradient(135deg, {colors['primary']}20, transparent);
-                            border-radius: 0 16px 0 100%;'></div>
-                <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
-                    High Performance
-                </h3>
-                <p style='color: {colors['neutral_600']}; font-size: 0.95rem; line-height: 1.7; margin: 0;'>
-                    24,674 bp/s processing speed. Handles sequences up to 1GB with chunked processing. 
-                    O(n) complexity for all major detectors.
-                </p>
-            </div>
-            <div style='background: {colors['white']}; padding: 1.8rem; border-radius: 16px; 
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']};
-                        transition: all 0.3s ease; position: relative; overflow: hidden;'>
-                <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
-                            background: linear-gradient(135deg, {colors['secondary']}20, transparent);
-                            border-radius: 0 16px 0 100%;'></div>
-                <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
-                    Publication Quality
-                </h3>
-                <p style='color: {colors['neutral_600']}; font-size: 0.95rem; line-height: 1.7; margin: 0;'>
-                    25+ visualization types at 300 DPI resolution. Nature/NAR-compliant formats. 
-                    Colorblind-friendly palettes (Wong 2011).
-                </p>
-            </div>
-            <div style='background: {colors['white']}; padding: 1.8rem; border-radius: 16px; 
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']};
-                        transition: all 0.3s ease; position: relative; overflow: hidden;'>
-                <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
-                            background: linear-gradient(135deg, {colors['primary']}20, transparent);
-                            border-radius: 0 16px 0 100%;'></div>
-                <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
-                    Scientifically Validated
-                </h3>
-                <p style='color: {colors['neutral_600']}; font-size: 0.95rem; line-height: 1.7; margin: 0;'>
-                    Literature-based algorithms: QmRLFS, G4Hunter, Z-Seeker. 
-                    Peer-reviewed methods with biological accuracy.
-                </p>
-            </div>
-            <div style='background: {colors['white']}; padding: 1.8rem; border-radius: 16px; 
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']};
-                        transition: all 0.3s ease; position: relative; overflow: hidden;'>
-                <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
-                            background: linear-gradient(135deg, {colors['secondary']}20, transparent);
-                            border-radius: 0 16px 0 100%;'></div>
-                <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
-                    Statistical Analysis
-                </h3>
-                <p style='color: {colors['neutral_600']}; font-size: 0.95rem; line-height: 1.7; margin: 0;'>
-                    Density analysis, enrichment calculations, p-value computation. 
-                    100-iteration sequence shuffling for validation.
-                </p>
-            </div>
-            <div style='background: {colors['white']}; padding: 1.8rem; border-radius: 16px; 
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']};
-                        transition: all 0.3s ease; position: relative; overflow: hidden;'>
-                <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
-                            background: linear-gradient(135deg, {colors['primary']}20, transparent);
-                            border-radius: 0 16px 0 100%;'></div>
-                <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
-                    Multiple Export Formats
-                </h3>
-                <p style='color: {colors['neutral_600']}; font-size: 0.95rem; line-height: 1.7; margin: 0;'>
-                    Excel (multi-sheet), CSV, BED, BigWig, JSON. 
-                    UCSC/IGV genome browser compatible outputs.
-                </p>
-            </div>
-            <div style='background: {colors['white']}; padding: 1.8rem; border-radius: 16px; 
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']};
-                        transition: all 0.3s ease; position: relative; overflow: hidden;'>
-                <div style='position: absolute; top: 0; right: 0; width: 80px; height: 80px;
-                            background: linear-gradient(135deg, {colors['secondary']}20, transparent);
-                            border-radius: 0 16px 0 100%;'></div>
-                <h3 style='color: {colors['text']}; font-size: 1.2rem; margin: 0 0 0.8rem 0; font-weight: 600;'>
-                    Comprehensive Coverage
-                </h3>
-                <p style='color: {colors['neutral_600']}; font-size: 0.95rem; line-height: 1.7; margin: 0;'>
-                    11 major classes, 22+ subclasses. Hybrid and cluster detection. 
-                    Complete Non-B DNA structural characterization.
-                </p>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
     
     # ========== HOW TO CITE SECTION ==========
     st.markdown("<br>", unsafe_allow_html=True)

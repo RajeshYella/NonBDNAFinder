@@ -8,18 +8,20 @@ to ensure visual consistency following scientific dashboard design principles.
 import streamlit as st
 import html
 
+# Import centralized color configuration
+from config.colors import HOME_COLORS, GLOBAL_COLORS
+
 
 def render_section_heading(title: str):
-    """Render a uniform section heading used across the app.
+    """Render a uniform section heading as a thin blue box with white glowing text.
     
     This is the canonical heading component for NonBDNAFinder. All section
     headings should use this function to maintain visual consistency.
     
     Features:
-    - Gradient accent bar (cyan to green)
-    - Consistent typography (1.6rem, weight 700)
-    - Uniform spacing (1.8rem top, 1.2rem bottom margin)
-    - No captions or subtitles
+    - Thin blue gradient box using centralized color tokens
+    - White glowing text with text-shadow effect
+    - Compact, polished appearance
     
     Args:
         title: The heading text to display
@@ -27,24 +29,27 @@ def render_section_heading(title: str):
     # Escape HTML to prevent XSS
     safe_title = html.escape(title)
     
+    # Use centralized colors from HOME_COLORS for consistency
+    primary_color = HOME_COLORS['primary']  # #0091FF
+    secondary_color = HOME_COLORS['secondary']  # #00B4FF
+    white = GLOBAL_COLORS['white']
+    
     st.markdown(f"""
     <div style="
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin: 1.8rem 0 1.2rem 0;
+        background: linear-gradient(135deg, {primary_color} 0%, {secondary_color} 100%);
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        margin: 1rem 0 1.2rem 0;
+        border: 2px solid {primary_color};
+        text-align: center;
+        box-shadow: 0 0 15px rgba(0, 145, 255, 0.4);
     ">
-        <div style="
-            width: 4px;
-            height: 28px;
-            background: linear-gradient(180deg, #0ea5e9, #22c55e);
-            border-radius: 4px;
-        "></div>
         <h2 style="
             margin: 0;
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: #1f2937;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: {white};
+            text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.6);
         ">
             {safe_title}
         </h2>

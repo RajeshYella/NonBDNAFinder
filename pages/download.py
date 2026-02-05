@@ -29,7 +29,7 @@ def render():
     # Apply Download tab theme based on configuration
     load_css(TAB_THEMES.get('Download', 'clinical_teal'))
     
-    # Uniform section heading (no caption)
+    # Uniform section heading (thin blue box with white glowing text)
     render_section_heading("Download & Export Results")
     
     if not st.session_state.results:
@@ -41,7 +41,7 @@ def render():
         # Sanitize sequence name for safe filenames
         safe_filename = re.sub(r'[^\w\-]', '_', primary_sequence_name)[:50].strip('_')
         
-        # Show selected class/subclass filter information
+        # Show selected class/subclass filter information (compact)
         selected_classes_used = st.session_state.get('selected_classes_used', [])
         selected_subclasses_used = st.session_state.get('selected_subclasses_used', [])
         analysis_mode_used = st.session_state.get('analysis_mode_used', 'Motif Level')
@@ -49,9 +49,9 @@ def render():
         if selected_classes_used:
             st.markdown(f"""
             <div style='background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); 
-                        padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem;
+                        padding: 0.6rem; border-radius: 6px; margin-bottom: 0.75rem;
                         border-left: 3px solid #ca8a04;'>
-                <p style='color: #713f12; margin: 0; font-size: 0.9rem;'>
+                <p style='color: #713f12; margin: 0; font-size: 0.85rem;'>
                     <strong>Data Filter:</strong> Exports contain only selected classes ({len(selected_classes_used)}) and subclasses ({len(selected_subclasses_used)}) 
                     from {analysis_mode_used} analysis
                 </p>
@@ -73,13 +73,13 @@ def render():
         except Exception as e:
             st.warning(f"Some motifs had invalid class/subclass data and were normalized: {e}")
         
-        # Individual file downloads as main option
+        # Individual file downloads as main option (compact)
         st.markdown("### Export Options")
         st.markdown("""
         <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
-                    padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem;
-                    border-left: 4px solid #0ea5e9; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);'>
-            <p style='color: #0c4a6e; margin: 0; font-size: 0.95rem;'>
+                    padding: 0.9rem; border-radius: 10px; margin-bottom: 1rem;
+                    border-left: 4px solid #0ea5e9;'>
+            <p style='color: #0c4a6e; margin: 0; font-size: 0.9rem;'>
                 <strong>Quick Export:</strong> Choose your preferred format below. All exports include complete motif data.
             </p>
         </div>
@@ -170,14 +170,14 @@ def render():
                 except Exception as e:
                     st.error(f"PDF export error: {str(e)}")
         
-        # Add Distribution & Statistics Tables Download Section
+        # Add Distribution & Statistics Tables Download Section (compact)
         st.markdown("---")
         st.markdown("### Statistical Analysis Tables")
         st.markdown("""
         <div style='background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
-                    padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem;
-                    border-left: 4px solid #22c55e; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);'>
-            <p style='color: #14532d; margin: 0; font-size: 0.95rem;'>
+                    padding: 0.9rem; border-radius: 10px; margin-bottom: 1rem;
+                    border-left: 4px solid #22c55e;'>
+            <p style='color: #14532d; margin: 0; font-size: 0.9rem;'>
                 <strong>Advanced Analytics:</strong> Detailed distribution and density statistics 
                 for publication-quality analysis and reporting
             </p>

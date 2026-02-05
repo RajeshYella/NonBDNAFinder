@@ -45,42 +45,46 @@ logger = logging.getLogger(__name__)
 CLUSTER_CLASSES = ['Hybrid', 'Non-B_DNA_Clusters']
 
 
-def _render_section_divider(emoji: str) -> None:
-    """Render a minimal section divider with emoji only."""
+def _render_section_divider(label: str) -> None:
+    """Render a minimal section divider with a label.
+    
+    Args:
+        label: Required text label for the section (e.g., 'Track', 'Density')
+    """
     st.markdown(f"""
-    <div style="display: flex; align-items: center; gap: 8px; padding: 4px 0; margin-top: 8px;">
-        <span style="font-size: 1rem;">{emoji}</span>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 2px 0; margin-top: 6px;">
+        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">{label}</span>
         <div style="flex: 1; height: 1px; background: linear-gradient(90deg, #a855f7 0%, transparent 100%);"></div>
     </div>
     """, unsafe_allow_html=True)
 
 
 def _render_analysis_summary_box(coverage_pct: float, density: float, motif_count: int, seq_length: int) -> None:
-    """Render compact horizontal analysis summary box with icons only."""
+    """Render compact horizontal analysis summary box (no icons/emojis)."""
     st.markdown(f"""
-    <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px; 
+    <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; 
                 background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-                border-radius: 8px; border: 1px solid #e9d5ff; margin-bottom: 12px;
+                border-radius: 6px; border: 1px solid #e9d5ff; margin-bottom: 10px;
                 justify-content: space-around; align-items: center;">
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
-            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 10px;">
+            <span style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{coverage_pct:.2f}%</span>
-            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">📊 Coverage</span>
+            <span style="font-size: 0.65rem; color: #64748b; text-transform: uppercase;">Coverage</span>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
-            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 10px;">
+            <span style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{density:.2f}</span>
-            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">📈 Motifs/kb</span>
+            <span style="font-size: 0.65rem; color: #64748b; text-transform: uppercase;">Motifs/kb</span>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
-            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 10px;">
+            <span style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{motif_count:,}</span>
-            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">🔬 Motifs</span>
+            <span style="font-size: 0.65rem; color: #64748b; text-transform: uppercase;">Motifs</span>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 12px;">
-            <span style="font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 10px;">
+            <span style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{seq_length:,}</span>
-            <span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">🧬 bp</span>
+            <span style="font-size: 0.65rem; color: #64748b; text-transform: uppercase;">bp</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -91,7 +95,7 @@ def render():
     # Apply Results tab theme
     load_css(TAB_THEMES.get('Results', 'genomic_purple'))
     
-    # Uniform section heading (no caption)
+    # Uniform section heading (thin blue box with white glowing text)
     render_section_heading("Analysis Results & Visualization")
     
     # No results - show info and stop
@@ -100,8 +104,8 @@ def render():
         st.info("Run analysis first in the 'Upload & Analyze' tab")
         st.stop()
     
-    # Collapsed data table preview (minimal)
-    with st.expander(f"📋 Data table ({len(st.session_state.summary_df)} rows)", expanded=False):
+    # Collapsed data table preview (no emoji)
+    with st.expander(f"Data table ({len(st.session_state.summary_df)} rows)", expanded=False):
         st.dataframe(st.session_state.summary_df, use_container_width=True)
     
     # Sequence selection for multi-sequence files
@@ -147,8 +151,8 @@ def render():
     has_clusters = any(m.get('Class') == 'Non-B_DNA_Clusters' for m in filtered_motifs)
     has_hybrids = any(m.get('Class') == 'Hybrid' for m in filtered_motifs)
     
-    # Create visualization tabs
-    viz_tabs = st.tabs(["🧬 All Motifs", "🔀 Dynamic Clusters"])
+    # Create visualization tabs (no emojis)
+    viz_tabs = st.tabs(["All Motifs", "Dynamic Clusters"])
     
     # =================================================================
     # TAB 1: ALL MOTIFS
@@ -156,8 +160,8 @@ def render():
     # =================================================================
     with viz_tabs[0]:
         
-        # 1️⃣ MOTIF TRACK — Class Level
-        _render_section_divider("📍")
+        # MOTIF TRACK — Class Level
+        _render_section_divider("Track")
         
         try:
             fig_track = plot_linear_motif_track(
@@ -169,8 +173,8 @@ def render():
         except Exception as e:
             st.error(f"Track error: {e}")
         
-        # 2️⃣ SUBCLASS TRACK — NEW (same coordinates, parent class colors, no clusters)
-        _render_section_divider("🔬")
+        # SUBCLASS TRACK (same coordinates, parent class colors, no clusters)
+        _render_section_divider("Subclass")
         
         try:
             # Filter out clusters from subclass track
@@ -189,8 +193,8 @@ def render():
         except Exception as e:
             st.error(f"Subclass track error: {e}")
         
-        # 3️⃣ DISTRIBUTION PLOTS (Side-by-Side)
-        _render_section_divider("📊")
+        # DISTRIBUTION PLOTS (Side-by-Side)
+        _render_section_divider("Distribution")
         
         col_class, col_subclass = st.columns(2)
         
@@ -218,8 +222,8 @@ def render():
             except Exception as e:
                 st.error(f"Subclass dist error: {e}")
         
-        # 4️⃣ MOTIF DENSITY ANALYSIS
-        _render_section_divider("📈")
+        # MOTIF DENSITY ANALYSIS
+        _render_section_divider("Density")
         
         try:
             # Get cached or calculate density
@@ -243,8 +247,8 @@ def render():
         except Exception as e:
             st.error(f"Density error: {e}")
         
-        # 5️⃣ MOTIF LENGTH KDE
-        _render_section_divider("📏")
+        # MOTIF LENGTH KDE
+        _render_section_divider("Length")
         
         try:
             fig_kde = plot_motif_length_kde(
@@ -257,8 +261,8 @@ def render():
         except Exception as e:
             st.error(f"KDE error: {e}")
         
-        # 6️⃣ MOTIF SCORE DISTRIBUTION
-        _render_section_divider("⭐")
+        # MOTIF SCORE DISTRIBUTION
+        _render_section_divider("Score")
         
         try:
             fig_score = plot_score_distribution(
@@ -271,8 +275,8 @@ def render():
         except Exception as e:
             st.error(f"Score error: {e}")
         
-        # 7️⃣ PIE / DONUT CHARTS (End)
-        _render_section_divider("🥧")
+        # PIE / DONUT CHARTS (End)
+        _render_section_divider("Composition")
         
         try:
             fig_pie = plot_nested_pie_chart(
@@ -290,9 +294,9 @@ def render():
     # =================================================================
     with viz_tabs[1]:
         
-        # 1️⃣ HYBRID & CLUSTER TRACK
+        # HYBRID & CLUSTER TRACK
         if has_clusters or has_hybrids:
-            _render_section_divider("🔗")
+            _render_section_divider("Clusters")
             
             # Filter to just hybrid/cluster motifs for the track
             cluster_hybrid_motifs = [m for m in filtered_motifs 
@@ -310,7 +314,7 @@ def render():
             
             # Cluster Size Distribution
             if has_clusters:
-                _render_section_divider("📊")
+                _render_section_divider("Stats")
                 try:
                     fig_cluster_size = plot_cluster_size_distribution(
                         filtered_motifs,
@@ -322,14 +326,14 @@ def render():
                     st.error(f"Cluster size error: {e}")
         else:
             st.markdown("""
-            <div style="padding: 12px; background: #f0f9ff; border-radius: 8px; 
-                        color: #0369a1; font-size: 0.9rem; text-align: center;">
-                ℹ️ No clusters or hybrids detected in this sequence
+            <div style="padding: 10px; background: #f0f9ff; border-radius: 6px; 
+                        color: #0369a1; font-size: 0.85rem; text-align: center;">
+                No clusters or hybrids detected in this sequence
             </div>
             """, unsafe_allow_html=True)
         
-        # 2️⃣ CO-OCCURRENCE MATRIX
-        _render_section_divider("🔗")
+        # CO-OCCURRENCE MATRIX
+        _render_section_divider("Co-occurrence")
         
         try:
             fig_cooccur = plot_motif_cooccurrence_matrix(
@@ -341,8 +345,8 @@ def render():
         except Exception as e:
             st.error(f"Co-occurrence error: {e}")
         
-        # 3️⃣ OVERLAP ANALYSIS (Class × Class, Subclass × Subclass)
-        _render_section_divider("🔀")
+        # OVERLAP ANALYSIS (Class × Class, Subclass × Subclass)
+        _render_section_divider("Overlaps")
         
         # Calculate overlap stats
         class_overlaps = _calculate_overlaps(filtered_motifs, by='Class')
@@ -354,14 +358,14 @@ def render():
             if class_overlaps:
                 _render_overlap_matrix(class_overlaps, "Class Overlaps")
             else:
-                st.markdown('<div style="color: #64748b; font-size: 0.85rem;">No class overlaps</div>', 
+                st.markdown('<div style="color: #64748b; font-size: 0.8rem;">No class overlaps</div>', 
                            unsafe_allow_html=True)
         
         with col_subclass_overlap:
             if subclass_overlaps:
                 _render_overlap_matrix(subclass_overlaps, "Subclass Overlaps")
             else:
-                st.markdown('<div style="color: #64748b; font-size: 0.85rem;">No subclass overlaps</div>', 
+                st.markdown('<div style="color: #64748b; font-size: 0.8rem;">No subclass overlaps</div>', 
                            unsafe_allow_html=True)
 
 
