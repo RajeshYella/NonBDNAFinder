@@ -604,44 +604,147 @@ def render():
                 st.rerun()
 
         # ------------------------------------------------------------------
-        # Render high-density 6-column grid for full 24-class visibility
-        # (6 columns × 4 rows = 24 submotifs visible without scrolling)
+        # Render pill-style visual tags with class-level grouping
+        # Pills provide modern, intuitive UI with clear visual feedback
         # ------------------------------------------------------------------
-        NUM_COLUMNS = 6
-        rows = [flat_submotifs[i:i + NUM_COLUMNS]
-                for i in range(0, len(flat_submotifs), NUM_COLUMNS)]
-
-        # Wrap grid in container with CSS class for targeted styling
-        st.markdown('<div class="submotif-grid">', unsafe_allow_html=True)
         
-        for row in rows:
-            cols = st.columns(NUM_COLUMNS, gap="small")
-            for col, (class_name, subclass) in zip(cols, row):
-                color = CLASS_COLORS.get(class_name, "#cbd5e1")
-                color_name = CLASS_COLOR_NAMES.get(class_name, "gray")
+        # Helper function to darken a hex color for gradients
+        def darken_color(hex_color: str, factor: float = 0.7) -> str:
+            """Darken a hex color by a factor (0-1). Lower factor = darker."""
+            hex_color = hex_color.lstrip('#')
+            r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+            r, g, b = int(r * factor), int(g * factor), int(b * factor)
+            return f'#{r:02x}{g:02x}{b:02x}'
+        
+        # Wrap in container with custom styling
+        st.markdown("""
+        <style>
+        .pill-container {
+            margin: 16px 0;
+        }
+        .class-header {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 24px;
+            display: inline-block;
+            margin: 8px 0 12px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: default;
+        }
+        .submotif-pills-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+        .pill-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .pill-label {
+            padding: 8px 16px;
+            border-radius: 18px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: block;
+            transition: all 0.2s ease;
+            user-select: none;
+            cursor: pointer;
+        }
+        .pill-label:hover {
+            transform: scale(1.05);
+        }
+        .pill-selected {
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+        .pill-unselected {
+            font-weight: 500;
+            border: 2px solid;
+        }
+        /* Hide the actual checkbox but keep it clickable */
+        div[data-testid="stCheckbox"] {
+            position: absolute !important;
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            opacity: 0 !important;
+            cursor: pointer !important;
+        }
+        div[data-testid="stCheckbox"] label {
+            width: 100% !important;
+            height: 100% !important;
+            cursor: pointer !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('<div class="pill-container">', unsafe_allow_html=True)
+        
+        # Group submotifs by class for hierarchical display
+        for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
+            entry = MOTIF_CLASSIFICATION[class_id]
+            class_name = entry['class']
+            subclasses = entry['subclasses']
+            
+            color = CLASS_COLORS.get(class_name, "#cbd5e1")
+            darker_shade = darken_color(color, 0.7)
+            
+            # Render class header with gradient
+            display_class_name = class_name.replace('_', ' ')
+            st.markdown(f"""
+            <div class="class-header" style="background: linear-gradient(135deg, {color} 0%, {darker_shade} 100%);">
+                {display_class_name}
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Render submotif pills for this class in a flex row
+            st.markdown('<div class="submotif-pills-row">', unsafe_allow_html=True)
+            
+            for subclass in subclasses:
                 key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                # Use abbreviated label for display, full name in tooltip
                 abbrev_label = get_abbreviated_label(subclass)
-
-                with col:
-                    st.markdown(f"""
-                    <div style="
-                        border-left: 3px solid {color};
-                        padding-left: 2px;
-                        margin-bottom: 0;
-                        font-size: 0.65rem;
-                    ">
-                    """, unsafe_allow_html=True)
-
-                    st.checkbox(
-                        f"**:{color_name}[{abbrev_label}]**",
-                        key=key,
-                        help=f"{subclass} ({class_name.replace('_', ' ')})"
-                    )
-
-                    st.markdown("</div>", unsafe_allow_html=True)
+                is_selected = st.session_state.get(key, True)
+                
+                # Determine pill styling based on selection state
+                if is_selected:
+                    pill_class = "pill-label pill-selected"
+                    pill_style = f"background: {color}; color: white;"
+                else:
+                    # Light background with colored text and border
+                    light_bg = f"{color}22"  # 22 = low opacity
+                    border_color = f"{color}99"  # 99 = medium opacity
+                    pill_class = "pill-label pill-unselected"
+                    pill_style = f"background: {light_bg}; color: {color}; border-color: {border_color};"
+                
+                # Create a wrapper for the pill with overlay checkbox
+                tooltip_text = f"{subclass} ({display_class_name})"
+                st.markdown(f"""
+                <div class="pill-wrapper">
+                    <div class="{pill_class}" 
+                         style="{pill_style}"
+                         title="{tooltip_text}">
+                        {abbrev_label}
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # Checkbox overlays the pill (invisible but clickable)
+                st.checkbox(
+                    abbrev_label,
+                    key=key,
+                    help=tooltip_text,
+                    label_visibility="collapsed"
+                )
+                
+                st.markdown('</div>', unsafe_allow_html=True)  # Close pill-wrapper
+            
+            st.markdown('</div>', unsafe_allow_html=True)  # Close submotif-pills-row
         
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)  # Close pill-container
 
         # ------------------------------------------------------------------
         # Build enabled class & subclass lists (for downstream analysis)
