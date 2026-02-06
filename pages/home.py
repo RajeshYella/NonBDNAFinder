@@ -5,6 +5,7 @@ from config.typography import FONT_CONFIG
 from config.themes import TAB_THEMES
 from config.colors import SEMANTIC_COLORS
 from ui.css import load_css, get_page_colors
+from ui.headers import render_section_heading
 
 
 def render():
@@ -17,67 +18,60 @@ def render():
     # This ensures all colors are still managed centrally even in inline styles.
     colors = get_page_colors('Home')
     
-    # ========== THIN BLUE BOX WITH WHITE GLOWING TEXT ==========
-    st.markdown(f"""
-    <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
-                padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; 
-                border: 2px solid {colors['primary']}; text-align: center;
-                box-shadow: 0 0 15px rgba(30, 64, 175, 0.4);'>
-        <p style='color: {colors['white']}; font-size: 1.1rem; font-weight: 600; 
-                  margin: 0; text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.6);'>
-            Non-B DNA Motif Detection System: Comprehensive Analysis of Non-B DNA Structures in Genomic Sequences
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    # ========== SECTION HEADING (using uniform component) ==========
+    render_section_heading("Non-B DNA Motif Detection System: Comprehensive Analysis of Non-B DNA Structures in Genomic Sequences")
     
 
     
-    # ========== NBD CIRCLE IMAGE (ABOVE SCIENTIFIC FOUNDATION) ==========
-    try:
-        # Display NBD Circle logo
-        possible_paths = ["nbdcircle.JPG", "archive/nbdcircle.JPG", "./nbdcircle.JPG"]
-        image_found = False
-        for img_path in possible_paths:
-            if os.path.exists(img_path):
-                col_img1, col_img2, col_img3 = st.columns([1, 2, 1])
-                with col_img2:
+    # ========== TWO-COLUMN SECTION: NBD CIRCLE (COL 1) & SCIENTIFIC FOUNDATION (COL 2) ==========
+    col_nbd, col_science = st.columns([1, 1], gap="large")
+    
+    with col_nbd:
+        # ========== NBD CIRCLE IMAGE ==========
+        try:
+            # Display NBD Circle logo
+            possible_paths = ["nbdcircle.JPG", "archive/nbdcircle.JPG", "./nbdcircle.JPG"]
+            image_found = False
+            for img_path in possible_paths:
+                if os.path.exists(img_path):
                     st.image(img_path, caption=UI_TEXT['home_image_caption'], use_container_width=True)
-                image_found = True
-                break
-        if not image_found:
-            raise FileNotFoundError("Image not found")  # Intentional: triggers fallback
-    except Exception:
-        # Placeholder if image not found - using page colors
+                    image_found = True
+                    break
+            if not image_found:
+                raise FileNotFoundError("Image not found")  # Intentional: triggers fallback
+        except Exception:
+            # Placeholder if image not found - using page colors
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
+                        border-radius: 15px; padding: 40px; text-align: center; color: {colors['white']}; margin-bottom: 1rem;'>
+                <h2 style='margin: 0; color: {colors['white']}; font-size: 2rem;'>{UI_TEXT['home_image_fallback_title']}</h2>
+                <h3 style='margin: 10px 0 0 0; color: {colors['white']};'>{UI_TEXT['home_image_fallback_subtitle']}</h3>
+                <p style='margin: 5px 0 0 0; color: rgba(255,255,255,0.9);'>{UI_TEXT['home_image_fallback_caption']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    with col_science:
+        # ========== SCIENTIFIC FOUNDATION ==========
         st.markdown(f"""
-        <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
-                    border-radius: 15px; padding: 40px; text-align: center; color: {colors['white']}; margin-bottom: 1rem;'>
-            <h2 style='margin: 0; color: {colors['white']}; font-size: 2rem;'>{UI_TEXT['home_image_fallback_title']}</h2>
-            <h3 style='margin: 10px 0 0 0; color: {colors['white']};'>{UI_TEXT['home_image_fallback_subtitle']}</h3>
-            <p style='margin: 5px 0 0 0; color: rgba(255,255,255,0.9);'>{UI_TEXT['home_image_fallback_caption']}</p>
+        <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; height: 100%;'>
+            <h2 style='color: {colors['text']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
+                Scientific Foundation
+            </h2>
+            <p style='color: {colors['neutral_700']}; font-size: 1rem; line-height: 1.8; margin-bottom: 1.2rem;'>
+                <b style='color: {colors['primary']};'>Non-canonical DNA structures</b> are critical regulatory elements 
+                implicated in genome stability, transcriptional regulation, replication, and disease mechanisms. 
+                These structures deviate from the canonical B-form DNA helix and play essential roles in:
+            </p>
+            <ul style='color: {colors['neutral_700']}; font-size: 0.95rem; line-height: 1.7; padding-left: 1.5rem;'>
+                <li><b>Genome Instability:</b> Hotspots for mutations and chromosomal rearrangements</li>
+                <li><b>Gene Regulation:</b> Promoter and enhancer activity modulation</li>
+                <li><b>DNA Replication:</b> Origins of replication and fork progression</li>
+                <li><b>Disease Association:</b> Cancer, neurological disorders, and aging</li>
+            </ul>
+            
         </div>
         """, unsafe_allow_html=True)
-    
-    # ========== SCIENTIFIC FOUNDATION (FULL WIDTH) ==========
-    st.markdown(f"""
-    <div style='background: {colors['white']}; padding: 2rem; border-radius: 16px; 
-                box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; margin-bottom: 1.5rem;'>
-        <h2 style='color: {colors['text']}; font-size: 1.6rem; margin: 0 0 1rem 0; font-weight: 600;'>
-            Scientific Foundation
-        </h2>
-        <p style='color: {colors['neutral_700']}; font-size: 1rem; line-height: 1.8; margin-bottom: 1.2rem;'>
-            <b style='color: {colors['primary']};'>Non-canonical DNA structures</b> are critical regulatory elements 
-            implicated in genome stability, transcriptional regulation, replication, and disease mechanisms. 
-            These structures deviate from the canonical B-form DNA helix and play essential roles in:
-        </p>
-        <ul style='color: {colors['neutral_700']}; font-size: 0.95rem; line-height: 1.7; padding-left: 1.5rem;'>
-            <li><b>Genome Instability:</b> Hotspots for mutations and chromosomal rearrangements</li>
-            <li><b>Gene Regulation:</b> Promoter and enhancer activity modulation</li>
-            <li><b>DNA Replication:</b> Origins of replication and fork progression</li>
-            <li><b>Disease Association:</b> Cancer, neurological disorders, and aging</li>
-        </ul>
-        
-    </div>
-    """, unsafe_allow_html=True)
     
     # ========== TWO-COLUMN SECTION: MOTIF CLASSES & CALL TO ACTION ==========
     left, right = st.columns([1, 1], gap="large")
