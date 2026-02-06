@@ -98,11 +98,30 @@ def render():
     # Uniform section heading (thin blue box with white glowing text)
     render_section_heading("Analysis Results & Visualization")
     
-    # No results - show info and stop
+    # No results - show info message but continue rendering page structure
     if not st.session_state.results:
         st.info(UI_TEXT['status_no_results'])
-        st.info("Run analysis first in the 'Upload & Analyze' tab")
-        st.stop()
+        st.info("Run analysis first in the 'Upload & Analyze' tab to see results and visualizations.")
+        
+        # Show placeholder content when no results
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); 
+                    padding: 2rem; border-radius: 12px; margin-top: 1rem;
+                    border: 1px solid #e9d5ff; text-align: center;'>
+            <h3 style='color: #7c3aed; margin: 0 0 1rem 0;'>Visualization Preview</h3>
+            <p style='color: #6b7280; margin: 0;'>
+                Once you upload and analyze a sequence, this page will display:
+            </p>
+            <ul style='color: #6b7280; text-align: left; margin: 1rem auto; max-width: 500px;'>
+                <li>Motif track visualizations</li>
+                <li>Class and subclass distributions</li>
+                <li>Density analysis plots</li>
+                <li>Length and score distributions</li>
+                <li>Co-occurrence matrices</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        return
     
     # Collapsed data table preview (no emoji)
     with st.expander(f"Data table ({len(st.session_state.summary_df)} rows)", expanded=False):
