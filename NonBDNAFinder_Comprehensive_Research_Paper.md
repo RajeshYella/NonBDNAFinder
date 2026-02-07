@@ -71,6 +71,35 @@ The workflow comprises: (1) Input processing and sequence validation; (2) Primar
 
 **Non-B DNA cluster detection** locates 100 bp windows containing ≥3 unique motif classes.
 
+**Table S1. Comprehensive Detection Algorithm Reference**
+
+| Motif Class | Submotif | What it is doing | Algorithmic approach | Key parameters / thresholds | Primary reference(s) |
+|-------------|----------|------------------|---------------------|----------------------------|---------------------|
+| Curved DNA | Global Curvature | Detects long-range DNA bending from phased A/T tracts | Pattern-based detection of phased polyA/polyT tracts aggregated into arrays | ≥3 A/T tracts; tract length ≥3 bp; spacing ≈10–11 bp | Koo et al. 1986; Marini et al. 1982; Drew & Travers 1985 |
+| Curved DNA | Local Curvature | Detects localized helix bending | Regex-based detection of long isolated A-tracts or T-tracts | A/T tract length ≥7 bp | Koo et al. 1986 |
+| Slipped DNA | Direct Repeat | Detects replication-slippage–prone repeats | Tandem repeat scanning with repeat unit normalization & purity filtering | Unit size ≥10 bp; ≥2 copies; purity ≥90%; total length ≥20 bp | Sinden & Wells 1992; Cer et al. 2012 |
+| Slipped DNA | STR | Detects microsatellite-like slippage motifs | k-mer–based STR detection with entropy filtering | Unit size 1–6 bp; ≥5 copies; length ≥15–20 bp | Cer et al. 2012; Non-B DB |
+| Cruciform | Cruciform forming IRs | Detects palindromes forming hairpin/cruciform structures | Inverted repeat detection using reverse-complement matching | Arm length 10–100 bp; loop size 0–3 bp; mismatches = 0 | Lilley 1980 |
+| R-Loop | R-loop formation sites | Predicts RNA:DNA hybrid–forming regions | QmRLFS model: G-tract–based RIZ + GC-rich REZ extension | G-runs ≥3 or ≥4; RIZ G% ≥50; REZ GC% ≥40; max REZ 2 kb | Ginno et al. 2012 |
+| Triplex | Triplex | Detects Hoogsteen triple-helix–forming DNA | Mirror repeat detection with purine/pyrimidine composition filter | Arm length 10–100 bp; spacer ≤8 bp; ≥90% purine or pyrimidine | Htun & Dahlberg 1988, 1989; Frank-Kamenetskii & Mirkin 1995 |
+| Triplex | Sticky DNA | Detects disease-associated triplex repeats | Regex-based detection of long GAA/TTC tracts | (GAA/TTC)n, n ≥ 50–59 repeats | Sakamoto et al. 1999 |
+| G-Quadruplex | Telomeric G4 | Detects telomere-specific quadruplexes | Exact motif matching of telomeric repeat arrays | (TTAGGG)n, n ≥ 4 | Sen & Gilbert 1988; Williamson et al. 1989 |
+| G-Quadruplex | Stacked canonical G4s | Detects adjacent G4 units | Composite regex + overlap merging | ≥2 canonical G4 motifs with no spacer | Huppert & Balasubramanian 2005; Brázda et al. 2019 |
+| G-Quadruplex | Stacked G4s with linker | Detects clustered G4s separated by linkers | Regex + linker-length–aware merging | Linker length ≤20 bp | Puig Lombardi & Londoño-Vallejo 2020 |
+| G-Quadruplex | Canonical intramolecular G4 | Detects classical G-quadruplex motifs | Regex-based PQS detection + G4Hunter-style scoring | G≥3 tracts; loop 1–7 bp; score ≥ threshold | Todd et al. 2005 |
+| G-Quadruplex | Extended-loop canonical | Detects relaxed G4 variants | Modified PQS regex allowing longer loops | Loop length 8–12 bp | Puig Lombardi & Londoño-Vallejo 2020 |
+| G-Quadruplex | Higher-order G4 array/G4-wire | Detects multimeric G4 assemblies | Density-based detection of multiple contiguous G-runs | ≥7 G-runs; extended region length | Sen & Gilbert 1988; Mashimo et al. 2010 |
+| G-Quadruplex | Intramolecular G-triplex | Detects three-stranded G intermediates | Regex-based detection of three G-run motifs | 3 G-tracts; loop 1–7 bp | Hou et al. 2017; Jiang et al. 2015 |
+| G-Quadruplex | Two-tetrad weak PQS | Detects low-stability quadruplexes | Relaxed PQS detection with reduced scoring | G≥2 tracts; low G4Hunter score | Puig Lombardi & Londoño-Vallejo 2020 |
+| i-Motif | Canonical i-motif | Detects classical C-rich i-motifs | Regex-based detection of 4 C-tract motifs | C≥3 tracts; loop 1–7 bp | Gehring et al. 1993; Zeraati et al. 2018 |
+| i-Motif | Relaxed i-motif | Detects variant i-motifs | Regex allowing longer loop lengths | Loop length up to 12 bp | Zeraati et al. 2018 |
+| i-Motif | AC-motif | Detects AC-repeat–based i-motif–like structures | Specialized consensus pattern matching | Alternating A/C tracts; fixed linker sizes | Hur et al. 2021 |
+| Z-DNA | Z-DNA | Detects left-handed helix–forming DNA | 10-mer dinucleotide scoring + Kadane scan | Z-score ≥ threshold; GC/AC/GT enriched | Ho et al. 1986; Wang et al. 2025 (Z-Seeker) |
+| Z-DNA | eGZ | Detects extruded-G Z-DNA motifs | Regex-based CGG-repeat detection | (CGG/GGC)n, n ≥ 4 | Fakharzadeh et al. 2022 |
+| A-philic DNA | A-philic DNA | Detects A-form–prone DNA regions | 10-mer log₂ odds scoring table, merged by overlap | Mean 10-mer score ≥0; merged windows | NAKB/NDB-derived (this study) |
+| Hybrid | Dynamic overlaps | Detects multi-structure–capable regions | Interval overlap analysis across motif classes | ≥2 distinct motif classes overlapping | Cer et al. 2012; this study |
+| Non-B DNA Clusters | Dynamic clusters | Detects structural hotspots | Sliding-window density-based clustering | Window ~100 bp; ≥3 motif classes | Cer et al. 2012; this study |
+
 ### 2.3 Sequence Data Sources
 
 Bacterial genome sequences were obtained from NCBI GenBank, representing three phyla (Proteobacteria, Actinobacteria, Firmicutes). Human repeat expansion loci (153 genes) were compiled from OMIM with RefSeq transcripts. The standardized validation sequence (40,523 bp, ID: 693fc40d26a53) represents a human genomic Alu-rich repeat region.
@@ -310,6 +339,9 @@ The platform enables systematic investigation of non-B DNA biology across divers
 ---
 
 ## Tables
+
+### Table S1. Comprehensive Detection Algorithm Reference
+(See Methods section 2.2 - Contains detailed algorithmic approaches, key parameters/thresholds, and primary references for all 24 submotifs)
 
 ### Table 1. Structural Class and Subclass Taxonomy
 (See Results section 3.1)
