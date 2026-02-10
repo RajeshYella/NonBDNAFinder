@@ -21,18 +21,18 @@ if _current_dir not in sys.path:
     sys.path.insert(0, _current_dir)
 
 # Import configuration modules
-from config.text import UI_TEXT
-from config.layout import LAYOUT_CONFIG
-from config.themes import TAB_THEMES
+from Utilities.config.text import UI_TEXT
+from Utilities.config.layout import LAYOUT_CONFIG
+from Utilities.config.themes import TAB_THEMES
 
 # Import UI utilities
-from ui.css import load_css
+from UI.css import load_css
 
 # Import page modules
-from pages import home, upload, results, download, documentation
+from UI import home, upload, results, download, documentation
 
 # Import core scanner functionality
-from nonbscanner import get_motif_info as get_motif_classification_info
+from Utilities.nonbscanner import get_motif_info as get_motif_classification_info
 
 # Optional imports with fallbacks
 try:
