@@ -43,6 +43,7 @@ def render_section_heading(title: str):
         border: 2px solid {primary_color};
         text-align: center;
         box-shadow: 0 0 15px rgba(0, 145, 255, 0.4);
+        width: 100%;
     ">
         <h2 style="
             margin: 0;
