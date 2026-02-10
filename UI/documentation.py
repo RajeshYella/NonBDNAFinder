@@ -12,6 +12,43 @@ from UI.css import load_css
 from UI.headers import render_section_heading
 
 
+def _build_motif_card(name: str, subtitle: str, color: str, description: str) -> str:
+    """Build HTML for a single motif class card.
+    
+    Note: Returns HTML without leading/trailing whitespace to prevent
+    Markdown from interpreting indented content as code blocks.
+    """
+    return (
+        f"<div style='background: white; padding: 1rem; border-radius: 10px; "
+        f"box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid {color};'>"
+        f"<strong style='color: #1e293b; font-size: 0.95rem;'>{name}</strong>"
+        f"<div style='color: {color}; font-size: 0.75rem; font-weight: 600; margin: 0.2rem 0;'>{subtitle}</div>"
+        f"<div style='color: #64748b; font-size: 0.8rem; line-height: 1.4;'>{description}</div>"
+        f"</div>"
+    )
+
+
+def _build_reference_card(ref: dict) -> str:
+    """Build HTML for a single reference card.
+    
+    Note: Returns HTML without leading/trailing whitespace to prevent
+    Markdown from interpreting indented content as code blocks.
+    """
+    return (
+        f"<div style='background: #f8fafc; padding: 0.75rem; border-radius: 6px; "
+        f"border-left: 3px solid #3b82f6;'>"
+        f"<div style='font-weight: 600; color: #1e293b; font-size: 0.85rem; margin-bottom: 0.2rem;'>"
+        f"{ref['authors']} ({ref['year']})</div>"
+        f"<div style='color: #334155; font-size: 0.8rem; font-style: italic; margin-bottom: 0.15rem;'>"
+        f"{ref['title']}</div>"
+        f"<div style='color: #64748b; font-size: 0.75rem;'>"
+        f"<strong>{ref['journal']}</strong> {ref['volume']} · "
+        f"<a href=\"https://doi.org/{ref['doi']}\" target=\"_blank\" style=\"color: #3b82f6;\">"
+        f"DOI: {ref['doi']}</a></div>"
+        f"</div>"
+    )
+
+
 # Comprehensive motif detection parameters
 MOTIF_PARAMETERS = {
     "Curved DNA": {
@@ -159,14 +196,7 @@ def render():
     
     cards_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">'
     for name, subtitle, color, description in motif_info:
-        cards_html += f'''
-        <div style='background: white; padding: 1rem; border-radius: 10px; 
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid {color};'>
-            <strong style='color: #1e293b; font-size: 0.95rem;'>{name}</strong>
-            <div style='color: {color}; font-size: 0.75rem; font-weight: 600; margin: 0.2rem 0;'>{subtitle}</div>
-            <div style='color: #64748b; font-size: 0.8rem; line-height: 1.4;'>{description}</div>
-        </div>
-        '''
+        cards_html += _build_motif_card(name, subtitle, color, description)
     cards_html += '</div>'
     st.markdown(cards_html, unsafe_allow_html=True)
     
@@ -221,20 +251,7 @@ def render():
     # Reference cards (compact)
     refs_html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">'
     for ref in REFERENCES:
-        refs_html += f'''
-        <div style='background: #f8fafc; padding: 0.75rem; border-radius: 6px; border-left: 3px solid #3b82f6;'>
-            <div style='font-weight: 600; color: #1e293b; font-size: 0.85rem; margin-bottom: 0.2rem;'>
-                {ref["authors"]} ({ref["year"]})
-            </div>
-            <div style='color: #334155; font-size: 0.8rem; font-style: italic; margin-bottom: 0.15rem;'>
-                {ref["title"]}
-            </div>
-            <div style='color: #64748b; font-size: 0.75rem;'>
-                <strong>{ref["journal"]}</strong> {ref["volume"]} · 
-                <a href="https://doi.org/{ref["doi"]}" target="_blank" style="color: #3b82f6;">DOI: {ref["doi"]}</a>
-            </div>
-        </div>
-        '''
+        refs_html += _build_reference_card(ref)
     refs_html += '</div>'
     st.markdown(refs_html, unsafe_allow_html=True)
     
