@@ -45,61 +45,134 @@ section[data-testid="stSidebar"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   STREAMLIT TAB STYLING - COMPACT, BOLD, AND VIBRANT
+   STREAMLIT TAB STYLING - HUGE, VIBRANT, AND SHINING
    ═══════════════════════════════════════════════════════════════ */
 
 /* Tab Container - Ensure Tabs Are Fully Visible Without Clipping */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 0 !important;
+    gap: 8px !important;
     width: 100% !important;
     display: flex !important;
     justify-content: space-evenly !important;
     overflow: visible !important;
+    padding: 12px 8px !important;
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Individual Tab Buttons - Compact, Bold, and Fully Visible */
+/* Individual Tab Buttons - HUGE, Bold, and Fully Visible */
 .stTabs [data-baseweb="tab"] {
-    height: 42px !important;
-    padding: 6px 16px !important;
-    background-color: #f0f4f8 !important;
-    border: none !important;
-    border-radius: 8px 8px 0 0 !important;
-    font-size: 1.05rem !important;
-    font-weight: 800 !important;
-    letter-spacing: -0.01em !important;
-    transition: all 0.25s ease !important;
+    height: auto !important;
+    padding: 16px 24px !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
+    font-size: 1.6rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.02em !important;
+    text-transform: uppercase !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     flex: 1 1 0 !important;
     min-width: 0 !important;
-    margin: 0 2px !important;
+    margin: 0 4px !important;
     white-space: nowrap !important;
     overflow: visible !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3), 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    position: relative !important;
 }
 
-/* Tab Hover State - Vibrant Accent */
+/* Tab Hover State - Vibrant Glowing Effect */
 .stTabs [data-baseweb="tab"]:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%) !important;
     color: white !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 
+        0 8px 25px rgba(102, 126, 234, 0.6),
+        0 0 40px rgba(118, 75, 162, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    text-shadow: 
+        0 0 20px rgba(255, 255, 255, 0.9),
+        0 0 40px rgba(255, 255, 255, 0.6),
+        0 0 60px rgba(240, 147, 251, 0.4) !important;
 }
 
-/* Active Tab - Bold Gradient Background */
+/* Active Tab - VIBRANT SHINING Gradient Background */
 .stTabs [data-baseweb="tab"][aria-selected="true"] {
-    background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%) !important;
-    color: #1a202c !important;
+    background: linear-gradient(135deg, #00C9FF 0%, #00D4AA 50%, #00E676 100%) !important;
+    color: #000000 !important;
     font-weight: 900 !important;
-    box-shadow: 0 4px 16px rgba(0, 201, 255, 0.5) !important;
-    border-bottom: 4px solid #00A3CC !important;
+    font-size: 1.75rem !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 
+        0 8px 30px rgba(0, 201, 255, 0.6),
+        0 0 50px rgba(0, 212, 170, 0.5),
+        0 0 80px rgba(0, 230, 118, 0.3),
+        inset 0 2px 0 rgba(255, 255, 255, 0.5) !important;
+    border: 3px solid rgba(255, 255, 255, 0.8) !important;
+    text-shadow: 
+        0 0 15px rgba(0, 201, 255, 0.8),
+        0 0 30px rgba(0, 212, 170, 0.6),
+        0 1px 2px rgba(255, 255, 255, 0.5) !important;
+    animation: shimmer 2s ease-in-out infinite alternate !important;
+}
+
+/* Shimmer Animation for Active Tab */
+@keyframes shimmer {
+    0% {
+        box-shadow: 
+            0 8px 30px rgba(0, 201, 255, 0.6),
+            0 0 50px rgba(0, 212, 170, 0.5),
+            0 0 80px rgba(0, 230, 118, 0.3),
+            inset 0 2px 0 rgba(255, 255, 255, 0.5);
+    }
+    100% {
+        box-shadow: 
+            0 8px 40px rgba(0, 201, 255, 0.8),
+            0 0 70px rgba(0, 212, 170, 0.7),
+            0 0 100px rgba(0, 230, 118, 0.5),
+            inset 0 2px 0 rgba(255, 255, 255, 0.7);
+    }
 }
 
 /* Tab Panel - Minimal Top Padding for Compactness */
 .stTabs [data-baseweb="tab-panel"] {
-    padding-top: 0.75rem !important;
+    padding-top: 1rem !important;
 }
 
 /* Tab Underline - Remove Default */
 .stTabs [data-baseweb="tab-highlight"] {
     display: none !important;
+}
+
+/* Tab Text Styling Override */
+.stTabs [data-baseweb="tab"] p {
+    font-size: 1.6rem !important;
+    font-weight: 900 !important;
+    margin: 0 !important;
+    text-transform: uppercase !important;
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"] p {
+    font-size: 1.75rem !important;
+}
+
+/* Accessibility: Reduced Motion Support for Vestibular Disorders */
+@media (prefers-reduced-motion: reduce) {
+    .stTabs [data-baseweb="tab"] {
+        transition: background 0.1s ease, color 0.1s ease !important;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        transform: none !important;
+    }
+    
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        animation: none !important;
+        transform: none !important;
+    }
 }
 
 /* ═══════════════════════════════════════════════════════════════
