@@ -990,7 +990,7 @@ def render():
                         # NOTE: scanner_agent.py has been archived - parallel scanning experimental
                         # Use experimental parallel scanner for large sequences
                         try:
-                            from scanner_agent import ParallelScanner
+                            from Utilities.scanner_agent import ParallelScanner
                             
                             # Create chunk progress placeholder
                             chunk_progress_placeholder = st.empty()
