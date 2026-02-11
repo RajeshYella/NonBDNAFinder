@@ -95,8 +95,8 @@ def render():
     # Apply Results tab theme
     load_css(TAB_THEMES.get('Results', 'genomic_purple'))
     
-    # Uniform section heading (thin blue box with white glowing text)
-    render_section_heading("Analysis Results & Visualization")
+    # Uniform section heading with page-specific color
+    render_section_heading("Analysis Results & Visualization", page="Results")
     
     # No results - show info message but continue rendering page structure
     if not st.session_state.results:

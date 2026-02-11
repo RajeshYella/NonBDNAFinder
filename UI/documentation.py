@@ -138,8 +138,8 @@ def render():
     # Apply Documentation tab theme - use scientific_blue for better readability
     load_css(TAB_THEMES.get('Documentation', 'scientific_blue'))
     
-    # Section heading (thin blue box with white glowing text)
-    render_section_heading("Scientific Documentation & References")
+    # Section heading with page-specific color
+    render_section_heading("Scientific Documentation & References", page="Documentation")
     
     # ═══════════════════════════════════════════════════════════
     # TOOL OVERVIEW CARD (compact, no emoji)

@@ -257,8 +257,8 @@ def render():
     # Apply Upload tab theme based on configuration
     load_css(TAB_THEMES.get('Upload & Analyze', 'nature_green'))
     
-    # Uniform section heading (no caption)
-    render_section_heading("Upload & Analyze Sequences")
+    # Uniform section heading with page-specific color
+    render_section_heading("Upload & Analyze Sequences", page="Upload & Analyze")
 
     # ============================================================
     # TWO-COLUMN LAYOUT: SEQUENCE CONTEXT (LEFT) | DETECTION SCOPE (RIGHT)
@@ -275,15 +275,30 @@ def render():
     with left_col:
         st.markdown("""
         <div style='background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
-                    padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
-                    border-left: 4px solid #10b981;'>
-            <h4 style='margin: 0; color: #065f46; font-size: 1rem; font-weight: 600;'>
+                    padding: 0.5rem 1rem; border-radius: 6px; margin-bottom: 0.75rem;
+                    border-left: 3px solid #10b981;'>
+            <h4 style='margin: 0; color: #065f46; font-size: 0.95rem; font-weight: 600;'>
                 Sequence Context
             </h4>
         </div>
         """, unsafe_allow_html=True)
         
-        # ----- Input Method -----
+        # ----- Input Method with improved spacing -----
+        st.markdown("""
+        <style>
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            padding: 0 0.5rem;
+        }
+        div.row-widget.stRadio > div {
+            gap: 1.5rem !important;
+        }
+        div.row-widget.stRadio > div > label {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.85rem !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         input_method = st.radio(UI_TEXT['upload_input_method_prompt'],
                             [UI_TEXT['upload_method_file'], UI_TEXT['upload_method_paste'], 
                              UI_TEXT['upload_method_example'], UI_TEXT['upload_method_ncbi']],
@@ -531,14 +546,11 @@ def render():
     with right_col:
         st.markdown("""
         <div style='background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); 
-                    padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
-                    border-left: 4px solid #3b82f6;'>
-            <h4 style='margin: 0; color: #1e3a8a; font-size: 1rem; font-weight: 600;'>
-                Detection Scope
+                    padding: 0.5rem 1rem; border-radius: 6px; margin-bottom: 0.75rem;
+                    border-left: 3px solid #3b82f6;'>
+            <h4 style='margin: 0; color: #1e3a8a; font-size: 0.95rem; font-weight: 600;'>
+                Detection Scope: Select Non-B DNA Motifs
             </h4>
-            <p style='margin: 4px 0 0 0; color: #1e40af; font-size: 0.75rem;'>
-                Non-B DNA elements to analyze
-            </p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -556,6 +568,7 @@ def render():
         # All 24 submotifs always visible via compact grid layout.
         # Color-encoding provides implicit class identity (via CLASS_COLORS).
         # No scrolling required - all detection targets visible at once.
+        # User selects individual motifs from the 24 available options.
         # ============================================================
 
         # ------------------------------------------------------------------
@@ -581,27 +594,6 @@ def render():
             key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
             if key not in st.session_state:
                 st.session_state[key] = True
-
-        # ------------------------------------------------------------------
-        # Global controls (compact inline buttons)
-        # ------------------------------------------------------------------
-        col_all, col_none, col_spacer = st.columns([1, 1, 6])
-
-        with col_all:
-            if st.button("Select All", use_container_width=True, key="select_all_submotifs"):
-                for class_name, subclass in flat_submotifs:
-                    st.session_state[
-                        f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                    ] = True
-                st.rerun()
-
-        with col_none:
-            if st.button("Clear All", use_container_width=True, key="deselect_all_submotifs"):
-                for class_name, subclass in flat_submotifs:
-                    st.session_state[
-                        f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                    ] = False
-                st.rerun()
 
         # ------------------------------------------------------------------
         # Render high-density 6-column grid for full 24-class visibility

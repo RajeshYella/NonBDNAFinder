@@ -29,8 +29,8 @@ def render():
     # Apply Download tab theme based on configuration
     load_css(TAB_THEMES.get('Download', 'clinical_teal'))
     
-    # Uniform section heading (thin blue box with white glowing text)
-    render_section_heading("Download & Export Results")
+    # Uniform section heading with page-specific color
+    render_section_heading("Download & Export Results", page="Downloads")
     
     if not st.session_state.results:
         st.info(UI_TEXT['download_no_results'])
