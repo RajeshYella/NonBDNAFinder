@@ -19,7 +19,7 @@ def render():
     colors = get_page_colors('Home')
     
     # ========== SECTION HEADING (using uniform component) ==========
-    render_section_heading("Non-B DNA Motif Detection System: Comprehensive Analysis of Non-B DNA Structures in Genomic Sequences")
+    render_section_heading("Non-B DNA Finder: Comprehensive Detection of Genomic Non-Canonical DNA Motifs", page="Home")
     
 
     
