@@ -38,18 +38,18 @@ def render():
         # Show placeholder content explaining available export formats
         st.markdown("""
         <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
-                    padding: 2rem; border-radius: 12px; margin-top: 1rem;
+                    padding: 1.2rem; border-radius: 12px; margin-top: 0.8rem;
                     border: 1px solid #bae6fd; text-align: center;'>
-            <h3 style='color: #0284c7; margin: 0 0 1rem 0;'>Export Formats Available</h3>
-            <p style='color: #6b7280; margin: 0 0 1rem 0;'>
+            <h3 style='color: #0284c7; margin: 0 0 0.6rem 0;'>Export Formats Available</h3>
+            <p style='color: #6b7280; margin: 0 0 0.6rem 0;'>
                 Once you upload and analyze a sequence, you can export results in the following formats:
             </p>
-            <div style='display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;'>
-                <span style='background: #0ea5e9; color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;'>CSV</span>
-                <span style='background: #0ea5e9; color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;'>Excel</span>
-                <span style='background: #0ea5e9; color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;'>JSON</span>
-                <span style='background: #0ea5e9; color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;'>BED</span>
-                <span style='background: #0ea5e9; color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;'>PDF</span>
+            <div style='display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap;'>
+                <span style='background: #0ea5e9; color: white; padding: 0.35rem 0.8rem; border-radius: 8px; font-weight: 600;'>CSV</span>
+                <span style='background: #0ea5e9; color: white; padding: 0.35rem 0.8rem; border-radius: 8px; font-weight: 600;'>Excel</span>
+                <span style='background: #0ea5e9; color: white; padding: 0.35rem 0.8rem; border-radius: 8px; font-weight: 600;'>JSON</span>
+                <span style='background: #0ea5e9; color: white; padding: 0.35rem 0.8rem; border-radius: 8px; font-weight: 600;'>BED</span>
+                <span style='background: #0ea5e9; color: white; padding: 0.35rem 0.8rem; border-radius: 8px; font-weight: 600;'>PDF</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -69,9 +69,9 @@ def render():
     if selected_classes_used:
         st.markdown(f"""
         <div style='background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); 
-                    padding: 0.6rem; border-radius: 6px; margin-bottom: 0.75rem;
+                    padding: 0.4rem; border-radius: 6px; margin-bottom: 0.5rem;
                     border-left: 3px solid #ca8a04;'>
-            <p style='color: #713f12; margin: 0; font-size: 0.85rem;'>
+            <p style='color: #713f12; margin: 0; font-size: 0.8rem;'>
                 <strong>Data Filter:</strong> Exports contain only selected classes ({len(selected_classes_used)}) and subclasses ({len(selected_subclasses_used)}) 
                 from {analysis_mode_used} analysis
             </p>
@@ -97,9 +97,9 @@ def render():
     st.markdown("### Export Options")
     st.markdown("""
     <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
-                padding: 0.9rem; border-radius: 10px; margin-bottom: 1rem;
+                padding: 0.6rem; border-radius: 10px; margin-bottom: 0.8rem;
                 border-left: 4px solid #0ea5e9;'>
-        <p style='color: #0c4a6e; margin: 0; font-size: 0.9rem;'>
+        <p style='color: #0c4a6e; margin: 0; font-size: 0.8rem;'>
             <strong>Quick Export:</strong> Choose your preferred format below. All exports include complete motif data.
         </p>
     </div>
@@ -195,9 +195,9 @@ def render():
     st.markdown("### Statistical Analysis Tables")
     st.markdown("""
     <div style='background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
-                padding: 0.9rem; border-radius: 10px; margin-bottom: 1rem;
+                padding: 0.6rem; border-radius: 10px; margin-bottom: 0.8rem;
                 border-left: 4px solid #22c55e;'>
-        <p style='color: #14532d; margin: 0; font-size: 0.9rem;'>
+        <p style='color: #14532d; margin: 0; font-size: 0.8rem;'>
             <strong>Advanced Analytics:</strong> Detailed distribution and density statistics 
             for publication-quality analysis and reporting
         </p>

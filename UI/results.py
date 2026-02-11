@@ -62,29 +62,29 @@ def _render_section_divider(label: str) -> None:
 def _render_analysis_summary_box(coverage_pct: float, density: float, motif_count: int, seq_length: int) -> None:
     """Render compact horizontal analysis summary box (no icons/emojis)."""
     st.markdown(f"""
-    <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; 
+    <div style="display: flex; flex-wrap: wrap; gap: 4px; padding: 5px 10px; 
                 background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-                border-radius: 6px; border: 1px solid #e9d5ff; margin-bottom: 10px;
+                border-radius: 6px; border: 1px solid #e9d5ff; margin-bottom: 8px;
                 justify-content: space-around; align-items: center;">
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 10px;">
-            <span style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 1px 8px;">
+            <span style="font-size: 0.95rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{coverage_pct:.2f}%</span>
-            <span style="font-size: 0.65rem; color: #64748b; text-transform: uppercase;">Coverage</span>
+            <span style="font-size: 0.6rem; color: #64748b; text-transform: uppercase;">Coverage</span>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 10px;">
-            <span style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 1px 8px;">
+            <span style="font-size: 0.95rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{density:.2f}</span>
-            <span style="font-size: 0.65rem; color: #64748b; text-transform: uppercase;">Motifs/kb</span>
+            <span style="font-size: 0.6rem; color: #64748b; text-transform: uppercase;">Motifs/kb</span>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 10px;">
-            <span style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 1px 8px;">
+            <span style="font-size: 0.95rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{motif_count:,}</span>
-            <span style="font-size: 0.65rem; color: #64748b; text-transform: uppercase;">Motifs</span>
+            <span style="font-size: 0.6rem; color: #64748b; text-transform: uppercase;">Motifs</span>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; padding: 2px 10px;">
-            <span style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 1px 8px;">
+            <span style="font-size: 0.95rem; font-weight: 800; background: linear-gradient(135deg, #a855f7, #8b5cf6);
                          -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{seq_length:,}</span>
-            <span style="font-size: 0.65rem; color: #64748b; text-transform: uppercase;">bp</span>
+            <span style="font-size: 0.6rem; color: #64748b; text-transform: uppercase;">bp</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -106,13 +106,13 @@ def render():
         # Show placeholder content when no results
         st.markdown("""
         <div style='background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); 
-                    padding: 2rem; border-radius: 12px; margin-top: 1rem;
+                    padding: 1.2rem; border-radius: 12px; margin-top: 0.8rem;
                     border: 1px solid #e9d5ff; text-align: center;'>
-            <h3 style='color: #7c3aed; margin: 0 0 1rem 0;'>Visualization Preview</h3>
+            <h3 style='color: #7c3aed; margin: 0 0 0.6rem 0;'>Visualization Preview</h3>
             <p style='color: #6b7280; margin: 0;'>
                 Once you upload and analyze a sequence, this page will display:
             </p>
-            <ul style='color: #6b7280; text-align: left; margin: 1rem auto; max-width: 500px;'>
+            <ul style='color: #6b7280; text-align: left; margin: 0.6rem auto; max-width: 500px;'>
                 <li>Motif track visualizations</li>
                 <li>Class and subclass distributions</li>
                 <li>Density analysis plots</li>
@@ -345,8 +345,8 @@ def render():
                     st.error(f"Cluster size error: {e}")
         else:
             st.markdown("""
-            <div style="padding: 10px; background: #f0f9ff; border-radius: 6px; 
-                        color: #0369a1; font-size: 0.85rem; text-align: center;">
+            <div style="padding: 8px; background: #f0f9ff; border-radius: 6px; 
+                        color: #0369a1; font-size: 0.8rem; text-align: center;">
                 No clusters or hybrids detected in this sequence
             </div>
             """, unsafe_allow_html=True)

@@ -59,12 +59,12 @@ section[data-testid="stSidebar"] {
 
 /* Individual Tab Buttons - Compact, Bold, and Fully Visible */
 .stTabs [data-baseweb="tab"] {
-    height: 48px !important;
-    padding: 8px 20px !important;
+    height: 42px !important;
+    padding: 6px 16px !important;
     background-color: #f0f4f8 !important;
     border: none !important;
     border-radius: 8px 8px 0 0 !important;
-    font-size: 1.15rem !important;
+    font-size: 1.05rem !important;
     font-weight: 800 !important;
     letter-spacing: -0.01em !important;
     transition: all 0.25s ease !important;
@@ -94,7 +94,7 @@ section[data-testid="stSidebar"] {
 
 /* Tab Panel - Minimal Top Padding for Compactness */
 .stTabs [data-baseweb="tab-panel"] {
-    padding-top: 1rem !important;
+    padding-top: 0.75rem !important;
 }
 
 /* Tab Underline - Remove Default */
@@ -167,7 +167,7 @@ h4 {
 
 /* Compact Element Spacing */
 .element-container {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -235,22 +235,22 @@ h4 {
 .toggle-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 6px;
+    padding: 6px 10px;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     border-radius: 8px;
     border: 1px solid #e2e8f0;
-    margin: 8px 0;
+    margin: 6px 0;
 }
 
 /* Individual toggle chip */
 .toggle-chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
+    gap: 5px;
+    padding: 4px 10px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -279,7 +279,7 @@ h4 {
 
 /* Toggle icon */
 .toggle-chip__icon {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -290,11 +290,11 @@ h4 {
 .metrics-strip {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    padding: 16px;
+    gap: 10px;
+    padding: 12px;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     border-radius: 12px;
-    margin: 16px 0;
+    margin: 12px 0;
     justify-content: space-between;
 }
 
@@ -303,7 +303,7 @@ h4 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 12px 16px;
+    padding: 10px 14px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     min-width: 100px;
@@ -312,13 +312,13 @@ h4 {
 
 /* Metric icon */
 .metric-card__icon {
-    font-size: 1.25rem;
-    margin-bottom: 4px;
+    font-size: 1.1rem;
+    margin-bottom: 3px;
 }
 
 /* Metric value */
 .metric-card__value {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     color: white;
     text-align: center;
@@ -326,12 +326,12 @@ h4 {
 
 /* Metric label */
 .metric-card__label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     text-align: center;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 /* Success state for metrics strip */
@@ -358,24 +358,24 @@ h4 {
 
 /* Progress panel base */
 .progress-panel {
-    padding: 20px;
+    padding: 14px;
     border-radius: 12px;
-    margin: 16px 0;
+    margin: 12px 0;
 }
 
 /* Progress panel title */
 .progress-panel__title {
-    font-size: 1.5rem !important;
+    font-size: 1.3rem !important;
     font-weight: 700 !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
     color: white !important;
 }
 
 /* Progress panel subtitle */
 .progress-panel__subtitle {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     opacity: 0.9;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 /* Success state */
@@ -389,30 +389,30 @@ h4 {
 .stats-grid--wide {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px;
-    margin-top: 16px;
+    gap: 10px;
+    margin-top: 12px;
 }
 
 /* Stat card in grid */
 .stats-grid .stat-card {
     background: rgba(255, 255, 255, 0.15);
-    padding: 12px;
+    padding: 10px;
     border-radius: 8px;
     text-align: center;
 }
 
 /* Stat card value */
 .stat-card__value {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: white;
 }
 
 /* Stat card label */
 .stat-card__label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: rgba(255, 255, 255, 0.8);
-    margin-top: 4px;
+    margin-top: 3px;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -473,17 +473,17 @@ h4 {
 .section-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 0;
-    margin-top: 12px;
+    gap: 6px;
+    padding: 4px 0;
+    margin-top: 10px;
 }
 
 .section-bar__emoji {
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .section-bar__title {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: #334155;
     letter-spacing: -0.01em;
@@ -493,7 +493,7 @@ h4 {
 .section-divider {
     height: 2px;
     background: linear-gradient(90deg, #a855f7 0%, #8b5cf6 50%, transparent 100%);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     border-radius: 1px;
 }
 
@@ -501,20 +501,20 @@ h4 {
 .metrics-ribbon {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
-    padding: 10px 16px;
+    gap: 12px;
+    padding: 8px 14px;
     background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
     border-radius: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     justify-content: center;
     align-items: center;
 }
 
 .ribbon-item {
     color: white;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    padding: 4px 12px;
+    padding: 3px 10px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     white-space: nowrap;
@@ -524,12 +524,12 @@ h4 {
 .stats-ribbon {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    padding: 12px 16px;
+    gap: 6px;
+    padding: 10px 14px;
     background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
     border-radius: 10px;
     border: 1px solid #e9d5ff;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     justify-content: space-around;
 }
 
@@ -537,12 +537,12 @@ h4 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 4px 16px;
+    padding: 3px 14px;
     min-width: 80px;
 }
 
 .stats-ribbon__value {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 800;
     background: linear-gradient(135deg, #a855f7, #8b5cf6);
     -webkit-background-clip: text;
@@ -551,53 +551,53 @@ h4 {
 }
 
 .stats-ribbon__label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 /* Compact badges */
 .filter-badge {
     display: inline-block;
-    padding: 4px 12px;
+    padding: 3px 10px;
     background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
     border-left: 3px solid #0ea5e9;
     border-radius: 4px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #0c4a6e;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .info-badge {
     display: inline-block;
-    padding: 4px 12px;
+    padding: 3px 10px;
     background: #f0f9ff;
     border-radius: 16px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #0369a1;
-    margin: 4px 0;
+    margin: 3px 0;
 }
 
 .success-badge {
     display: inline-block;
-    padding: 4px 12px;
+    padding: 3px 10px;
     background: #f0fdf4;
     border-radius: 16px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #166534;
-    margin: 4px 0;
+    margin: 3px 0;
 }
 
 .transparency-badge {
     display: inline-block;
-    padding: 6px 14px;
+    padding: 4px 12px;
     background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
     border-radius: 6px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #92400e;
-    margin: 8px 0;
+    margin: 6px 0;
     border: 1px solid #fcd34d;
 }
 
@@ -667,25 +667,25 @@ h4 {
 
 /* Generic thin card styling */
 .thin-card {
-    padding: 0.5rem 1rem !important;
+    padding: 0.4rem 0.8rem !important;
     border-radius: 6px !important;
     border-width: 1px !important;
 }
 
 /* Thin section header boxes */
 .section-header-thin {
-    padding: 0.4rem 0.8rem !important;
+    padding: 0.3rem 0.6rem !important;
     border-radius: 5px !important;
     border-left-width: 2px !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.4rem !important;
 }
 
 /* Thin info boxes */
 .info-box-thin {
-    padding: 0.5rem 0.75rem !important;
+    padding: 0.4rem 0.6rem !important;
     border-radius: 5px !important;
     border-width: 1px !important;
-    line-height: 1.4 !important;
+    line-height: 1.3 !important;
 }
 
 /* Properly aligned text in boxes */
@@ -698,5 +698,5 @@ h4 {
 
 /* Compact container spacing */
 .stContainer {
-    padding: 0.5rem !important;
+    padding: 0.4rem !important;
 }
