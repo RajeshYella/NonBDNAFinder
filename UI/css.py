@@ -63,7 +63,7 @@ def load_css(theme_name=None):
     )
     is_dark = st.session_state.theme_mode == "dark"
 
-    css_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "styles.css")
+    css_file_path = os.path.join(os.path.dirname(__file__), "styles.css")
     try:
         with open(css_file_path, "r") as f:
             css_content = f.read()
