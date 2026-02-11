@@ -59,9 +59,9 @@ def render_section_heading(title: str, page: str = None):
     st.markdown(f"""
     <div style="
         background: {background};
-        padding: 0.6rem 1.5rem;
+        padding: 0.35rem 1.5rem;
         border-radius: 6px;
-        margin: 0.8rem 0 1rem 0;
+        margin: 0.5rem 0 0.75rem 0;
         border: 1px solid {border_color};
         text-align: center;
         box-shadow: 0 0 12px rgba(0, 145, 255, 0.3);
@@ -69,7 +69,7 @@ def render_section_heading(title: str, page: str = None):
     ">
         <h2 style="
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 700;
             color: {white};
             text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.6);

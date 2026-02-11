@@ -19,11 +19,11 @@ def _build_motif_card(name: str, subtitle: str, color: str, description: str) ->
     Markdown from interpreting indented content as code blocks.
     """
     return (
-        f"<div style='background: white; padding: 1rem; border-radius: 10px; "
+        f"<div style='background: white; padding: 0.7rem; border-radius: 10px; "
         f"box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid {color};'>"
-        f"<strong style='color: #1e293b; font-size: 0.95rem;'>{name}</strong>"
-        f"<div style='color: {color}; font-size: 0.75rem; font-weight: 600; margin: 0.2rem 0;'>{subtitle}</div>"
-        f"<div style='color: #64748b; font-size: 0.8rem; line-height: 1.4;'>{description}</div>"
+        f"<strong style='color: #1e293b; font-size: 0.85rem;'>{name}</strong>"
+        f"<div style='color: {color}; font-size: 0.7rem; font-weight: 600; margin: 0.15rem 0;'>{subtitle}</div>"
+        f"<div style='color: #64748b; font-size: 0.7rem; line-height: 1.3;'>{description}</div>"
         f"</div>"
     )
 
@@ -35,13 +35,13 @@ def _build_reference_card(ref: dict) -> str:
     Markdown from interpreting indented content as code blocks.
     """
     return (
-        f"<div style='background: #f8fafc; padding: 0.75rem; border-radius: 6px; "
+        f"<div style='background: #f8fafc; padding: 0.5rem; border-radius: 6px; "
         f"border-left: 3px solid #3b82f6;'>"
-        f"<div style='font-weight: 600; color: #1e293b; font-size: 0.85rem; margin-bottom: 0.2rem;'>"
+        f"<div style='font-weight: 600; color: #1e293b; font-size: 0.75rem; margin-bottom: 0.15rem;'>"
         f"{ref['authors']} ({ref['year']})</div>"
-        f"<div style='color: #334155; font-size: 0.8rem; font-style: italic; margin-bottom: 0.15rem;'>"
+        f"<div style='color: #334155; font-size: 0.7rem; font-style: italic; margin-bottom: 0.1rem;'>"
         f"{ref['title']}</div>"
-        f"<div style='color: #64748b; font-size: 0.75rem;'>"
+        f"<div style='color: #64748b; font-size: 0.65rem;'>"
         f"<strong>{ref['journal']}</strong> {ref['volume']} · "
         f"<a href=\"https://doi.org/{ref['doi']}\" target=\"_blank\" style=\"color: #3b82f6;\">"
         f"DOI: {ref['doi']}</a></div>"
@@ -146,25 +146,25 @@ def render():
     # ═══════════════════════════════════════════════════════════
     st.markdown("""
     <div style='background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); 
-                padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;
+                padding: 1rem; border-radius: 12px; margin-bottom: 1rem;
                 box-shadow: 0 4px 16px rgba(30, 64, 175, 0.3);'>
-        <h2 style='color: white; margin: 0 0 0.75rem 0; font-size: 1.4rem; font-weight: 700;'>
+        <h2 style='color: white; margin: 0 0 0.5rem 0; font-size: 1.2rem; font-weight: 700;'>
             NonBDNAFinder v2025.1
         </h2>
-        <p style='color: rgba(255,255,255,0.95); font-size: 0.95rem; line-height: 1.6; margin: 0;'>
+        <p style='color: rgba(255,255,255,0.95); font-size: 0.85rem; line-height: 1.4; margin: 0;'>
             A comprehensive computational platform for <strong>genome-wide detection and analysis</strong> of 
             Non-B DNA structures. Implements <strong>11 motif classes</strong> with <strong>24 subclasses</strong>, 
             validated against peer-reviewed algorithms including G4Hunter, QmRLFS, and Z-Seeker.
         </p>
-        <div style='display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;'>
-            <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 16px; 
-                         color: white; font-size: 0.8rem; font-weight: 600;'>24,674 bp/s</span>
-            <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 16px; 
-                         color: white; font-size: 0.8rem; font-weight: 600;'>200MB+ sequences</span>
-            <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 16px; 
-                         color: white; font-size: 0.8rem; font-weight: 600;'>25+ visualizations</span>
-            <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 16px; 
-                         color: white; font-size: 0.8rem; font-weight: 600;'>Nature-ready output</span>
+        <div style='display: flex; gap: 0.5rem; margin-top: 0.6rem; flex-wrap: wrap;'>
+            <span style='background: rgba(255,255,255,0.2); padding: 0.25rem 0.6rem; border-radius: 16px; 
+                         color: white; font-size: 0.7rem; font-weight: 600;'>24,674 bp/s</span>
+            <span style='background: rgba(255,255,255,0.2); padding: 0.25rem 0.6rem; border-radius: 16px; 
+                         color: white; font-size: 0.7rem; font-weight: 600;'>200MB+ sequences</span>
+            <span style='background: rgba(255,255,255,0.2); padding: 0.25rem 0.6rem; border-radius: 16px; 
+                         color: white; font-size: 0.7rem; font-weight: 600;'>25+ visualizations</span>
+            <span style='background: rgba(255,255,255,0.2); padding: 0.25rem 0.6rem; border-radius: 16px; 
+                         color: white; font-size: 0.7rem; font-weight: 600;'>Nature-ready output</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -173,7 +173,7 @@ def render():
     # MOTIF CLASSES - DETAILED CARDS (compact, no emoji)
     # ═══════════════════════════════════════════════════════════
     st.markdown("""
-    <h3 style='color: #003D82; font-size: 1.3rem; margin: 1.5rem 0 0.75rem 0; font-weight: 700;
+    <h3 style='color: #003D82; font-size: 1.1rem; margin: 1rem 0 0.5rem 0; font-weight: 700;
                border-left: 4px solid #0091FF; padding-left: 0.75rem;'>
         Detected Non-B DNA Motif Classes
     </h3>
@@ -194,7 +194,7 @@ def render():
         ("Clusters", "Hotspots", "#334155", "High-density Non-B DNA regions"),
     ]
     
-    cards_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">'
+    cards_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem; margin-bottom: 1rem;">'
     for name, subtitle, color, description in motif_info:
         cards_html += _build_motif_card(name, subtitle, color, description)
     cards_html += '</div>'
@@ -204,7 +204,7 @@ def render():
     # ALGORITHM PARAMETERS TABLE (no emoji)
     # ═══════════════════════════════════════════════════════════
     st.markdown("""
-    <h3 style='color: #003D82; font-size: 1.3rem; margin: 1.5rem 0 0.75rem 0; font-weight: 700;
+    <h3 style='color: #003D82; font-size: 1.1rem; margin: 1rem 0 0.5rem 0; font-weight: 700;
                border-left: 4px solid #0091FF; padding-left: 0.75rem;'>
         Detection Parameters & Algorithms
     </h3>
@@ -239,17 +239,17 @@ def render():
     # PEER-REVIEWED REFERENCES (no emoji)
     # ═══════════════════════════════════════════════════════════
     st.markdown("""
-    <h3 style='color: #003D82; font-size: 1.3rem; margin: 1.5rem 0 0.75rem 0; font-weight: 700;
+    <h3 style='color: #003D82; font-size: 1.1rem; margin: 1rem 0 0.5rem 0; font-weight: 700;
                border-left: 4px solid #0091FF; padding-left: 0.75rem;'>
         Peer-Reviewed References
     </h3>
-    <p style='color: #64748b; font-size: 0.85rem; margin-bottom: 0.75rem;'>
+    <p style='color: #64748b; font-size: 0.75rem; margin-bottom: 0.5rem;'>
         NonBDNAFinder implements algorithms validated in the following peer-reviewed publications:
     </p>
     """, unsafe_allow_html=True)
     
     # Reference cards (compact)
-    refs_html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">'
+    refs_html = '<div style="display: flex; flex-direction: column; gap: 0.35rem;">'
     for ref in REFERENCES:
         refs_html += _build_reference_card(ref)
     refs_html += '</div>'
@@ -260,21 +260,21 @@ def render():
     # ═══════════════════════════════════════════════════════════
     st.markdown(f"""
     <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
-                padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem;
+                padding: 1rem; border-radius: 12px; margin-top: 1rem;
                 border: 1px solid #bae6fd;'>
-        <h3 style='color: #0c4a6e; margin: 0 0 0.75rem 0; font-size: 1.1rem; font-weight: 700;'>
+        <h3 style='color: #0c4a6e; margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 700;'>
             How to Cite
         </h3>
-        <div style='background: white; padding: 1rem; border-radius: 6px; font-family: "Courier New", monospace;
-                    font-size: 0.8rem; line-height: 1.6; color: #334155; border-left: 4px solid #0284c7;'>
+        <div style='background: white; padding: 0.7rem; border-radius: 6px; font-family: "Courier New", monospace;
+                    font-size: 0.7rem; line-height: 1.4; color: #334155; border-left: 4px solid #0284c7;'>
             <strong>Yella VR</strong> (2025). NonBDNAFinder: Comprehensive Detection and Analysis of Non-B DNA Forming Motifs.<br>
             GitHub: <a href="https://github.com/VRYella/NonBDNAFinder" style="color: #0284c7;">https://github.com/VRYella/NonBDNAFinder</a>
         </div>
-        <div style='margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #bae6fd;'>
-            <div style='font-weight: 700; color: #0c4a6e; font-size: 0.9rem; margin-bottom: 0.4rem;'>
+        <div style='margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid #bae6fd;'>
+            <div style='font-weight: 700; color: #0c4a6e; font-size: 0.8rem; margin-bottom: 0.25rem;'>
                 Developed by
             </div>
-            <div style='color: #334155; font-size: 0.85rem;'>
+            <div style='color: #334155; font-size: 0.75rem;'>
                 <strong>{UI_TEXT['author']}</strong><br>
                 Email: <a href='mailto:{UI_TEXT["author_email"]}' style='color: #0284c7;'>{UI_TEXT['author_email']}</a><br>
                 <a href='https://github.com/VRYella' target='_blank' style='color: #0284c7;'>GitHub: VRYella</a>
