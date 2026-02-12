@@ -26,25 +26,25 @@ try:
     from Utilities.config.layout import LAYOUT_CONFIG
     from Utilities.config.themes import TAB_THEMES
 except ImportError as e:
-    raise ImportError(f"Failed to import configuration modules: {e}. Current dir: {_current_dir}, sys.path: {sys.path[:3]}")
+    raise ImportError(f"Failed to import configuration modules: {e}. Current dir: {_current_dir}, sys.path: {sys.path[:5]}")
 
 # Import UI utilities
 try:
     from UI.css import load_css
 except ImportError as e:
-    raise ImportError(f"Failed to import UI.css: {e}")
+    raise ImportError(f"Failed to import UI.css: {e}. Current dir: {_current_dir}, sys.path: {sys.path[:5]}")
 
 # Import page modules with explicit error handling
 try:
     from UI import home, upload, results, download, documentation
 except ImportError as e:
-    raise ImportError(f"Failed to import UI page modules: {e}")
+    raise ImportError(f"Failed to import UI page modules: {e}. Current dir: {_current_dir}, sys.path: {sys.path[:5]}")
 
 # Import core scanner functionality
 try:
     from Utilities.nonbscanner import get_motif_info as get_motif_classification_info
 except ImportError as e:
-    raise ImportError(f"Failed to import nonbscanner: {e}")
+    raise ImportError(f"Failed to import nonbscanner: {e}. Current dir: {_current_dir}, sys.path: {sys.path[:5]}")
 
 # Optional imports with fallbacks
 try:
