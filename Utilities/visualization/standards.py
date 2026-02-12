@@ -32,10 +32,11 @@ from typing import Dict, List, Set, Tuple, Optional
 from enum import Enum
 
 # =============================================================================
-# MOTIF CLASS COLOR SCHEME - NATURE-READY (MAX 6 COLORS + NEUTRAL)
+# MOTIF CLASS COLOR SCHEME - UNIFIED ACROSS ALL VISUALIZATIONS
 # =============================================================================
-# Single source of truth: config/colors.py → VISUALIZATION_MOTIF_COLORS
-# This module re-exports as NATURE_MOTIF_COLORS for backward compatibility
+# Single source of truth: config/colors.py → UNIFIED_MOTIF_COLORS
+# All 11 motif classes have unique, colorblind-friendly colors.
+# This module re-exports as NATURE_MOTIF_COLORS for backward compatibility.
 
 from Utilities.config.colors import VISUALIZATION_MOTIF_COLORS as NATURE_MOTIF_COLORS
 
