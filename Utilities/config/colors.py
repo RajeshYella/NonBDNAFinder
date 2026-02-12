@@ -184,55 +184,68 @@ VISUALIZATION_PALETTE = {
     'chart_12': '#546E7A',        # STEEL BLUE - Balanced contrast
 }
 
-# ==================== VISUALIZATION MOTIF COLORS (PUBLICATION-GRADE) ====================
-# Nature-ready colorblind-friendly palette for scientific visualizations and plots.
-# Based on Wong, B. (2011) Nature Methods colorblind-safe palette.
-# Reference: Wong, B. (2011) Points of view: Color blindness. Nat Methods 8, 441
+# ==================== UNIFIED MOTIF CLASS COLORS ====================
+# SINGLE SOURCE OF TRUTH for all motif class colors across the entire application.
 # 
-# These colors follow Nature journal guidelines for scientific figures:
-# - Limited to 6 primary colors for main biological classes
-# - Colorblind accessible (tested with all three types)
-# - High contrast for print and screen
+# This unified palette is used for:
+# - Scientific visualizations (plots, charts, tracks)
+# - UI elements (cards, checkboxes, headers)
+# - Documentation and home page displays
 #
-# NOTE: This is the SINGLE SOURCE OF TRUTH for visualization colors.
-#       utilities.py imports MOTIF_CLASS_COLORS from here.
-#       visualization/standards.py re-exports NATURE_MOTIF_COLORS from here.
-VISUALIZATION_MOTIF_COLORS = {
-    # Primary motif classes (6 core colors per Nature guidelines)
-    'Curved_DNA': '#CC79A7',          # Reddish Purple - Structure
-    'G-Quadruplex': '#0072B2',        # Blue - Stable structures
-    'Z-DNA': '#882255',               # Wine - Alternative helices
-    'Cruciform': '#56B4E9',           # Sky Blue - Symmetric structures
-    'Triplex': '#E69F00',             # Orange - Triple-stranded
-    'R-Loop': '#009E73',              # Bluish Green - RNA-DNA hybrids
+# Design principles:
+# 1. Each of the 11 classes has a UNIQUE, distinct color
+# 2. Colorblind-friendly (tested with protanopia, deuteranopia, tritanopia)
+# 3. High contrast for both screen and print
+# 4. Inspired by Wong, B. (2011) Nature Methods colorblind-safe palette
+#    Reference: Wong, B. (2011) Points of view: Color blindness. Nat Methods 8, 441
+#
+# Non-B DNA Finder detects 11 major classes and 24 subclasses:
+# 1. Curved DNA (Global Curvature, Local Curvature)
+# 2. Slipped DNA (Direct Repeats, Short Tandem Repeats)
+# 3. Cruciform (Cruciform forming IRs)
+# 4. R-Loop (R-loop formation sites)
+# 5. Triplex/H-DNA (Triplex, Sticky DNA)
+# 6. G-Quadruplex (8 subclasses including Telomeric G4, Canonical G4, etc.)
+# 7. i-Motif (Canonical i-motif, Relaxed i-motif, AC-motif)
+# 8. Z-DNA (Z-DNA, eGZ motif)
+# 9. A-philic DNA (A-philic DNA)
+# 10. Hybrid (Dynamic overlaps)
+# 11. Non-B_DNA_Clusters (Dynamic clusters)
+
+UNIFIED_MOTIF_COLORS = {
+    # ---- Primary Structural Classes ----
+    'Curved_DNA': '#06b6d4',          # Cyan - DNA bending/curvature
+    'Slipped_DNA': '#f59e0b',         # Amber - Direct repeats & STRs
+    'Cruciform': '#ef4444',           # Red - Inverted repeats/hairpins
+    'R-Loop': '#8b5cf6',              # Violet - RNA:DNA hybrids
+    'Triplex': '#ec4899',             # Pink/Magenta - Triple-stranded H-DNA
     
-    # Secondary classes (consolidated to reduce visual complexity)
-    'i-Motif': '#0072B2',             # Same as G4 (complementary structures)
-    'A-philic_DNA': '#CC79A7',        # Same as Curved (structural affinity)
-    'Slipped_DNA': '#E69F00',         # Same as Triplex (repeats)
+    # ---- G-rich & C-rich Structures ----
+    'G-Quadruplex': '#10b981',        # Emerald - G4 structures (8 subclasses)
+    'i-Motif': '#22c55e',             # Green - C-rich intercalated structures
     
-    # Meta-classes (neutral grays)
-    'Hybrid': '#888888',              # Medium gray
-    'Non-B_DNA_Clusters': '#666666'   # Dark gray
+    # ---- Alternative Helices ----
+    'Z-DNA': '#6366f1',               # Indigo - Left-handed Z-form helix
+    'A-philic_DNA': '#f97316',        # Orange - A-form propensity regions
+    
+    # ---- Meta-classes (Overlaps & Clusters) ----
+    'Hybrid': '#64748b',              # Slate - Multi-class overlapping regions
+    'Non-B_DNA_Clusters': '#334155',  # Dark Slate - High-density Non-B hotspots
 }
 
+# ==================== VISUALIZATION MOTIF COLORS (PUBLICATION-GRADE) ====================
+# Re-exports UNIFIED_MOTIF_COLORS for backward compatibility.
+# Used by utilities.py, visualization/standards.py, and all plotting functions.
+#
+# NOTE: This is now an alias to UNIFIED_MOTIF_COLORS to ensure consistency.
+VISUALIZATION_MOTIF_COLORS = UNIFIED_MOTIF_COLORS.copy()
+
 # ==================== MOTIF CLASS COLOR ENCODING (UI) ====================
-# Each motif class has a single, consistent color for visual encoding.
-# Applied to class header cards and submotifs under that class.
-# Matches genome browser conventions for scannable, dense UI.
-CLASS_COLORS = {
-    'Curved_DNA': '#06b6d4',          # Cyan - DNA bending
-    'Slipped_DNA': '#f59e0b',         # Amber - Slipped structures
-    'Cruciform': '#ef4444',           # Red - Cruciform/Inverted repeats
-    'R-Loop': '#8b5cf6',              # Violet - R-loop formation
-    'Triplex': '#ec4899',             # Pink - Triplex structures
-    'G-Quadruplex': '#10b981',        # Emerald - G4 structures
-    'i-Motif': '#22c55e',             # Green - i-Motif structures
-    'Z-DNA': '#6366f1',               # Indigo - Z-DNA/Left-handed helix
-    'A-philic_DNA': '#f97316',        # Orange - A-philic DNA
-    'Hybrid': '#64748b',              # Slate - Dynamic overlaps
-    'Non-B_DNA_Clusters': '#0f172a',  # Dark slate - Clusters
-}
+# Re-exports UNIFIED_MOTIF_COLORS for backward compatibility.
+# Used by UI components (upload.py checkboxes, home.py cards, etc.)
+#
+# NOTE: This is now an alias to UNIFIED_MOTIF_COLORS to ensure consistency.
+CLASS_COLORS = UNIFIED_MOTIF_COLORS.copy()
 
 # Streamlit color names for :color[text] syntax (matches CLASS_COLORS)
 # Used for colorizing submotif checkbox labels in the UI
@@ -249,3 +262,128 @@ CLASS_COLOR_NAMES = {
     'Hybrid': 'gray',                 # Slate → gray
     'Non-B_DNA_Clusters': 'gray',     # Dark slate → gray
 }
+
+# ==================== MOTIF CLASS CARD COLORS ====================
+# Pre-computed light/dark color variations for UI cards.
+# Each class has:
+#   - 'primary': The main UNIFIED_MOTIF_COLORS color (for border)
+#   - 'light': Light background gradient start
+#   - 'lighter': Light background gradient end  
+#   - 'dark': Dark text color
+# These ensure uniform styling across home.py and documentation.py
+MOTIF_CARD_COLORS = {
+    'Curved_DNA': {
+        'primary': '#06b6d4',   # Cyan
+        'light': '#cffafe',     # cyan-100
+        'lighter': '#a5f3fc',   # cyan-200
+        'dark': '#164e63',      # cyan-900
+    },
+    'Slipped_DNA': {
+        'primary': '#f59e0b',   # Amber
+        'light': '#fef3c7',     # amber-100
+        'lighter': '#fde68a',   # amber-200
+        'dark': '#78350f',      # amber-900
+    },
+    'Cruciform': {
+        'primary': '#ef4444',   # Red
+        'light': '#fee2e2',     # red-100
+        'lighter': '#fecaca',   # red-200
+        'dark': '#7f1d1d',      # red-900
+    },
+    'R-Loop': {
+        'primary': '#8b5cf6',   # Violet
+        'light': '#ede9fe',     # violet-100
+        'lighter': '#ddd6fe',   # violet-200
+        'dark': '#4c1d95',      # violet-900
+    },
+    'Triplex': {
+        'primary': '#ec4899',   # Pink
+        'light': '#fce7f3',     # pink-100
+        'lighter': '#fbcfe8',   # pink-200
+        'dark': '#831843',      # pink-900
+    },
+    'G-Quadruplex': {
+        'primary': '#10b981',   # Emerald
+        'light': '#d1fae5',     # emerald-100
+        'lighter': '#a7f3d0',   # emerald-200
+        'dark': '#064e3b',      # emerald-900
+    },
+    'i-Motif': {
+        'primary': '#22c55e',   # Green
+        'light': '#dcfce7',     # green-100
+        'lighter': '#bbf7d0',   # green-200
+        'dark': '#14532d',      # green-900
+    },
+    'Z-DNA': {
+        'primary': '#6366f1',   # Indigo
+        'light': '#e0e7ff',     # indigo-100
+        'lighter': '#c7d2fe',   # indigo-200
+        'dark': '#312e81',      # indigo-900
+    },
+    'A-philic_DNA': {
+        'primary': '#f97316',   # Orange
+        'light': '#ffedd5',     # orange-100
+        'lighter': '#fed7aa',   # orange-200
+        'dark': '#7c2d12',      # orange-900
+    },
+    'Hybrid': {
+        'primary': '#64748b',   # Slate
+        'light': '#f1f5f9',     # slate-100
+        'lighter': '#e2e8f0',   # slate-200
+        'dark': '#1e293b',      # slate-800
+    },
+    'Non-B_DNA_Clusters': {
+        'primary': '#334155',   # Dark Slate
+        'light': '#e2e8f0',     # slate-200
+        'lighter': '#cbd5e1',   # slate-300
+        'dark': '#0f172a',      # slate-900
+    },
+}
+
+# ==================== MOTIF CLASS DISPLAY INFO ====================
+# Complete display information for all 11 motif classes.
+# Used by home.py and documentation.py for consistent display.
+MOTIF_CLASS_INFO = [
+    {'key': 'Curved_DNA', 'name': 'Curved DNA', 'subtitle': 'A-tract curvature', 'num': 1},
+    {'key': 'Slipped_DNA', 'name': 'Slipped DNA', 'subtitle': 'Direct repeats, STRs', 'num': 2},
+    {'key': 'Cruciform', 'name': 'Cruciform', 'subtitle': 'Inverted repeats', 'num': 3},
+    {'key': 'R-Loop', 'name': 'R-Loop', 'subtitle': 'RNA-DNA hybrids', 'num': 4},
+    {'key': 'Triplex', 'name': 'Triplex/H-DNA', 'subtitle': 'Mirror repeats, Sticky DNA', 'num': 5},
+    {'key': 'G-Quadruplex', 'name': 'G-Quadruplex', 'subtitle': '8 subclasses', 'num': 6},
+    {'key': 'i-Motif', 'name': 'i-Motif', 'subtitle': 'C-rich structures', 'num': 7},
+    {'key': 'Z-DNA', 'name': 'Z-DNA', 'subtitle': 'Left-handed helix', 'num': 8},
+    {'key': 'A-philic_DNA', 'name': 'A-philic DNA', 'subtitle': 'A/T-rich regions', 'num': 9},
+    {'key': 'Hybrid', 'name': 'Hybrid', 'subtitle': 'Multi-class overlap', 'num': 10},
+    {'key': 'Non-B_DNA_Clusters', 'name': 'Clusters', 'subtitle': 'Motif hotspots', 'num': 11},
+]
+
+
+def get_motif_card_style(class_key: str) -> dict:
+    """
+    Get CSS style properties for a motif class card.
+    
+    Args:
+        class_key: The motif class key (e.g., 'Curved_DNA', 'G-Quadruplex')
+        
+    Returns:
+        Dictionary with 'background', 'border', 'text' CSS color values
+    """
+    colors = MOTIF_CARD_COLORS.get(class_key, MOTIF_CARD_COLORS['Hybrid'])
+    return {
+        'background': f"linear-gradient(135deg, {colors['light']} 0%, {colors['lighter']} 100%)",
+        'border': colors['primary'],
+        'text': colors['dark'],
+    }
+
+
+def get_motif_color(class_key: str) -> str:
+    """
+    Get the primary color for a motif class.
+    
+    Args:
+        class_key: The motif class key (e.g., 'Curved_DNA', 'G-Quadruplex')
+        
+    Returns:
+        Hex color string
+    """
+    return UNIFIED_MOTIF_COLORS.get(class_key, '#808080')

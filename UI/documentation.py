@@ -8,6 +8,7 @@ import pandas as pd
 from Utilities.config.text import UI_TEXT
 from Utilities.config.typography import FONT_CONFIG
 from Utilities.config.themes import TAB_THEMES
+from Utilities.config.colors import UNIFIED_MOTIF_COLORS, MOTIF_CLASS_INFO
 from UI.css import load_css
 from UI.headers import render_section_heading
 
@@ -171,6 +172,7 @@ def render():
     
     # ═══════════════════════════════════════════════════════════
     # MOTIF CLASSES - DETAILED CARDS (compact, no emoji)
+    # Using UNIFIED_MOTIF_COLORS from centralized config for consistency
     # ═══════════════════════════════════════════════════════════
     st.markdown("""
     <h3 style='color: #003D82; font-size: 1.1rem; margin: 1rem 0 0.5rem 0; font-weight: 700;
@@ -179,24 +181,27 @@ def render():
     </h3>
     """, unsafe_allow_html=True)
     
-    # Create motif cards in a grid (no emoji icons)
-    motif_info = [
-        ("Curved DNA", "A-tract mediated bending", "#06b6d4", "Intrinsic DNA curvature from phased A-tracts"),
-        ("Slipped DNA", "Direct repeats & STRs", "#f59e0b", "Slippage-mediated repeat expansions"),
-        ("Cruciform", "Inverted repeats", "#ef4444", "Hairpin structures from palindromic sequences"),
-        ("R-Loop", "RNA:DNA hybrids", "#8b5cf6", "Co-transcriptional R-loop formation sites"),
-        ("Triplex", "H-DNA structures", "#ec4899", "Triple-stranded DNA from mirror repeats"),
-        ("G-Quadruplex", "G4 structures", "#10b981", "Four-stranded G-rich secondary structures"),
-        ("i-Motif", "C-rich structures", "#22c55e", "Intercalated cytosine structures"),
-        ("Z-DNA", "Left-handed helix", "#6366f1", "Alternating purine-pyrimidine sequences"),
-        ("A-philic DNA", "Protein-binding", "#f97316", "High nucleosome positioning potential"),
-        ("Hybrid", "Multi-class overlaps", "#64748b", "Regions with multiple motif types"),
-        ("Clusters", "Hotspots", "#334155", "High-density Non-B DNA regions"),
-    ]
+    # Motif class descriptions for documentation
+    MOTIF_DESCRIPTIONS = {
+        'Curved_DNA': "Intrinsic DNA curvature from phased A-tracts",
+        'Slipped_DNA': "Slippage-mediated repeat expansions",
+        'Cruciform': "Hairpin structures from palindromic sequences",
+        'R-Loop': "Co-transcriptional R-loop formation sites",
+        'Triplex': "Triple-stranded DNA from mirror repeats",
+        'G-Quadruplex': "Four-stranded G-rich secondary structures",
+        'i-Motif': "Intercalated cytosine structures",
+        'Z-DNA': "Alternating purine-pyrimidine sequences",
+        'A-philic_DNA': "High nucleosome positioning potential",
+        'Hybrid': "Regions with multiple motif types",
+        'Non-B_DNA_Clusters': "High-density Non-B DNA regions",
+    }
     
+    # Build cards using centralized color config
     cards_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem; margin-bottom: 1rem;">'
-    for name, subtitle, color, description in motif_info:
-        cards_html += _build_motif_card(name, subtitle, color, description)
+    for info in MOTIF_CLASS_INFO:
+        color = UNIFIED_MOTIF_COLORS[info['key']]
+        description = MOTIF_DESCRIPTIONS.get(info['key'], info['subtitle'])
+        cards_html += _build_motif_card(info['name'], info['subtitle'], color, description)
     cards_html += '</div>'
     st.markdown(cards_html, unsafe_allow_html=True)
     

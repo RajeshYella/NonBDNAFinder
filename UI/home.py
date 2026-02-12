@@ -3,9 +3,33 @@ import os
 from Utilities.config.text import UI_TEXT
 from Utilities.config.typography import FONT_CONFIG
 from Utilities.config.themes import TAB_THEMES
-from Utilities.config.colors import SEMANTIC_COLORS
+from Utilities.config.colors import (
+    SEMANTIC_COLORS, 
+    UNIFIED_MOTIF_COLORS, 
+    MOTIF_CARD_COLORS,
+    MOTIF_CLASS_INFO,
+    get_motif_card_style
+)
 from UI.css import load_css, get_page_colors
 from UI.headers import render_section_heading
+
+
+def _build_motif_class_card(class_info: dict) -> str:
+    """
+    Build HTML for a single motif class card using centralized colors.
+    
+    Args:
+        class_info: Dictionary with 'key', 'name', 'subtitle', 'num' keys
+        
+    Returns:
+        HTML string for the card
+    """
+    style = get_motif_card_style(class_info['key'])
+    return f"""<div style='padding: 0.5rem; background: {style['background']}; 
+                border-radius: 8px; border-left: 4px solid {style['border']};'>
+    <div style='font-weight: 600; color: {style['text']}; font-size: 0.8rem;'>{class_info['num']}. {class_info['name']}</div>
+    <div style='color: {style['text']}; font-size: 0.7rem; margin-top: 0.15rem;'>{class_info['subtitle']}</div>
+</div>"""
 
 
 def render():
@@ -77,10 +101,10 @@ def render():
     left, right = st.columns([1, 1], gap="large")
     
     with left:
-        # NOTE: Motif Classes visualization uses specific color gradients per motif type
-        # These match the VISUALIZATION_PALETTE defined in centralized tokens but must
-        # be literal values here due to Streamlit's inline HTML constraints.
-        # Colors are carefully coordinated with the centralized token system.
+        # Motif Classes visualization using UNIFIED colors from centralized config
+        # Build cards dynamically from MOTIF_CLASS_INFO for consistency
+        cards_html = ''.join(_build_motif_class_card(info) for info in MOTIF_CLASS_INFO)
+        
         st.markdown(f"""
         <div style='background: {colors['white']}; padding: 1.2rem; border-radius: 16px; 
                     box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; height: 100%;'>
@@ -88,68 +112,7 @@ def render():
                 Detected Motif Classes
             </h2>
             <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.6rem;'>
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, {SEMANTIC_COLORS['warning_light']} 0%, {SEMANTIC_COLORS['warning_border']} 100%); 
-                            border-radius: 8px; border-left: 4px solid {SEMANTIC_COLORS['warning']};'>
-                    <div style='font-weight: 600; color: {SEMANTIC_COLORS['warning_dark']}; font-size: 0.8rem;'>1. Curved DNA</div>
-                    <div style='color: {SEMANTIC_COLORS['warning_dark']}; font-size: 0.7rem; margin-top: 0.15rem;'>A-tract curvature</div>
-                </div>
-                <!-- NOTE: Motif class visualization cards use semantic gradients for visual distinction.
-                     Cards 1-2 use SEMANTIC_COLORS from centralized tokens.
-                     Cards 3-11 use specific Tailwind-inspired gradients - this is intentional:
-                     - Each motif type requires a unique, visually distinct gradient
-                     - These form a carefully designed visual vocabulary for motif recognition
-                     - Adding 9 × 4 gradient variations to centralized tokens would decrease maintainability
-                     All colors follow semantic principles. This is an explicit design decision. -->
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, {SEMANTIC_COLORS['info_light']} 0%, {SEMANTIC_COLORS['info_border']} 100%); 
-                            border-radius: 8px; border-left: 4px solid {SEMANTIC_COLORS['info']};'>
-                    <div style='font-weight: 600; color: {SEMANTIC_COLORS['info_dark']}; font-size: 0.8rem;'>2. Slipped DNA</div>
-                    <div style='color: {SEMANTIC_COLORS['info_dark']}; font-size: 0.7rem; margin-top: 0.15rem;'>Direct repeats, STRs</div>
-                </div>
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); 
-                            border-radius: 8px; border-left: 4px solid #ec4899;'>
-                    <div style='font-weight: 600; color: #9f1239; font-size: 0.8rem;'>3. Cruciform</div>
-                    <div style='color: #831843; font-size: 0.7rem; margin-top: 0.15rem;'>Palindromic IRs</div>
-                </div>
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
-                            border-radius: 8px; border-left: 4px solid #10b981;'>
-                    <div style='font-weight: 600; color: #065f46; font-size: 0.8rem;'>4. R-Loop</div>
-                    <div style='color: #064e3b; font-size: 0.7rem; margin-top: 0.15rem;'>RNA-DNA hybrids</div>
-                </div>
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); 
-                            border-radius: 8px; border-left: 4px solid #eab308;'>
-                    <div style='font-weight: 600; color: #713f12; font-size: 0.8rem;'>5. Triplex</div>
-                    <div style='color: #713f12; font-size: 0.7rem; margin-top: 0.15rem;'>Mirror repeats</div>
-                </div>
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%); 
-                            border-radius: 8px; border-left: 4px solid #8b5cf6;'>
-                    <div style='font-weight: 600; color: #5b21b6; font-size: 0.8rem;'>6. G-Quadruplex</div>
-                    <div style='color: #4c1d95; font-size: 0.7rem; margin-top: 0.15rem;'>7 subtypes</div>
-                </div>
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); 
-                            border-radius: 8px; border-left: 4px solid #f97316;'>
-                    <div style='font-weight: 600; color: #7c2d12; font-size: 0.8rem;'>7. i-Motif</div>
-                    <div style='color: #7c2d12; font-size: 0.7rem; margin-top: 0.15rem;'>C-rich structures</div>
-                </div>
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
-                            border-radius: 8px; border-left: 4px solid #6366f1;'>
-                    <div style='font-weight: 600; color: #3730a3; font-size: 0.8rem;'>8. Z-DNA</div>
-                    <div style='color: #312e81; font-size: 0.7rem; margin-top: 0.15rem;'>Left-handed helix</div>
-                </div>
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); 
-                            border-radius: 8px; border-left: 4px solid #14b8a6;'>
-                    <div style='font-weight: 600; color: #134e4a; font-size: 0.8rem;'>9. A-philic DNA</div>
-                    <div style='color: #134e4a; font-size: 0.7rem; margin-top: 0.15rem;'>A/T-rich regions</div>
-                </div>
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); 
-                            border-radius: 8px; border-left: 4px solid #a855f7;'>
-                    <div style='font-weight: 600; color: #6b21a8; font-size: 0.8rem;'>10. Hybrid</div>
-                    <div style='color: #581c87; font-size: 0.7rem; margin-top: 0.15rem;'>Multi-class overlap</div>
-                </div>
-                <div style='padding: 0.5rem; background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); 
-                            border-radius: 8px; border-left: 4px solid #6b7280;'>
-                    <div style='font-weight: 600; color: #1f2937; font-size: 0.8rem;'>11. Clusters</div>
-                    <div style='color: #374151; font-size: 0.7rem; margin-top: 0.15rem;'>Motif hotspots</div>
-                </div>
+                {cards_html}
             </div>
         </div>
         """, unsafe_allow_html=True)
