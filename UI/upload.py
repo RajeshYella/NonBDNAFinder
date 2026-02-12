@@ -932,17 +932,6 @@ def render():
                 with progress_placeholder.container():
                     pbar = st.progress(0)
                 
-                # Show detailed progress panel with detector sequence (only once since it's static)
-                # The status shows all detectors as "running" during analysis since they run in parallel
-                with detailed_progress_placeholder.container():
-                    st.subheader(UI_TEXT['analysis_pipeline_title'])
-                    
-                    # Display detectors in a clean list format
-                    for j, (detector_name, detector_desc) in enumerate(DETECTOR_PROCESSES):
-                        st.write(f"**{j+1}. {detector_name}** - {detector_desc}")
-                    
-                    st.info(UI_TEXT['analysis_all_detectors_parallel'])
-                    
                 # ============================================================
                 # MULTI-FASTA STABILITY: Per-sequence logic isolated
                 # ============================================================
@@ -1338,26 +1327,46 @@ def render():
                 
                 # Show comprehensive completion summary with scientific time format
                 # GOLD STANDARD: Final time display after everything is done
-                completion_msg = f"""**Analysis Complete!** All processing stages finished successfully:
+                # Display as styled colored box
+                validation_status = 'PASSED' if len(validation_issues) == 0 else f'{len(validation_issues)} issues found'
                 
-**Detection & Analysis:**
-- {len(DETECTOR_PROCESSES)} detector processes completed
-- {sum(len(r) for r in all_results)} total motifs detected across {len(st.session_state.seqs)} sequences
-- Analysis completed in {format_time_scientific(total_time)} ({overall_speed:,.0f} bp/s)
-
-**Quality Validation:**
-- Data consistency checks: {'PASSED' if len(validation_issues) == 0 else f'{len(validation_issues)} issues found'}
-- Non-redundancy validation: Complete
-- Position validation: Complete
-
-**Visualization Generation:**
-- {total_viz_count} visualization components pre-generated
-- Class-level and subclass-level analysis ready
-- Visualizations prepared in {format_time_scientific(viz_total_time)}
-
-**View detailed results in the 'Results' tab.**
-"""
-                st.success(completion_msg)
+                # Build completion HTML with styled green box
+                # Using concatenation for better readability while keeping single-line HTML for Streamlit
+                box_style = "background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border-radius: 12px; padding: 20px; margin: 15px 0; color: white; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);"
+                section_style = "background: rgba(255,255,255,0.15); border-radius: 8px; padding: 12px; margin: 10px 0;"
+                h3_style = "margin: 0 0 15px 0; color: white; font-size: 1.4rem;"
+                h4_style = "margin: 0 0 8px 0; color: white; font-size: 1.1rem;"
+                ul_style = "margin: 0; padding-left: 20px; list-style-type: disc;"
+                footer_style = "margin-top: 15px; font-weight: 600; font-size: 1.1rem; text-align: center;"
+                
+                completion_html = (
+                    f'<div style="{box_style}">'
+                    f'<h3 style="{h3_style}">✅ Analysis Complete! All processing stages finished successfully:</h3>'
+                    f'<div style="{section_style}">'
+                    f'<h4 style="{h4_style}">Detection &amp; Analysis:</h4>'
+                    f'<ul style="{ul_style}">'
+                    f'<li>{len(DETECTOR_PROCESSES)} detector processes completed</li>'
+                    f'<li>{sum(len(r) for r in all_results)} total motifs detected across {len(st.session_state.seqs)} sequences</li>'
+                    f'<li>Analysis completed in {format_time_scientific(total_time)} ({overall_speed:,.0f} bp/s)</li>'
+                    f'</ul></div>'
+                    f'<div style="{section_style}">'
+                    f'<h4 style="{h4_style}">Quality Validation:</h4>'
+                    f'<ul style="{ul_style}">'
+                    f'<li>Data consistency checks: {validation_status}</li>'
+                    f'<li>Non-redundancy validation: Complete</li>'
+                    f'<li>Position validation: Complete</li>'
+                    f'</ul></div>'
+                    f'<div style="{section_style}">'
+                    f'<h4 style="{h4_style}">Visualization Generation:</h4>'
+                    f'<ul style="{ul_style}">'
+                    f'<li>{total_viz_count} visualization components pre-generated</li>'
+                    f'<li>Class-level and subclass-level analysis ready</li>'
+                    f'<li>Visualizations prepared in {format_time_scientific(viz_total_time)}</li>'
+                    f'</ul></div>'
+                    f'<div style="{footer_style}">View detailed results in the \'Results\' tab.</div>'
+                    f'</div>'
+                )
+                st.markdown(completion_html, unsafe_allow_html=True)
                 st.session_state.analysis_status = "Complete"
                 
                 # Set analysis_done flag for idempotent run button
@@ -1365,7 +1374,7 @@ def render():
                 st.session_state.analysis_time = total_time
                 
                 # ============================================================
-                # RESULT PERSISTENCE: Save results to disk under job ID
+                # RESULT PERSISTENCE: Save results to disk (silently)
                 # ============================================================
                 job_id = st.session_state.get('current_job_id')
                 
@@ -1374,9 +1383,6 @@ def render():
                     logger.warning("Job ID missing from session state, regenerating")
                     job_id = generate_job_id()
                     st.session_state.current_job_id = job_id
-                
-                save_status_placeholder = st.empty()
-                save_status_placeholder.info(f"Saving results for Job ID: {job_id}...")
                 
                 # Prepare metadata
                 job_metadata = {
@@ -1388,7 +1394,8 @@ def render():
                     'analysis_mode': st.session_state.get('analysis_mode_used', 'Motif Level')
                 }
                 
-                # Save results to disk
+                # Save results to disk silently (no job ID display to user)
+                # Log failures but don't display to user since results are available in session
                 save_success = save_job_results(
                     job_id,
                     all_results,
@@ -1396,14 +1403,8 @@ def render():
                     st.session_state.names,
                     job_metadata
                 )
-                
-                if save_success:
-                    save_status_placeholder.success(f"Results saved successfully! Job ID: **{job_id}**")
-                else:
-                    save_status_placeholder.warning(
-                        "Results could not be saved to disk, but are available in this session. "
-                        "Download your results now from the Download tab."
-                    )
+                if not save_success:
+                    logger.warning(f"Failed to persist results for job {job_id} - results available in session only")
                 
             except Exception as e:
                 progress_placeholder.empty()
