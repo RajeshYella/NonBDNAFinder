@@ -20,19 +20,31 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 if _current_dir not in sys.path:
     sys.path.insert(0, _current_dir)
 
-# Import configuration modules
-from Utilities.config.text import UI_TEXT
-from Utilities.config.layout import LAYOUT_CONFIG
-from Utilities.config.themes import TAB_THEMES
+# Import configuration modules with explicit error handling
+try:
+    from Utilities.config.text import UI_TEXT
+    from Utilities.config.layout import LAYOUT_CONFIG
+    from Utilities.config.themes import TAB_THEMES
+except ImportError as e:
+    raise ImportError(f"Failed to import configuration modules: {e}. Current dir: {_current_dir}, sys.path: {sys.path[:3]}")
 
 # Import UI utilities
-from UI.css import load_css
+try:
+    from UI.css import load_css
+except ImportError as e:
+    raise ImportError(f"Failed to import UI.css: {e}")
 
-# Import page modules
-from UI import home, upload, results, download, documentation
+# Import page modules with explicit error handling
+try:
+    from UI import home, upload, results, download, documentation
+except ImportError as e:
+    raise ImportError(f"Failed to import UI page modules: {e}")
 
 # Import core scanner functionality
-from Utilities.nonbscanner import get_motif_info as get_motif_classification_info
+try:
+    from Utilities.nonbscanner import get_motif_info as get_motif_classification_info
+except ImportError as e:
+    raise ImportError(f"Failed to import nonbscanner: {e}")
 
 # Optional imports with fallbacks
 try:

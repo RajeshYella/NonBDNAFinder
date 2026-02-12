@@ -7,7 +7,6 @@ import re
 import io
 import traceback
 from collections import Counter
-from openpyxl import Workbook
 
 from Utilities.config.text import UI_TEXT
 from Utilities.config.themes import TAB_THEMES
