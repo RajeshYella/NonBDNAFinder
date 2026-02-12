@@ -123,8 +123,8 @@ def render():
         """, unsafe_allow_html=True)
         return
     
-    # Collapsed data table preview (no emoji)
-    with st.expander(f"Data table ({len(st.session_state.summary_df)} rows)", expanded=False):
+    # Collapsed summary table preview (no emoji)
+    with st.expander(f"Summary ({len(st.session_state.summary_df)} rows)", expanded=False):
         st.dataframe(st.session_state.summary_df, use_container_width=True)
     
     # Sequence selection for multi-sequence files
