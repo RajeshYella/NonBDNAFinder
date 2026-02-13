@@ -75,7 +75,7 @@ def render():
             """, unsafe_allow_html=True)
     
     with col_science:
-        # ========== SCIENTIFIC FOUNDATION ==========
+        # ========== SCIENTIFIC FOUNDATION + START AN ANALYSIS COMBINED ==========
         st.markdown(f"""
         <div style='background: {colors['white']}; padding: 1.2rem; border-radius: 16px; 
                     box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; height: 100%;'>
@@ -87,55 +87,45 @@ def render():
                 implicated in genome stability, transcriptional regulation, replication, and disease mechanisms. 
                 These structures deviate from the canonical B-form DNA helix and play essential roles in:
             </p>
-            <ul style='color: {colors['neutral_700']}; font-size: 0.85rem; line-height: 1.5; padding-left: 1.5rem;'>
+            <ul style='color: {colors['neutral_700']}; font-size: 0.85rem; line-height: 1.5; padding-left: 1.5rem; margin-bottom: 1rem;'>
                 <li><b>Genome Instability:</b> Hotspots for mutations and chromosomal rearrangements</li>
                 <li><b>Gene Regulation:</b> Promoter and enhancer activity modulation</li>
                 <li><b>DNA Replication:</b> Origins of replication and fork progression</li>
                 <li><b>Disease Association:</b> Cancer, neurological disorders, and aging</li>
             </ul>
-            
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # ========== TWO-COLUMN SECTION: MOTIF CLASSES & CALL TO ACTION ==========
-    left, right = st.columns([1, 1], gap="large")
-    
-    with left:
-        # Motif Classes visualization using UNIFIED colors from centralized config
-        # Build cards dynamically from MOTIF_CLASS_INFO for consistency
-        cards_html = ''.join(_build_motif_class_card(info) for info in MOTIF_CLASS_INFO)
-        
-        st.markdown(f"""
-        <div style='background: {colors['white']}; padding: 1.2rem; border-radius: 16px; 
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; height: 100%;'>
-            <h2 style='color: {colors['text']}; font-size: 1.4rem; margin: 0 0 0.6rem 0; font-weight: 600;'>
-                Detected Motif Classes
-            </h2>
-            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.6rem;'>
-                {cards_html}
+            <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
+                        padding: 0.8rem; border-radius: 10px; text-align: center; 
+                        box-shadow: 0 4px 12px {colors['shadow']};'>
+                <h3 style='color: {colors['white']}; margin: 0 0 0.2rem 0; font-size: 1rem;'>
+                    {UI_TEXT['home_call_to_action_title']}
+                </h3>
+                <p style='color: rgba(255,255,255,0.95); margin: 0 0 0.4rem 0; font-size: 0.8rem;'>
+                    {UI_TEXT['home_call_to_action_text']}
+                </p>
+                <div style='background: {colors['white']}; color: {colors['primary']}; padding: 0.4rem 1rem; 
+                            border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.85rem;'>
+                    {UI_TEXT['home_call_to_action_button']}
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
-        
-    with right:
-        # Call to Action - Using page-specific colors
-        st.markdown(f"""
-        <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
-                    padding: 1rem; border-radius: 12px; text-align: center; 
-                    box-shadow: 0 4px 12px {colors['shadow']}; height: 100%;
-                    display: flex; flex-direction: column; justify-content: center;'>
-            <h3 style='color: {colors['white']}; margin: 0 0 0.3rem 0; font-size: 1.1rem;'>
-                {UI_TEXT['home_call_to_action_title']}
-            </h3>
-            <p style='color: rgba(255,255,255,0.95); margin: 0 0 0.6rem 0; font-size: 0.85rem;'>
-                {UI_TEXT['home_call_to_action_text']}
-            </p>
-            <div style='background: {colors['white']}; color: {colors['primary']}; padding: 0.5rem 1.2rem; 
-                        border-radius: 8px; display: inline-block; font-weight: 600; font-size: 0.9rem; margin: 0 auto;'>
-                {UI_TEXT['home_call_to_action_button']}
-            </div>
+    
+    # ========== FULL-WIDTH SECTION: DETECTED MOTIF CLASSES ==========
+    # Motif Classes visualization using UNIFIED colors from centralized config
+    # Build cards dynamically from MOTIF_CLASS_INFO for consistency
+    cards_html = ''.join(_build_motif_class_card(info) for info in MOTIF_CLASS_INFO)
+    
+    st.markdown(f"""
+    <div style='background: {colors['white']}; padding: 1.2rem; border-radius: 16px; 
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid {colors['neutral_200']}; margin-top: 1rem;'>
+        <h2 style='color: {colors['text']}; font-size: 1.4rem; margin: 0 0 0.6rem 0; font-weight: 600;'>
+            Detected Motif Classes
+        </h2>
+        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.5rem; margin-top: 0.6rem;'>
+            {cards_html}
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
     
     # ========== HOW TO CITE SECTION ==========
     st.markdown("<br>", unsafe_allow_html=True)
