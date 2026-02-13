@@ -8039,12 +8039,21 @@ def export_to_pdf(motifs: List[Dict[str, Any]],
     """
     Generate PDF containing visualization summaries of sequence analyses.
     
-    This function creates a multi-page PDF with key visualizations including:
-    - Motif distribution by class and subclass
-    - Coverage maps and density heatmaps
-    - Length and score distributions
-    - Circos plot for genome-wide view
-    - Manhattan plot and cumulative distribution
+    This function creates a multi-page PDF with key visualizations that match
+    the Results page display. The PDF includes:
+    
+    Page order (matching Results page visualization order):
+    1. Class Track (Linear Motif Track)
+    2. Subclass Track
+    3. Class Distribution (Bar Chart)
+    4. Subclass Distribution (Bar Chart)
+    5. Density Analysis (Genomic + Positional)
+    6. Length KDE (Kernel Density Estimation)
+    7. Score Distribution
+    8. Class-Subclass Pie Chart (Nested Donut)
+    9. Hybrid & Cluster Track (if present)
+    10. Cluster Statistics (if clusters present)
+    11. Co-occurrence Matrix
     
     Args:
         motifs: List of motif dictionaries with required keys (Start, End, Class, etc.)
@@ -8065,46 +8074,94 @@ def export_to_pdf(motifs: List[Dict[str, Any]],
     
     figures = []
     
+    # Define cluster classes for filtering
+    cluster_classes = ['Hybrid', 'Non-B_DNA_Clusters']
+    
+    # Check for hybrids and clusters
+    has_clusters = any(m.get('Class') == 'Non-B_DNA_Clusters' for m in motifs)
+    has_hybrids = any(m.get('Class') == 'Hybrid' for m in motifs)
+    
     try:
-        # 1. Distribution plots
+        # ========================================
+        # SECTION 1: LINEAR TRACKS (Position-based)
+        # ========================================
+        
+        # 1. Class Track - Linear visualization of all motifs by class
+        figures.append(plot_linear_motif_track(motifs, sequence_length, 
+                                               title=f"Class Track - {sequence_name}"))
+        
+        # 2. Subclass Track - Linear visualization grouped by subclass
+        # Filter out clusters from subclass track for cleaner view
+        subclass_motifs = [m for m in motifs if m.get('Class') not in cluster_classes]
+        if subclass_motifs:
+            figures.append(plot_linear_subclass_track(subclass_motifs, sequence_length, 
+                                                      title=f"Subclass Track - {sequence_name}"))
+        
+        # ========================================
+        # SECTION 2: DISTRIBUTION PLOTS
+        # ========================================
+        
+        # 3. Class Distribution (Bar Chart)
         figures.append(plot_motif_distribution(motifs, by='Class', 
                                               title=f"Motif Classes - {sequence_name}"))
+        
+        # 4. Subclass Distribution (Bar Chart)
         figures.append(plot_motif_distribution(motifs, by='Subclass', 
                                               title=f"Motif Subclasses - {sequence_name}"))
         
-        # 2. Nested pie chart for class-subclass relationship
-        figures.append(plot_nested_pie_chart(motifs, 
-                                            title=f"Class-Subclass Distribution - {sequence_name}"))
+        # ========================================
+        # SECTION 3: DENSITY ANALYSIS
+        # ========================================
         
-        # 3. Coverage and density maps
-        figures.append(plot_coverage_map(motifs, sequence_length, 
-                                        title=f"Motif Coverage - {sequence_name}"))
+        # 5. Density Comparison (Genomic + Positional) - matches Results page
+        genomic_density = calculate_genomic_density(motifs, sequence_length, by_class=True)
+        positional_density_kbp = calculate_positional_density(motifs, sequence_length, unit='kbp', by_class=True)
+        figures.append(plot_density_comparison(genomic_density, positional_density_kbp,
+                                               title=f"Density Analysis - {sequence_name}"))
         
-        # Calculate appropriate window size for density heatmap
-        # Use adaptive window sizing based on sequence length, with a minimum size
-        window_size = max(DEFAULT_PDF_WINDOW_SIZE_MIN, sequence_length // DEFAULT_PDF_WINDOW_DIVISOR)
-        window_size = min(window_size, sequence_length)
+        # ========================================
+        # SECTION 4: STATISTICAL DISTRIBUTIONS
+        # ========================================
         
-        figures.append(plot_density_heatmap(motifs, sequence_length, 
-                                           window_size=window_size,
-                                           title=f"Motif Density - {sequence_name}"))
+        # 6. Length KDE (Kernel Density Estimation) - matches Results page
+        figures.append(plot_motif_length_kde(motifs, by_class=True, 
+                                             title=f"Length KDE - {sequence_name}"))
         
-        # 4. Statistical distributions
-        figures.append(plot_length_distribution(motifs, by_class=True, 
-                                               title="Length Distribution by Motif Class"))
+        # 7. Score Distribution
         figures.append(plot_score_distribution(motifs, by_class=True,
-                                              title="Score Distribution by Motif Class"))
+                                              title=f"Score Distribution - {sequence_name}"))
         
-        # 5. Genome-wide visualizations
-        figures.append(plot_circos_motif_density(motifs, sequence_length, 
-                                                title=f"Circos Density - {sequence_name}"))
+        # ========================================
+        # SECTION 5: COMPOSITION
+        # ========================================
         
-        figures.append(plot_manhattan_motif_density(motifs, sequence_length, 
-                                                   title=f"Manhattan Plot - {sequence_name}"))
+        # 8. Nested Pie Chart (Class → Subclass)
+        figures.append(plot_nested_pie_chart(motifs, 
+                                            title=f"Class → Subclass - {sequence_name}"))
         
-        figures.append(plot_cumulative_motif_distribution(motifs, sequence_length,
-                                                         title=f"Cumulative Distribution - {sequence_name}",
-                                                         by_class=True))
+        # ========================================
+        # SECTION 6: HYBRIDS & CLUSTERS
+        # ========================================
+        
+        # 9. Hybrid & Cluster Track (if present)
+        if has_hybrids or has_clusters:
+            cluster_hybrid_motifs = [m for m in motifs if m.get('Class') in cluster_classes]
+            if cluster_hybrid_motifs:
+                figures.append(plot_linear_motif_track(cluster_hybrid_motifs, sequence_length,
+                                                       title=f"Hybrid & Cluster Track - {sequence_name}"))
+        
+        # 10. Cluster Statistics (if clusters present)
+        if has_clusters:
+            figures.append(plot_cluster_size_distribution(motifs,
+                                                          title=f"Cluster Statistics - {sequence_name}"))
+        
+        # ========================================
+        # SECTION 7: CO-OCCURRENCE & RELATIONSHIPS
+        # ========================================
+        
+        # 11. Co-occurrence Matrix
+        figures.append(plot_motif_cooccurrence_matrix(motifs,
+                                                      title=f"Co-occurrence Matrix - {sequence_name}"))
         
         # Save all figures to PDF buffer
         with PdfPages(pdf_buffer) as pdf:
@@ -8240,14 +8297,20 @@ PACKAGE CONTENTS
 PDF CONTENTS
 ════════════
 The PDF contains publication-ready visualizations (300 DPI) ordered as follows:
-1. Overview plots (class and subclass distribution)
-2. Coverage and density maps
-3. Statistical distributions (length, score)
-4. Genome-wide analysis (Manhattan plot, cumulative distribution)
-5. Advanced visualizations (co-occurrence matrix, KDE plots)
-6. Circos density plot
+1. Class Track - Linear position-based view of all motifs by class
+2. Subclass Track - Linear position-based view by subclass (excludes clusters)
+3. Class Distribution - Bar chart of motif counts by class
+4. Subclass Distribution - Bar chart of motif counts by subclass
+5. Density Analysis - Genomic density (%) and positional density (motifs/kbp)
+6. Length KDE - Kernel density estimation of motif lengths by class
+7. Score Distribution - Score histogram by class
+8. Class → Subclass Pie - Nested donut chart showing class-subclass hierarchy
+9. Hybrid & Cluster Track - Position view of Hybrids and Clusters (if present)
+10. Cluster Statistics - Cluster size and diversity distributions (if clusters present)
+11. Co-occurrence Matrix - Heatmap of motif class co-occurrences
 
-All figures are suitable for direct use in publications, presentations, and reports.
+All figures match the Results page visualizations and are suitable for direct use 
+in publications, presentations, and reports.
 
 EXCEL CONTENTS
 ══════════════
