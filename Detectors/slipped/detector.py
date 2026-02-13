@@ -40,7 +40,7 @@ Performance:
 import re
 from typing import List, Dict, Any, Tuple
 from ..base.base_detector import BaseMotifDetector
-from core.motif_normalizer import normalize_class_subclass
+from Utilities.core.motif_normalizer import normalize_class_subclass
 
 
 class SlippedDNADetector(BaseMotifDetector):
