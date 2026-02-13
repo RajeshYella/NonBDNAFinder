@@ -107,11 +107,11 @@ SUBMOTIF_ABBREVIATIONS = {
 # ============================================================
 # SUBMOTIF GRID CONFIG (TUNABLE)
 # ============================================================
-GRID_COLUMNS = 8        # 3 × 8 layout
-GRID_GAP = "0.25rem"    # horizontal gap
-ROW_GAP = "0.15rem"     # vertical gap
-DOT_SIZE = 16           # px
-GLOW_SIZE = 14          # glow intensity
+GRID_COLUMNS = 6        # 3 × 8 layout
+GRID_GAP = "0.20rem"    # horizontal gap
+ROW_GAP = "0.10rem"     # vertical gap
+DOT_SIZE = 10           # px
+GLOW_SIZE = 10          # glow intensity
 
 
 def get_abbreviated_label(subclass: str) -> str:
