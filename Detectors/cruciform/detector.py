@@ -1,10 +1,40 @@
-"""Cruciform DNA detector: thermodynamic inverted repeats using seed-and-extend indexing
-(Lilley 2000; SantaLucia 1998)."""
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    CRUCIFORM DETECTOR MODULE                                  ║
+║       Thermodynamic Inverted Repeat Detection (Seed-and-Extend)              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
+MODULE: detector.py (Detectors/cruciform/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    Cruciform DNA detection using thermodynamic inverted repeat analysis
+    with seed-and-extend indexing. Implements SantaLucia nearest-neighbor
+    ΔG scoring for hairpin stability.
+
+REFERENCES:
+    - Lilley (2000) - Cruciform DNA structures
+    - SantaLucia (1998) - NN thermodynamic parameters
+
+THERMODYNAMIC MODEL:
+    | Parameter     | Value/Range         | Description             |
+    |---------------|---------------------|-------------------------|
+    | MIN_ARM       | 8 bp                | Minimum arm length      |
+    | MAX_ARM       | 50 bp               | Maximum arm length      |
+    | MAX_LOOP      | 12 bp               | Maximum loop size       |
+    | ΔG_THRESHOLD  | -5.0 kcal/mol       | Stability cutoff        |
+
+PERFORMANCE: O(n²) worst-case, O(n) typical with seed filtering
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import math
 from typing import List, Dict, Any, Tuple, Optional
 from collections import defaultdict
-
 from ..base.base_detector import BaseMotifDetector
 from Utilities.detectors_utils import revcomp, calc_gc_content
 from Utilities.core.motif_normalizer import normalize_class_subclass

@@ -1,42 +1,41 @@
 """
-Slipped DNA Motif Detector
-==========================
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     SLIPPED DNA DETECTOR MODULE                               ║
+║          Unified STR and Direct Repeat Detection with Energy Scoring          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-Unified detector for slippage-prone DNA structures including:
-- Short Tandem Repeats (STRs): k=1-9 bp unit sizes
-- Direct Repeats: k≥10 bp unit sizes
+MODULE: detector.py (Detectors/slipped/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
 
-Requires ≥20 bp tracts with ≥90% purity for high-confidence detection.
+DESCRIPTION:
+    Unified detector for slippage-prone DNA structures including:
+    - Short Tandem Repeats (STRs): k=1-9 bp unit sizes
+    - Direct Repeats: k≥10 bp unit sizes
+    
+    Requires ≥20 bp tracts with ≥90% purity for high-confidence detection.
+    Implements mechanistic slippage energy scoring (1-3 scale).
 
-Scientific References:
----------------------
-- Sinden, R.R. (1994). DNA Structure and Function. Academic Press.
-  Describes the molecular basis of slipped-strand DNA formation and
-  its role in genetic instability.
+REFERENCES:
+    - Sinden (1994) - DNA slipped-strand formation
+    - Pearson et al. (2005) - Repeat instability mechanisms
+    - Mirkin (2007) - Expandable DNA repeats and disease
 
-- Pearson, C.E., Nichol Edamura, K., and Cleary, J.D. (2005).
-  Repeat instability: mechanisms of dynamic mutations.
-  Nature Reviews Genetics 6(10):729-742.
-  Comprehensive review of repeat expansion mechanisms and slippage.
+DETECTION PIPELINE:
+    | Stage | Process                | Output                    |
+    |-------|------------------------|---------------------------|
+    | 1     | Tandem repeat finding  | Raw candidates            |
+    | 2     | Stringent filtering    | Purity/length validated   |
+    | 3     | Redundancy elimination | One call per locus        |
+    | 4     | Energy scoring         | Slippage scores (1-3)     |
 
-- Mirkin, S.M. (2007). Expandable DNA repeats and human disease.
-  Nature 447:932-940.
-  Links slipped-strand structures to repeat expansion diseases.
-
-Algorithm:
-----------
-1. Unified tandem repeat detection for k=1 to MAX_UNIT_SIZE
-2. Stringent quality filters (length, purity, copy number, entropy)
-3. Redundancy elimination (one call per genomic locus)
-4. Mechanistic slippage energy scoring (1-3 scale)
-
-Performance:
------------
-- O(n) complexity with efficient algorithmic detection
-- No catastrophic regex backtracking
-- Handles sequences up to 100 Kbp efficiently
+PERFORMANCE: O(n) complexity, handles sequences up to 100 Kbp
 """
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import List, Dict, Any, Tuple
 from ..base.base_detector import BaseMotifDetector

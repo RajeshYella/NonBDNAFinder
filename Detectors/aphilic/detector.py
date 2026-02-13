@@ -1,23 +1,65 @@
-"""A-philic DNA detector: 10-mer scoring table with hyperscan acceleration."""
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      A-PHILIC DNA DETECTOR MODULE                             ║
+║             10-mer Scoring Table with Hyperscan Acceleration                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
+MODULE: detector.py (Detectors/aphilic/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    A-philic DNA detection using tetranucleotide log₂ odds scoring table.
+    Identifies regions with high nucleosome positioning propensity.
+    Supports Hyperscan acceleration when available.
+
+REFERENCES:
+    - Vinogradov (2003) - DNA helix GC-richness
+    - Rohs et al. (2009) - DNA shape in protein recognition
+
+SCORING METHOD:
+    | Component       | Description                    |
+    |-----------------|--------------------------------|
+    | 10-mer table    | Pre-computed log₂ odds scores  |
+    | Per-base contrib| Distributed L/10 per position  |
+    | Sum threshold   | MIN_SUM_LOG2 = 0.5             |
+
+PERFORMANCE: O(n) with Hyperscan acceleration, pure-Python fallback
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import logging
 from typing import Any, Dict, List, Tuple
 
-try: from Detectors.base.base_detector import BaseMotifDetector
+try:
+    from Detectors.base.base_detector import BaseMotifDetector
 except ImportError:
-    import sys; from pathlib import Path
+    import sys
+    from pathlib import Path
     parent_dir = str(Path(__file__).parent.parent.parent)
-    if parent_dir not in sys.path: sys.path.insert(0, parent_dir)
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
     from Detectors import BaseMotifDetector
 
 from Utilities.core.motif_normalizer import normalize_class_subclass
 from .tenmer_table import TENMER_LOG2
 
-try: from Detectors.zdna import hyperscan_backend; _HYPERSCAN_AVAILABLE = hyperscan_backend.is_hyperscan_available()
-except ImportError: _HYPERSCAN_AVAILABLE = False; hyperscan_backend = None
+try:
+    from Detectors.zdna import hyperscan_backend
+    _HYPERSCAN_AVAILABLE = hyperscan_backend.is_hyperscan_available()
+except ImportError:
+    _HYPERSCAN_AVAILABLE = False
+    hyperscan_backend = None
 
-try: from motif_patterns import APHILIC_DNA_PATTERNS
-except ImportError: APHILIC_DNA_PATTERNS = {}
+try:
+    from motif_patterns import APHILIC_DNA_PATTERNS
+except ImportError:
+    APHILIC_DNA_PATTERNS = {}
+
+logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 

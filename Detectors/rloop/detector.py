@@ -1,8 +1,34 @@
 """
-R-Loop detector: QmRLFS algorithm (Jenjaroenpun 2016)
-Hyperscan + Seed-accelerated REZ detection (high performance)
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      R-LOOP DETECTOR MODULE                                   ║
+║            QmRLFS Algorithm with Hyperscan Acceleration                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+MODULE: detector.py (Detectors/rloop/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    R-loop detection using the QmRLFS algorithm (Jenjaroenpun 2016).
+    Features Hyperscan acceleration and seed-accelerated REZ detection
+    for high-performance analysis.
+
+REFERENCES:
+    - Jenjaroenpun et al. (2016) - QmRLFS-finder algorithm
+
+DETECTION MODELS:
+    | Model | Pattern Type        | G-content Threshold |
+    |-------|---------------------|---------------------|
+    | 1     | G-cluster RIZ       | ≥50% G              |
+    | 2     | Extended G-tract    | ≥50% G              |
+
+PERFORMANCE: O(n) with Hyperscan + prefix-sum GC array optimization
 """
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import List, Dict, Any, Tuple, Optional
 from ..base.base_detector import BaseMotifDetector

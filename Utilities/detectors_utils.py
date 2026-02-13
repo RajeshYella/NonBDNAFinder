@@ -1,11 +1,37 @@
 """
-Shared utilities for Non-B DNA motif detectors.
-Extracted common functions to reduce code repetition in detectors.py
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    DETECTORS UTILITIES MODULE                                 ║
+║            Shared Functions for Non-B DNA Motif Detectors                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-Author: Dr. Venkata Rajesh Yella
-Version: 2024.1
+MODULE: detectors_utils.py (Utilities/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    Shared utility functions for all motif detectors including:
+    - Sequence manipulation (reverse complement)
+    - Content calculations (GC%, AT%)
+    - Overlap removal algorithms
+    - Pattern loading with fallback
+
+UTILITY FUNCTIONS:
+    | Function                   | Description                    |
+    |----------------------------|--------------------------------|
+    | revcomp()                  | Reverse complement of DNA      |
+    | calc_gc_content()          | Calculate GC percentage        |
+    | calc_at_content()          | Calculate AT percentage        |
+    | remove_overlaps()          | Remove overlapping motifs      |
+    | remove_overlaps_by_subclass() | Remove overlaps within subclass |
+    | load_patterns_with_fallback() | Load patterns with defaults  |
+
+PERFORMANCE: O(n) for all operations
 """
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 from typing import List, Dict, Any, Callable, Optional
 
 

@@ -1,5 +1,35 @@
-"""Curved DNA detector: A-tract and T-tract phasing patterns (Koo 1986, Olson 1998)."""
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     CURVED DNA DETECTOR MODULE                                ║
+║           A-tract and T-tract Phasing Pattern Detection                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
+MODULE: detector.py (Detectors/curved/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    Curved DNA detection based on A-tract and T-tract phasing patterns.
+    Identifies both local curvature (long tracts) and global curvature
+    (A-phased repeats with helical periodicity).
+
+REFERENCES:
+    - Koo et al. (1986) - A-tract DNA bending
+    - Olson et al. (1998) - DNA curvature mechanics
+
+SUBCLASSES DETECTED:
+    | ID | Subclass        | Description                    |
+    |----|-----------------|--------------------------------|
+    | 1  | Global Curvature| A-phased repeat regions (APRs) |
+    | 2  | Local Curvature | Long A/T-tract sequences       |
+
+PERFORMANCE: O(n) with efficient phasing analysis
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import List, Dict, Any, Tuple
 from ..base.base_detector import BaseMotifDetector

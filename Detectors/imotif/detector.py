@@ -1,18 +1,55 @@
-"""i-Motif DNA detector: canonical C-rich structures and HUR AC-motifs (Gehring 1993, Hur 2021)."""
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     i-MOTIF DETECTOR MODULE                                   ║
+║         Canonical C-rich Structures + HUR AC-motif Detection                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
+MODULE: detector.py (Detectors/imotif/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    i-Motif detection for pH-dependent C-rich DNA secondary structures.
+    Includes canonical 4×C-tract patterns and HUR AC-motifs.
+
+REFERENCES:
+    - Gehring et al. (1993) - i-Motif structure discovery
+    - Leroy et al. (1995) - i-Motif validation
+    - Hur et al. (2021) - AC-motif characterization
+
+SUBCLASSES DETECTED:
+    | ID | Subclass          | Description                    |
+    |----|-------------------|--------------------------------|
+    | 1  | Canonical i-motif | 4×C-tract intercalated        |
+    | 2  | AC-motif (HUR)    | Alternating A/C pattern        |
+
+PERFORMANCE: O(n) with greedy overlap resolution
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import Dict, List, Tuple, Any
 from ..base.base_detector import BaseMotifDetector
 from Utilities.detectors_utils import revcomp
 from Utilities.core.motif_normalizer import normalize_class_subclass
 
-try: from motif_patterns import IMOTIF_PATTERNS
-except ImportError: IMOTIF_PATTERNS = {}
+try:
+    from motif_patterns import IMOTIF_PATTERNS
+except ImportError:
+    IMOTIF_PATTERNS = {}
 
-# Tunable constants
-MIN_REGION_LEN = 10; CLASS_PRIORITIES = {'canonical_imotif': 1, 'hur_ac_motif': 2}
-VALIDATED_SEQS = [("IM_VAL_001", "CCCCTCCCCTCCCCTCCCC", "Validated i-motif 1", "Gehring 1993"),
-                  ("IM_VAL_002", "CCCCACCCCACCCCACCCC", "Validated i-motif 2", "Leroy 1995")]
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+MIN_REGION_LEN = 10
+CLASS_PRIORITIES = {'canonical_imotif': 1, 'hur_ac_motif': 2}
+VALIDATED_SEQS = [
+    ("IM_VAL_001", "CCCCTCCCCTCCCCTCCCC", "Validated i-motif 1", "Gehring 1993"),
+    ("IM_VAL_002", "CCCCACCCCACCCCACCCC", "Validated i-motif 2", "Leroy 1995")
+]
 
 def _class_prio_idx(class_name: str) -> int: return CLASS_PRIORITIES.get(class_name, 999)
 

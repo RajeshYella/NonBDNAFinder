@@ -1,15 +1,49 @@
 """
-Ultra-fast G-Quadruplex detector:
-Seeded scanning + G-only G4Hunter scoring
-(Huppert 2005, Bedrat 2016 inspired)
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    G-QUADRUPLEX DETECTOR MODULE                               ║
+║         Ultra-fast G4Hunter + Seeded Scanning Implementation                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+MODULE: detector.py (Detectors/gquad/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    High-performance G-Quadruplex detection using seeded scanning with
+    G-only G4Hunter scoring. Implements 8 subclasses from telomeric to
+    weak PQS structures.
+
+REFERENCES:
+    - Huppert & Balasubramanian (2005) - G4 prevalence in human genome
+    - Bedrat et al. (2016) - G4Hunter algorithm
+
+SUBCLASSES DETECTED:
+    | ID | Subclass                    | Pattern Type           |
+    |----|-----------------------------|-----------------------|
+    | 1  | Telomeric G4                | TTAGGG repeats        |
+    | 2  | Stacked canonical G4s       | Multiple G4 units     |
+    | 3  | Stacked G4s with linker     | G4s with spacers      |
+    | 4  | Canonical intramolecular G4 | Standard G4           |
+    | 5  | Extended-loop canonical     | Long loop G4          |
+    | 6  | Higher-order G4 array       | G4-wire structures    |
+    | 7  | Intramolecular G-triplex    | 3-tetrad structures   |
+    | 8  | Two-tetrad weak PQS         | Minimal G4            |
+
+PERFORMANCE: O(n) seeded scanning with priority-based overlap resolution
 """
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import Dict, List, Tuple, Any
 from ..base.base_detector import BaseMotifDetector
 from Utilities.core.motif_normalizer import normalize_class_subclass
 
-# Tunable constants
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
 WINDOW_SIZE_DEFAULT = 25
 MIN_REGION_LEN = 8
 

@@ -1,11 +1,61 @@
-import streamlit as st; import pandas as pd; import matplotlib.pyplot as plt; import logging
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                       RESULTS PAGE MODULE                                     ║
+║              Analysis Results & Visualization Renderer                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+MODULE: results.py (UI/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    Renders analysis results with comprehensive visualizations including:
+    - Motif track visualizations (class/subclass)
+    - Distribution charts (bar, pie, KDE)
+    - Density analysis plots
+    - Cluster and co-occurrence analysis
+
+VISUALIZATIONS:
+    | Type                | Description                    |
+    |---------------------|--------------------------------|
+    | Linear Track        | Genomic position mapping       |
+    | Distribution        | Class/Subclass bar charts      |
+    | Nested Pie          | Hierarchical composition       |
+    | Density Comparison  | Genomic vs positional          |
+    | Length KDE          | Length distribution curves     |
+    | Co-occurrence       | Motif interaction matrix       |
+
+PERFORMANCE: Optimized DataFrame memory usage for large result sets
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import logging
 from collections import Counter
-from Utilities.config.text import UI_TEXT; from Utilities.config.themes import TAB_THEMES; from Utilities.config.analysis import MAX_OVERLAP_DISPLAY
-from UI.css import load_css; from UI.headers import render_section_heading
-from Utilities.utilities import get_basic_stats, export_results_to_dataframe, optimize_dataframe_memory, calculate_genomic_density, calculate_positional_density, plot_motif_distribution, plot_nested_pie_chart, plot_linear_motif_track, plot_linear_subclass_track, plot_density_comparison, plot_cluster_size_distribution, plot_motif_cooccurrence_matrix, plot_motif_length_kde, plot_score_distribution
+from Utilities.config.text import UI_TEXT
+from Utilities.config.themes import TAB_THEMES
+from Utilities.config.analysis import MAX_OVERLAP_DISPLAY
+from UI.css import load_css
+from UI.headers import render_section_heading
+from Utilities.utilities import (
+    get_basic_stats, export_results_to_dataframe, optimize_dataframe_memory,
+    calculate_genomic_density, calculate_positional_density, plot_motif_distribution,
+    plot_nested_pie_chart, plot_linear_motif_track, plot_linear_subclass_track,
+    plot_density_comparison, plot_cluster_size_distribution, plot_motif_cooccurrence_matrix,
+    plot_motif_length_kde, plot_score_distribution
+)
 from Utilities.visualization import NATURE_MOTIF_COLORS
 
-logger = logging.getLogger(__name__); CLUSTER_CLASSES = ['Hybrid', 'Non-B_DNA_Clusters']
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+logger = logging.getLogger(__name__)
+CLUSTER_CLASSES = ['Hybrid', 'Non-B_DNA_Clusters']
 
 def _render_section_divider(label): st.markdown(f"<div style='display:flex;align-items:center;gap:8px;padding:2px 0;margin-top:6px;'><span style='font-size:0.8rem;color:#64748b;font-weight:600;'>{label}</span><div style='flex:1;height:1px;background:linear-gradient(90deg,#a855f7 0%,transparent 100%);'></div></div>", unsafe_allow_html=True)
 

@@ -1,11 +1,86 @@
-import streamlit as st; import pandas as pd
-from Utilities.config.text import UI_TEXT; from Utilities.config.themes import TAB_THEMES
-from Utilities.config.colors import UNIFIED_MOTIF_COLORS, MOTIF_CLASS_INFO
-from UI.css import load_css; from UI.headers import render_section_heading
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    DOCUMENTATION PAGE MODULE                                  ║
+║             Scientific Documentation & References Renderer                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-MOTIF_PARAMETERS = {"Curved DNA": {"min_length": "20 bp", "max_length": "500 bp", "algorithm": "A-tract phasing detection", "scoring": "Tract length × phasing score", "refs": ["Crothers et al., 1990", "Koo et al., 1986"]}, "G-Quadruplex": {"min_length": "15 bp", "max_length": "100 bp", "algorithm": "G4Hunter + Regex pattern matching", "scoring": "G4Hunter score (threshold ≥1.2)", "refs": ["Bedrat et al., 2016", "Huppert & Balasubramanian, 2005"]}, "Z-DNA": {"min_length": "8 bp", "max_length": "200 bp", "algorithm": "Alternating purine-pyrimidine detection", "scoring": "Z-score with GC enrichment", "refs": ["Ho et al., 1986", "Wang et al., 1979"]}, "Cruciform": {"min_length": "10 bp arm", "max_length": "100 bp arm", "algorithm": "Inverted repeat detection", "scoring": "Arm length × stem stability", "refs": ["Lilley, 1980", "Panayotatos & Wells, 1981"]}, "R-Loop": {"min_length": "15 bp", "max_length": "2000 bp", "algorithm": "QmRLFS model", "scoring": "Thermodynamic ΔG stability", "refs": ["Jenjaroenpun et al., 2015", "Aguilera & García-Muse, 2012"]}, "Triplex": {"min_length": "10 bp", "max_length": "100 bp", "algorithm": "Mirror repeat detection", "scoring": "Purine/pyrimidine purity ≥90%", "refs": ["Mirkin et al., 1987", "Frank-Kamenetskii & Mirkin, 1995"]}, "i-Motif": {"min_length": "12 bp", "max_length": "60 bp", "algorithm": "C-tract pattern matching", "scoring": "C-run count × content score", "refs": ["Zeraati et al., 2018", "Day et al., 2014"]}, "Slipped DNA": {"min_length": "6 bp unit", "max_length": "50 bp unit", "algorithm": "Direct repeat detection", "scoring": "Unit copies × repeat fidelity", "refs": ["Pearson et al., 2005", "Wells, 2007"]}, "A-philic DNA": {"min_length": "10 bp", "max_length": "200 bp", "algorithm": "Tetranucleotide log₂ odds scoring", "scoring": "Propensity score threshold", "refs": ["Vinogradov, 2003", "Rohs et al., 2009"]}}
-REFERENCES = [{"authors": "Bedrat A, Lacroix L, Mergny JL", "year": 2016, "title": "Re-evaluation of G-quadruplex propensity with G4Hunter", "journal": "Nucleic Acids Res", "volume": "44(4):1746-59", "doi": "10.1093/nar/gkw006"}, {"authors": "Huppert JL, Balasubramanian S", "year": 2005, "title": "Prevalence of quadruplexes in the human genome", "journal": "Nucleic Acids Res", "volume": "33(9):2908-16", "doi": "10.1093/nar/gki609"}, {"authors": "Zeraati M, Langley DB, et al.", "year": 2018, "title": "I-motif DNA structures are formed in the nuclei of human cells", "journal": "Nat Chem", "volume": "10(6):631-637", "doi": "10.1038/s41557-018-0046-3"}, {"authors": "Ho PS, Frederick CA, Saal D, et al.", "year": 1986, "title": "The interactions of ruthenium hexaammine with Z-DNA", "journal": "J Biomol Struct Dyn", "volume": "4(3):521-34", "doi": "10.1080/07391102.1986.10506363"}, {"authors": "Jenjaroenpun P, Wongsurawat T, et al.", "year": 2015, "title": "QmRLFS-finder: a model, web server and stand-alone tool", "journal": "Nucleic Acids Res", "volume": "43(W1):W527-34", "doi": "10.1093/nar/gkv344"}, {"authors": "Aguilera A, García-Muse T", "year": 2012, "title": "R loops: from transcription byproducts to threats to genome stability", "journal": "Mol Cell", "volume": "46(2):115-24", "doi": "10.1016/j.molcel.2012.04.009"}, {"authors": "Frank-Kamenetskii MD, Mirkin SM", "year": 1995, "title": "Triplex DNA structures", "journal": "Annu Rev Biochem", "volume": "64:65-95", "doi": "10.1146/annurev.bi.64.070195.000433"}, {"authors": "Crothers DM, Drak J, et al.", "year": 1990, "title": "DNA bending, flexibility, and helical repeat", "journal": "Methods Enzymol", "volume": "212:3-29", "doi": "10.1016/0076-6879(92)12003-9"}, {"authors": "Vinogradov AE", "year": 2003, "title": "DNA helix: the importance of being GC-rich", "journal": "Nucleic Acids Res", "volume": "31(7):1838-44", "doi": "10.1093/nar/gkg296"}, {"authors": "Rohs R, West SM, et al.", "year": 2009, "title": "The role of DNA shape in protein-DNA recognition", "journal": "Nature", "volume": "461(7268):1248-53", "doi": "10.1038/nature08473"}, {"authors": "Pearson CE, Nichol Edamura K, Cleary JD", "year": 2005, "title": "Repeat instability: mechanisms of dynamic mutations", "journal": "Nat Rev Genet", "volume": "6(10):729-42", "doi": "10.1038/nrg1689"}, {"authors": "Bacolla A, Wells RD", "year": 2004, "title": "Non-B DNA conformations, genomic rearrangements, and human disease", "journal": "J Biol Chem", "volume": "279(46):47411-4", "doi": "10.1074/jbc.R400028200"}]
-MOTIF_DESCRIPTIONS = {'Curved_DNA': "Intrinsic DNA curvature from phased A-tracts", 'Slipped_DNA': "Slippage-mediated repeat expansions", 'Cruciform': "Hairpin structures from palindromic sequences", 'R-Loop': "Co-transcriptional R-loop formation sites", 'Triplex': "Triple-stranded DNA from mirror repeats", 'G-Quadruplex': "Four-stranded G-rich secondary structures", 'i-Motif': "Intercalated cytosine structures", 'Z-DNA': "Alternating purine-pyrimidine sequences", 'A-philic_DNA': "High nucleosome positioning potential", 'Hybrid': "Regions with multiple motif types", 'Non-B_DNA_Clusters': "High-density Non-B DNA regions"}
+MODULE: documentation.py (UI/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    Renders scientific documentation including:
+    - Detected motif class descriptions
+    - Detection parameters and algorithms
+    - Peer-reviewed references with DOI links
+    - Citation information
+
+CONTENT SECTIONS:
+    | Section             | Description                    |
+    |---------------------|--------------------------------|
+    | Motif Classes       | 11 classes with descriptions   |
+    | Parameters          | Detection thresholds/algorithms|
+    | References          | Peer-reviewed citations        |
+    | How to Cite         | Citation template              |
+
+PERFORMANCE: Static content with minimal rendering overhead
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
+import streamlit as st
+import pandas as pd
+from Utilities.config.text import UI_TEXT
+from Utilities.config.themes import TAB_THEMES
+from Utilities.config.colors import UNIFIED_MOTIF_COLORS, MOTIF_CLASS_INFO
+from UI.css import load_css
+from UI.headers import render_section_heading
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+MOTIF_PARAMETERS = {
+    "Curved DNA": {"min_length": "20 bp", "max_length": "500 bp", "algorithm": "A-tract phasing detection", "scoring": "Tract length × phasing score", "refs": ["Crothers et al., 1990", "Koo et al., 1986"]},
+    "G-Quadruplex": {"min_length": "15 bp", "max_length": "100 bp", "algorithm": "G4Hunter + Regex pattern matching", "scoring": "G4Hunter score (threshold ≥1.2)", "refs": ["Bedrat et al., 2016", "Huppert & Balasubramanian, 2005"]},
+    "Z-DNA": {"min_length": "8 bp", "max_length": "200 bp", "algorithm": "Alternating purine-pyrimidine detection", "scoring": "Z-score with GC enrichment", "refs": ["Ho et al., 1986", "Wang et al., 1979"]},
+    "Cruciform": {"min_length": "10 bp arm", "max_length": "100 bp arm", "algorithm": "Inverted repeat detection", "scoring": "Arm length × stem stability", "refs": ["Lilley, 1980", "Panayotatos & Wells, 1981"]},
+    "R-Loop": {"min_length": "15 bp", "max_length": "2000 bp", "algorithm": "QmRLFS model", "scoring": "Thermodynamic ΔG stability", "refs": ["Jenjaroenpun et al., 2015", "Aguilera & García-Muse, 2012"]},
+    "Triplex": {"min_length": "10 bp", "max_length": "100 bp", "algorithm": "Mirror repeat detection", "scoring": "Purine/pyrimidine purity ≥90%", "refs": ["Mirkin et al., 1987", "Frank-Kamenetskii & Mirkin, 1995"]},
+    "i-Motif": {"min_length": "12 bp", "max_length": "60 bp", "algorithm": "C-tract pattern matching", "scoring": "C-run count × content score", "refs": ["Zeraati et al., 2018", "Day et al., 2014"]},
+    "Slipped DNA": {"min_length": "6 bp unit", "max_length": "50 bp unit", "algorithm": "Direct repeat detection", "scoring": "Unit copies × repeat fidelity", "refs": ["Pearson et al., 2005", "Wells, 2007"]},
+    "A-philic DNA": {"min_length": "10 bp", "max_length": "200 bp", "algorithm": "Tetranucleotide log₂ odds scoring", "scoring": "Propensity score threshold", "refs": ["Vinogradov, 2003", "Rohs et al., 2009"]}
+}
+
+REFERENCES = [
+    {"authors": "Bedrat A, Lacroix L, Mergny JL", "year": 2016, "title": "Re-evaluation of G-quadruplex propensity with G4Hunter", "journal": "Nucleic Acids Res", "volume": "44(4):1746-59", "doi": "10.1093/nar/gkw006"},
+    {"authors": "Huppert JL, Balasubramanian S", "year": 2005, "title": "Prevalence of quadruplexes in the human genome", "journal": "Nucleic Acids Res", "volume": "33(9):2908-16", "doi": "10.1093/nar/gki609"},
+    {"authors": "Zeraati M, Langley DB, et al.", "year": 2018, "title": "I-motif DNA structures are formed in the nuclei of human cells", "journal": "Nat Chem", "volume": "10(6):631-637", "doi": "10.1038/s41557-018-0046-3"},
+    {"authors": "Ho PS, Frederick CA, Saal D, et al.", "year": 1986, "title": "The interactions of ruthenium hexaammine with Z-DNA", "journal": "J Biomol Struct Dyn", "volume": "4(3):521-34", "doi": "10.1080/07391102.1986.10506363"},
+    {"authors": "Jenjaroenpun P, Wongsurawat T, et al.", "year": 2015, "title": "QmRLFS-finder: a model, web server and stand-alone tool", "journal": "Nucleic Acids Res", "volume": "43(W1):W527-34", "doi": "10.1093/nar/gkv344"},
+    {"authors": "Aguilera A, García-Muse T", "year": 2012, "title": "R loops: from transcription byproducts to threats to genome stability", "journal": "Mol Cell", "volume": "46(2):115-24", "doi": "10.1016/j.molcel.2012.04.009"},
+    {"authors": "Frank-Kamenetskii MD, Mirkin SM", "year": 1995, "title": "Triplex DNA structures", "journal": "Annu Rev Biochem", "volume": "64:65-95", "doi": "10.1146/annurev.bi.64.070195.000433"},
+    {"authors": "Crothers DM, Drak J, et al.", "year": 1990, "title": "DNA bending, flexibility, and helical repeat", "journal": "Methods Enzymol", "volume": "212:3-29", "doi": "10.1016/0076-6879(92)12003-9"},
+    {"authors": "Vinogradov AE", "year": 2003, "title": "DNA helix: the importance of being GC-rich", "journal": "Nucleic Acids Res", "volume": "31(7):1838-44", "doi": "10.1093/nar/gkg296"},
+    {"authors": "Rohs R, West SM, et al.", "year": 2009, "title": "The role of DNA shape in protein-DNA recognition", "journal": "Nature", "volume": "461(7268):1248-53", "doi": "10.1038/nature08473"},
+    {"authors": "Pearson CE, Nichol Edamura K, Cleary JD", "year": 2005, "title": "Repeat instability: mechanisms of dynamic mutations", "journal": "Nat Rev Genet", "volume": "6(10):729-42", "doi": "10.1038/nrg1689"},
+    {"authors": "Bacolla A, Wells RD", "year": 2004, "title": "Non-B DNA conformations, genomic rearrangements, and human disease", "journal": "J Biol Chem", "volume": "279(46):47411-4", "doi": "10.1074/jbc.R400028200"}
+]
+
+MOTIF_DESCRIPTIONS = {
+    'Curved_DNA': "Intrinsic DNA curvature from phased A-tracts",
+    'Slipped_DNA': "Slippage-mediated repeat expansions",
+    'Cruciform': "Hairpin structures from palindromic sequences",
+    'R-Loop': "Co-transcriptional R-loop formation sites",
+    'Triplex': "Triple-stranded DNA from mirror repeats",
+    'G-Quadruplex': "Four-stranded G-rich secondary structures",
+    'i-Motif': "Intercalated cytosine structures",
+    'Z-DNA': "Alternating purine-pyrimidine sequences",
+    'A-philic_DNA': "High nucleosome positioning potential",
+    'Hybrid': "Regions with multiple motif types",
+    'Non-B_DNA_Clusters': "High-density Non-B DNA regions"
+}
 
 def _build_motif_card(n, sub, col, desc): return f"<div style='background:white;padding:0.7rem;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid {col};'><strong style='color:#1e293b;font-size:0.85rem;'>{n}</strong><div style='color:{col};font-size:0.7rem;font-weight:600;margin:0.15rem 0;'>{sub}</div><div style='color:#64748b;font-size:0.7rem;line-height:1.3;'>{desc}</div></div>"
 def _build_reference_card(r): return f"<div style='background:#f8fafc;padding:0.5rem;border-radius:6px;border-left:3px solid #3b82f6;'><div style='font-weight:600;color:#1e293b;font-size:0.75rem;margin-bottom:0.15rem;'>{r['authors']} ({r['year']})</div><div style='color:#334155;font-size:0.7rem;font-style:italic;margin-bottom:0.1rem;'>{r['title']}</div><div style='color:#64748b;font-size:0.65rem;'><strong>{r['journal']}</strong> {r['volume']} · <a href=\"https://doi.org/{r['doi']}\" target=\"_blank\" style=\"color:#3b82f6;\">DOI: {r['doi']}</a></div></div>"

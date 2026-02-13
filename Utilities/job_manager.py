@@ -1,16 +1,34 @@
 """
-Job Management Module for NBDScanner
-=====================================
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                       JOB MANAGER MODULE                                      ║
+║          Job ID Generation, Result Persistence, and Lookup                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-Provides job ID generation, result persistence, and job lookup functionality.
+MODULE: job_manager.py (Utilities/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
 
-Features:
-- Short, URL-safe unique job IDs (10-character hex)
-- Disk-based result persistence under results/<job_id>/
-- Job metadata storage (timestamp, sequence info)
-- Job lookup and retrieval
+DESCRIPTION:
+    Provides job management functionality for NBDScanner including:
+    - Short, URL-safe unique job IDs (10-character hex)
+    - Disk-based result persistence under results/<job_id>/
+    - Job metadata storage (timestamp, sequence info)
+    - Job lookup and retrieval
+
+JOB STORAGE STRUCTURE:
+    | File           | Content                        |
+    |----------------|--------------------------------|
+    | results.json   | All motif detection results    |
+    | metadata.json  | Job metadata and stats         |
+    | sequences.json | Original sequences             |
+
+PERFORMANCE: Efficient disk I/O with JSON serialization
 """
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import os
 import json
 import uuid
@@ -18,9 +36,10 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 import logging
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
 logger = logging.getLogger(__name__)
-
-# Base directory for all job results
 RESULTS_BASE_DIR = "results"
 
 

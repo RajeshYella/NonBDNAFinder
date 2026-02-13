@@ -1,6 +1,45 @@
-import os; import streamlit as st
-from Utilities.config.colors import GLOBAL_COLORS, HOME_COLORS, INPUT_COLORS, ANALYSIS_COLORS, RESULTS_COLORS, VISUALIZATION_COLORS, DOWNLOAD_COLORS, DOCUMENTATION_COLORS, SEMANTIC_COLORS
-from Utilities.config.themes import COLOR_THEMES; from Utilities.config.typography import FONT_CONFIG; from Utilities.config.layout import LAYOUT_CONFIG; from Utilities.config.animation import ANIMATION_CONFIG
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         CSS MODULE                                            ║
+║              Theme Management and Dynamic CSS Generation                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+MODULE: css.py (UI/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    Manages application theming and CSS generation including:
+    - Dynamic color theme application
+    - CSS variable injection
+    - Page-specific color schemes
+    - DNA pattern SVG generation
+
+THEME SUPPORT:
+    | Theme              | Primary Use           |
+    |--------------------|----------------------|
+    | scientific_blue    | Default/Documentation|
+    | genomic_purple     | Results              |
+    | clinical_teal      | Download             |
+
+PERFORMANCE: Cached CSS with session-based theme switching
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
+import os
+import streamlit as st
+from Utilities.config.colors import (
+    GLOBAL_COLORS, HOME_COLORS, INPUT_COLORS, ANALYSIS_COLORS,
+    RESULTS_COLORS, VISUALIZATION_COLORS, DOWNLOAD_COLORS,
+    DOCUMENTATION_COLORS, SEMANTIC_COLORS
+)
+from Utilities.config.themes import COLOR_THEMES
+from Utilities.config.typography import FONT_CONFIG
+from Utilities.config.layout import LAYOUT_CONFIG
+from Utilities.config.animation import ANIMATION_CONFIG
 
 def hex_to_rgb(hex_color): h = hex_color.lstrip("#"); return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
 

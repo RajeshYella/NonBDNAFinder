@@ -1,8 +1,43 @@
-import streamlit as st; import os
-from Utilities.config.text import UI_TEXT; from Utilities.config.themes import TAB_THEMES
-from Utilities.config.colors import MOTIF_CLASS_INFO, get_motif_card_style
-from UI.css import load_css, get_page_colors; from UI.headers import render_section_heading
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         HOME PAGE MODULE                                      ║
+║                  NonBDNAFinder Landing Page Renderer                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
+MODULE: home.py (UI/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    Renders the home page for NonBDNAFinder application including:
+    - Scientific foundation section
+    - Detected motif class cards
+    - Citation information
+
+COMPONENTS:
+    | Function             | Description                    |
+    |----------------------|--------------------------------|
+    | render()             | Main page rendering function   |
+    | _build_motif_class_card() | Generate motif info cards |
+
+PERFORMANCE: Lightweight rendering with CSS caching
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
+import streamlit as st
+import os
+from Utilities.config.text import UI_TEXT
+from Utilities.config.themes import TAB_THEMES
+from Utilities.config.colors import MOTIF_CLASS_INFO, get_motif_card_style
+from UI.css import load_css, get_page_colors
+from UI.headers import render_section_heading
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
 IMAGE_PATHS = ["nbdcircle.JPG", "archive/nbdcircle.JPG", "./nbdcircle.JPG"]
 
 def _build_motif_class_card(info):

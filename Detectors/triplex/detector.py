@@ -1,8 +1,34 @@
-"""Triplex DNA detector: seed-and-extend mirror repeats (H-DNA)
-Frank-Kamenetskii 1995; Soyfer & Potaman 1995
-Sticky DNA handled separately.
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      TRIPLEX DETECTOR MODULE                                  ║
+║              Seed-and-Extend Mirror Repeat Detection (H-DNA)                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+MODULE: detector.py (Detectors/triplex/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    Triplex (H-DNA) detection using seed-and-extend algorithm for
+    mirror repeat identification. Includes Sticky DNA (GAA/TTC repeats).
+
+REFERENCES:
+    - Frank-Kamenetskii & Mirkin (1995) - Triplex DNA structures
+    - Soyfer & Potaman (1995) - Sticky DNA characterization
+
+SUBCLASSES DETECTED:
+    | ID | Subclass   | Description                      |
+    |----|------------|----------------------------------|
+    | 1  | H-DNA      | Mirror repeat triplex structures |
+    | 2  | Sticky_DNA | GAA/TTC triplet repeats          |
+
+PERFORMANCE: O(n) seed-based detection with purity filtering
 """
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import List, Dict, Any, Tuple
 from collections import defaultdict

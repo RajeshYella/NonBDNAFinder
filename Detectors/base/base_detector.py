@@ -1,15 +1,38 @@
 """
-Base Detector Class - Abstract base for all Non-B DNA motif detectors
-Dr. Venkata Rajesh Yella | 2024.1 | MIT License
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    BASE DETECTOR CLASS MODULE                                 ║
+║          Abstract Base for All Non-B DNA Motif Detectors                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-O(n) regex matching | Pattern compilation & caching
+MODULE: base_detector.py (Detectors/base/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    Abstract base class for all Non-B DNA motif detectors. Provides:
+    - Pattern compilation and caching
+    - O(n) regex matching
+    - Standardized motif output structure
+    - Audit tracking for detection pipeline
+
+ABSTRACT METHODS:
+    | Method              | Description                    |
+    |---------------------|--------------------------------|
+    | get_patterns()      | Return patterns for detection  |
+    | get_motif_class_name() | Return motif class name     |
+    | calculate_score()   | Calculate confidence score     |
+
+PERFORMANCE: O(n) regex matching with compiled pattern caching
 """
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Tuple
 
-# Import shared utilities
 from Utilities.detectors_utils import (
     calc_gc_content,
     calc_at_content,

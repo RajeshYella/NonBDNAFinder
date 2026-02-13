@@ -1,21 +1,57 @@
-"""Z-DNA detector: 10-mer scoring (Ho 1986) + eGZ-motifs (Herbert 1997)."""
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                       Z-DNA DETECTOR MODULE                                   ║
+║            10-mer Scoring Table + eGZ-motif Detection                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-import logging; import re
+MODULE: detector.py (Detectors/zdna/)
+AUTHOR: Dr. Venkata Rajesh Yella
+VERSION: 2024.1
+LICENSE: MIT
+
+DESCRIPTION:
+    Z-DNA detection using thermodynamic 10-mer scoring table (Ho 1986)
+    combined with eGZ-motif pattern recognition (Herbert 1997).
+    Supports Hyperscan acceleration when available.
+
+REFERENCES:
+    - Ho et al. (1986) - Z-DNA thermodynamics and 10-mer scoring
+    - Herbert et al. (1997) - Extruded-G Z-DNA (eGZ) motifs
+
+SUBCLASSES DETECTED:
+    | ID | Subclass | Description                    |
+    |----|----------|--------------------------------|
+    | 1  | Z-DNA    | Alternating purine-pyrimidine  |
+    | 2  | eGZ      | Extruded-G triplet repeats     |
+
+PERFORMANCE: O(n) with Hyperscan acceleration, pure-Python fallback
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
+import logging
+import re
 from typing import Any, Dict, List, Tuple
 
-try: from Detectors.base.base_detector import BaseMotifDetector
+try:
+    from Detectors.base.base_detector import BaseMotifDetector
 except ImportError:
-    import sys; from pathlib import Path
+    import sys
+    from pathlib import Path
     parent_dir = str(Path(__file__).parent.parent.parent)
-    if parent_dir not in sys.path: sys.path.insert(0, parent_dir)
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
     from Detectors import BaseMotifDetector
 
 from .tenmer_table import TENMER_SCORE
 from . import hyperscan_backend
 from Utilities.core.motif_normalizer import normalize_class_subclass
 
-try: from motif_patterns import ZDNA_PATTERNS
-except ImportError: ZDNA_PATTERNS = {}
+try:
+    from motif_patterns import ZDNA_PATTERNS
+except ImportError:
+    ZDNA_PATTERNS = {}
 
 logger = logging.getLogger(__name__)
 
