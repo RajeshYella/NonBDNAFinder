@@ -28,6 +28,85 @@ class TriplexDetector(BaseMotifDetector):
     def get_motif_class_name(self) -> str:
         return "Triplex"
 
+    def get_patterns(self) -> Dict[str, List[Tuple]]:
+        """
+        Return patterns for Triplex/H-DNA detection.
+        
+        Note: The mirror_triplex pattern uses an empty regex because mirror repeat
+        detection is handled via the seed-based algorithm in _find_mirror_repeats().
+        This follows the same pattern as ZDNADetector's 10-mer table lookup.
+        """
+        return {
+            'mirror_triplex': [
+                # Empty regex - detection handled by _find_mirror_repeats() via annotate_sequence()
+                (r'', 'TRX_MIRROR', 'Mirror repeat triplex', 'H-DNA', self.MIN_ARM, 'structural_triplex_score', 0.25, 'Seed-based mirror repeat detection', 'Frank-Kamenetskii 1995')
+            ],
+            'sticky_dna': [
+                (r'(?:GAA){4,}', 'TRX_STICKY_GAA', 'GAA repeat (Sticky DNA)', 'Sticky_DNA', 12, 'sticky_dna_score', 0.20, 'Friedreich ataxia-associated GAA repeat', 'Soyfer & Potaman 1995'),
+                (r'(?:TTC){4,}', 'TRX_STICKY_TTC', 'TTC repeat (Sticky DNA)', 'Sticky_DNA', 12, 'sticky_dna_score', 0.20, 'TTC repeat (complement of GAA)', 'Soyfer & Potaman 1995'),
+            ]
+        }
+
+    def calculate_score(self, sequence: str, pattern_info: Tuple) -> float:
+        """Calculate triplex score based on pattern type."""
+        if not sequence:
+            return 0.0
+        
+        seq = sequence.upper()
+        
+        # Check if this is a sticky DNA pattern
+        if pattern_info and len(pattern_info) > 1:
+            pattern_id = pattern_info[1]
+            if 'STICKY' in pattern_id:
+                return self._sticky_dna_score(seq)
+        
+        # For mirror-based triplex, use structural score with default loop length
+        # When called directly, we don't have arm/loop info from the seed algorithm,
+        # so we estimate loop length as ~10% of sequence length (typical for H-DNA)
+        estimated_loop = min(self.MAX_LOOP, max(1, len(seq) // 10))
+        return self._structural_triplex_score(seq, estimated_loop)
+
+    def detect_motifs(self, sequence: str, sequence_name: str = "sequence") -> List[Dict[str, Any]]:
+        """
+        Detect Triplex/H-DNA motifs using seed-based mirror repeat algorithm.
+        
+        Overrides base class to use annotate_sequence() which handles:
+        - Mirror repeat detection via seed-and-extend algorithm
+        - Sticky DNA (GAA/TTC repeats) via regex matching
+        """
+        sequence = sequence.upper().strip()
+        motifs = []
+        annotations = self.annotate_sequence(sequence)
+        
+        for annotation in annotations:
+            class_name = annotation['class_name']
+            start_pos = annotation['start']
+            end_pos = annotation['end']
+            motif_seq = annotation['matched_seq']
+            
+            # Normalize class and subclass
+            subclass = 'H-DNA' if class_name == 'Triplex' else 'Sticky_DNA'
+            canonical_class, canonical_subclass = normalize_class_subclass(
+                self.get_motif_class_name(), subclass, strict=False, auto_correct=True
+            )
+            
+            motifs.append({
+                'ID': f"{sequence_name}_{annotation['pattern_id']}_{start_pos+1}",
+                'Sequence_Name': sequence_name,
+                'Class': canonical_class,
+                'Subclass': canonical_subclass,
+                'Start': start_pos + 1,
+                'End': end_pos,
+                'Length': annotation['length'],
+                'Sequence': motif_seq,
+                'Score': round(annotation['score'], 3),
+                'Strand': '+',
+                'Method': 'Triplex_detection',
+                'Pattern_ID': annotation['pattern_id']
+            })
+        
+        return motifs
+
     # ---------------------------------------------------
     # Structural Stability Model (Non-thermodynamic)
     # ---------------------------------------------------
