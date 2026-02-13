@@ -28,6 +28,28 @@ class TriplexDetector(BaseMotifDetector):
     def get_motif_class_name(self) -> str:
         return "Triplex"
 
+    def get_patterns(self) -> Dict[str, List[Tuple]]:
+        """Return patterns for triplex detection."""
+        return {
+            'triplex_mirror': [
+                (r'', 'TRX_MIRROR', 'Mirror repeat triplex', 'Triplex', 20, 'triplex_score', 0.85,
+                 'H-DNA via mirror repeat', 'Frank-Kamenetskii 1995')
+            ],
+            'sticky_dna': [
+                (r'(?:GAA){4,}', 'TRX_STICKY_GAA', 'GAA sticky DNA', 'Sticky DNA', 12, 'sticky_score', 0.80,
+                 'GAA repeat triplex', 'Soyfer & Potaman 1995'),
+                (r'(?:TTC){4,}', 'TRX_STICKY_TTC', 'TTC sticky DNA', 'Sticky DNA', 12, 'sticky_score', 0.80,
+                 'TTC repeat triplex', 'Soyfer & Potaman 1995')
+            ]
+        }
+
+    def calculate_score(self, sequence: str, pattern_info: Tuple = None) -> float:
+        """Calculate triplex score based on mirror repeats and sticky DNA."""
+        annotations = self.annotate_sequence(sequence)
+        if not annotations:
+            return 0.0
+        return float(sum(a.get('score', 0) for a in annotations))
+
     # ---------------------------------------------------
     # Structural Stability Model (Non-thermodynamic)
     # ---------------------------------------------------
@@ -202,3 +224,51 @@ class TriplexDetector(BaseMotifDetector):
 
         results.sort(key=lambda r: r["start"])
         return results
+
+    def detect_motifs(self, sequence: str, sequence_name: str = "sequence") -> List[Dict[str, Any]]:
+        """Detect triplex DNA motifs (mirror repeats and sticky DNA)."""
+        self.audit['invoked'] = True
+        self.audit['windows_scanned'] = 1
+        self.audit['candidates_seen'] = 0
+        self.audit['reported'] = 0
+
+        sequence = sequence.upper().strip()
+        motifs = []
+
+        annotations = self.annotate_sequence(sequence)
+        self.audit['candidates_seen'] = len(annotations)
+
+        for i, ann in enumerate(annotations):
+            class_name = ann.get('class_name', 'Triplex')
+            subclass = 'Sticky DNA' if 'Sticky' in class_name else 'H-DNA (mirror repeat)'
+            
+            canonical_class, canonical_subclass = normalize_class_subclass(
+                self.get_motif_class_name(),
+                subclass,
+                strict=False,
+                auto_correct=True
+            )
+
+            start_pos = ann['start']
+            end_pos = ann['end']
+            motif_seq = ann.get('matched_seq', sequence[start_pos:end_pos])
+
+            motif = {
+                'ID': f"{sequence_name}_{ann['pattern_id']}_{start_pos+1}",
+                'Sequence_Name': sequence_name,
+                'Class': canonical_class,
+                'Subclass': canonical_subclass,
+                'Start': start_pos + 1,
+                'End': end_pos,
+                'Length': ann['length'],
+                'Sequence': motif_seq,
+                'Score': round(ann.get('score', 0), 3),
+                'Strand': '+',
+                'Method': 'Triplex_detection',
+                'Pattern_ID': ann['pattern_id']
+            }
+
+            motifs.append(motif)
+            self.audit['reported'] += 1
+
+        return motifs

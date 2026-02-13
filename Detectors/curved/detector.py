@@ -34,8 +34,15 @@ class CurvedDNADetector(BaseMotifDetector):
 
     def detect_motifs(self, sequence: str, sequence_name: str = "sequence") -> List[Dict[str, Any]]:
         """Detect curved DNA motifs using A/T-tract phasing patterns."""
+        self.audit['invoked'] = True
+        self.audit['windows_scanned'] = 1
+        self.audit['candidates_seen'] = 0
+        self.audit['reported'] = 0
+        
         sequence = sequence.upper().strip(); motifs = []
         annotation = self.annotate_sequence(sequence)
+        
+        self.audit['candidates_seen'] = len(annotation.get('aprs', [])) + len(annotation.get('long_tracts', []))
 
         for i, apr in enumerate(annotation.get('aprs', [])):
             if apr.get('score', 0) > self.SCORE_THRESHOLD:
@@ -54,6 +61,7 @@ class CurvedDNADetector(BaseMotifDetector):
                     'T_Tract_Lengths': [len(t) for t in t_tracts], 'GC_Content': round(gc_total, 2),
                     'AT_Content': round(at_content, 2), 'Center_Positions': apr.get('center_positions', [])
                 })
+                self.audit['reported'] += 1
 
         for i, tract in enumerate(annotation.get('long_tracts', [])):
             if tract.get('score', 0) > self.SCORE_THRESHOLD:
@@ -68,6 +76,7 @@ class CurvedDNADetector(BaseMotifDetector):
                     'Pattern_ID': f'CRV_TRACT_{i+1}', 'Tract_Type': tract_type, 'Tract_Length': end_pos - start_pos,
                     'GC_Content': round(gc_total, 2), 'AT_Content': round(at_content, 2)
                 })
+                self.audit['reported'] += 1
         return motifs
 
     def calculate_score(self, sequence: str, pattern_info: Tuple = None) -> float:

@@ -126,8 +126,14 @@ class IMotifDetector(BaseMotifDetector):
     
     def detect_motifs(self, sequence: str, sequence_name: str = "sequence") -> List[Dict[str, Any]]:
         """Detect i-motif structures with component details and overlap resolution."""
+        self.audit['invoked'] = True
+        self.audit['windows_scanned'] = 1
+        self.audit['candidates_seen'] = 0
+        self.audit['reported'] = 0
+        
         seq = sequence.upper(); motifs = []
         annotation_result = self.annotate_sequence(seq); accepted_motifs = annotation_result.get('accepted', [])
+        self.audit['candidates_seen'] = len(accepted_motifs)
         subclass_map = {'canonical_imotif': 'Canonical i-motif', 'hur_ac_motif': 'AC-motif', 'ac_motif_hur': 'AC-motif'}
 
         for i, accepted in enumerate(accepted_motifs):
@@ -150,4 +156,5 @@ class IMotifDetector(BaseMotifDetector):
             if c_tracts: motif['Stem_Length'] = sum(len(s) for s in c_tracts) / len(c_tracts)
             if loops: motif['Loop_Length'] = sum(len(l) for l in loops) / len(loops)
             motifs.append(motif)
+            self.audit['reported'] += 1
         return motifs

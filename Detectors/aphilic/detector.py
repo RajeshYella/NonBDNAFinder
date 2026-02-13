@@ -54,7 +54,14 @@ class APhilicDetector(BaseMotifDetector):
 
     def detect_motifs(self, sequence: str, sequence_name: str = "sequence") -> List[Dict[str, Any]]:
         """Detect A-philic regions using 10-mer scoring."""
+        self.audit['invoked'] = True
+        self.audit['windows_scanned'] = 1
+        self.audit['candidates_seen'] = 0
+        self.audit['reported'] = 0
+        
         sequence = sequence.upper().strip(); motifs = []; annotations = self.annotate_sequence(sequence)
+        self.audit['candidates_seen'] = len(annotations)
+        
         for i, region in enumerate(annotations):
             if region.get('sum_log2', 0) > self.MIN_SUM_LOG2 and region.get('n_10mers', 0) >= 1:
                 start_pos, end_pos = region['start'], region['end']
@@ -65,6 +72,7 @@ class APhilicDetector(BaseMotifDetector):
                     'Sequence': sequence[start_pos:end_pos], 'Score': round(region['sum_log2'], 3), 'Strand': '+',
                     'Method': 'A-philic_detection', 'Pattern_ID': f'APHIL_{i+1}'
                 })
+                self.audit['reported'] += 1
         return motifs
 
     def _find_10mer_matches(self, seq: str) -> List[Tuple[int, str, float]]:

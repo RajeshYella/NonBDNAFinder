@@ -107,7 +107,14 @@ class GQuadruplexDetector(BaseMotifDetector):
 
     def detect_motifs(self, sequence: str, sequence_name: str = "sequence") -> List[Dict[str, Any]]:
         """Detect G4 motifs with overlap resolution and component info."""
+        self.audit['invoked'] = True
+        self.audit['windows_scanned'] = 1
+        self.audit['candidates_seen'] = 0
+        self.audit['reported'] = 0
+        
         sequence = sequence.upper().strip(); motifs = []; annotations = self.annotate_sequence(sequence)
+        self.audit['candidates_seen'] = len(annotations)
+        
         subclass_map = {'telomeric_g4': 'Telomeric G4', 'stacked_canonical_g4s': 'Stacked canonical G4s',
                         'stacked_g4s_linker': 'Stacked G4s with linker', 'canonical_g4': 'Canonical intramolecular G4',
                         'extended_loop_g4': 'Extended-loop canonical', 'higher_order_g4': 'Higher-order G4 array/G4-wire',
@@ -129,5 +136,6 @@ class GQuadruplexDetector(BaseMotifDetector):
                 if stem_lengths: motif['Stem_Length'] = sum(stem_lengths) / len(stem_lengths)
                 if loop_lengths: motif['Loop_Length'] = sum(loop_lengths) / len(loop_lengths)
             motifs.append(motif)
+            self.audit['reported'] += 1
         return motifs
 

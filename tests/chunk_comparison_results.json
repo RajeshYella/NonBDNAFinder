@@ -1,0 +1,128 @@
+{
+  "sequence_length": 100000,
+  "sequence_name": "ecoli_like_test",
+  "timestamp": "2026-02-13T07:11:56.010204",
+  "chunk_comparisons": [
+    {
+      "chunk_size": 5000,
+      "overlap": 500,
+      "num_chunks": 20,
+      "total_motifs": 273,
+      "processing_time": 2.843,
+      "throughput_bp_per_sec": 35169.3,
+      "class_counts": {
+        "R-Loop": 50,
+        "A-philic_DNA": 22,
+        "Non-B_DNA_Clusters": 6,
+        "G-Quadruplex": 139,
+        "Z-DNA": 7,
+        "Curved_DNA": 24,
+        "i-Motif": 4,
+        "Cruciform": 14,
+        "Hybrid": 7
+      },
+      "vs_baseline": "baseline"
+    },
+    {
+      "chunk_size": 10000,
+      "overlap": 1000,
+      "num_chunks": 10,
+      "total_motifs": 274,
+      "processing_time": 2.904,
+      "throughput_bp_per_sec": 34429.5,
+      "class_counts": {
+        "R-Loop": 50,
+        "A-philic_DNA": 22,
+        "Non-B_DNA_Clusters": 5,
+        "G-Quadruplex": 139,
+        "Z-DNA": 7,
+        "Curved_DNA": 24,
+        "i-Motif": 4,
+        "Cruciform": 14,
+        "Hybrid": 9
+      },
+      "vs_baseline": {
+        "common_motifs": 268,
+        "only_in_baseline": 5,
+        "only_in_current": 6,
+        "jaccard_similarity": 0.9606
+      }
+    },
+    {
+      "chunk_size": 25000,
+      "overlap": 2500,
+      "num_chunks": 4,
+      "total_motifs": 273,
+      "processing_time": 3.025,
+      "throughput_bp_per_sec": 33058.9,
+      "class_counts": {
+        "R-Loop": 49,
+        "A-philic_DNA": 22,
+        "Non-B_DNA_Clusters": 5,
+        "G-Quadruplex": 139,
+        "Z-DNA": 7,
+        "Curved_DNA": 24,
+        "i-Motif": 4,
+        "Cruciform": 14,
+        "Hybrid": 9
+      },
+      "vs_baseline": {
+        "common_motifs": 267,
+        "only_in_baseline": 6,
+        "only_in_current": 6,
+        "jaccard_similarity": 0.957
+      }
+    },
+    {
+      "chunk_size": 50000,
+      "overlap": 2500,
+      "num_chunks": 2,
+      "total_motifs": 273,
+      "processing_time": 2.903,
+      "throughput_bp_per_sec": 34448.3,
+      "class_counts": {
+        "R-Loop": 49,
+        "A-philic_DNA": 22,
+        "Non-B_DNA_Clusters": 5,
+        "G-Quadruplex": 139,
+        "Z-DNA": 7,
+        "Curved_DNA": 24,
+        "i-Motif": 4,
+        "Cruciform": 14,
+        "Hybrid": 9
+      },
+      "vs_baseline": {
+        "common_motifs": 268,
+        "only_in_baseline": 5,
+        "only_in_current": 5,
+        "jaccard_similarity": 0.964
+      }
+    },
+    {
+      "chunk_size": 100000,
+      "overlap": 2500,
+      "num_chunks": 1,
+      "total_motifs": 272,
+      "processing_time": 2.85,
+      "throughput_bp_per_sec": 35082.8,
+      "class_counts": {
+        "R-Loop": 48,
+        "A-philic_DNA": 22,
+        "Non-B_DNA_Clusters": 5,
+        "G-Quadruplex": 139,
+        "Z-DNA": 7,
+        "Curved_DNA": 24,
+        "i-Motif": 4,
+        "Cruciform": 14,
+        "Hybrid": 9
+      },
+      "vs_baseline": {
+        "common_motifs": 267,
+        "only_in_baseline": 6,
+        "only_in_current": 5,
+        "jaccard_similarity": 0.9604
+      }
+    }
+  ],
+  "class_distributions": {}
+}

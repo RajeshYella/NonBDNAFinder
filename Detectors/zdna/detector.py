@@ -74,8 +74,14 @@ class ZDNADetector(BaseMotifDetector):
 
     def detect_motifs(self, sequence: str, sequence_name: str = "sequence") -> List[Dict[str, Any]]:
         """Detect Z-DNA (10-mer scoring) and eGZ-motif regions."""
+        self.audit['invoked'] = True
+        self.audit['windows_scanned'] = 1
+        self.audit['candidates_seen'] = 0
+        self.audit['reported'] = 0
+        
         sequence = sequence.upper().strip(); motifs = []
         annotations = self.annotate_sequence(sequence)
+        self.audit['candidates_seen'] = len(annotations)
         
         for i, region in enumerate(annotations):
             subclass = region.get('subclass', 'Z-DNA'); start_pos = region['start']; end_pos = region['end']
@@ -92,6 +98,7 @@ class ZDNADetector(BaseMotifDetector):
                         'Pattern_ID': region['pattern_id'], 'Repeat_Unit': region.get('repeat_unit', ''),
                         'Repeat_Count': region.get('repeat_count', 0), 'GC_Content': round(gc_content, 2)
                     })
+                    self.audit['reported'] += 1
             else:
                 if region.get('sum_score', 0) > self.MIN_Z_SCORE and region.get('n_10mers', 0) >= 1:
                     cg_count = motif_seq.count('CG') + motif_seq.count('GC'); at_count = motif_seq.count('AT') + motif_seq.count('TA')
@@ -108,6 +115,7 @@ class ZDNADetector(BaseMotifDetector):
                         'AT_Dinucleotides': at_count, 'Alternating_CG_Regions': alternating_cg,
                         'Alternating_AT_Regions': alternating_at, 'GC_Content': round(gc_content, 2)
                     })
+                    self.audit['reported'] += 1
         return motifs
 
     def _find_egz_motifs(self, seq: str) -> List[Dict[str, Any]]:
