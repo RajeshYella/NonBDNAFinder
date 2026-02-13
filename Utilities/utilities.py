@@ -2815,7 +2815,7 @@ def export_to_bed(motifs: List[Dict[str, Any]], sequence_name: str = "sequence",
         BED format string
     """
     # Validate and normalize motifs before export
-    from export.export_validator import validate_export_data
+    from Utilities.export.export_validator import validate_export_data
     try:
         motifs = validate_export_data(motifs, auto_normalize=True, strict=False)
     except Exception as e:
@@ -2888,7 +2888,7 @@ def export_to_csv(motifs: List[Dict[str, Any]], filename: Optional[str] = None,
         return "No motifs to export"
     
     # Validate and normalize motifs before export
-    from export.export_validator import validate_export_data
+    from Utilities.export.export_validator import validate_export_data
     try:
         motifs = validate_export_data(motifs, auto_normalize=True, strict=False)
     except Exception as e:
@@ -2945,7 +2945,7 @@ def export_to_json(motifs: List[Dict[str, Any]], filename: Optional[str] = None,
         JSON format string
     """
     # Validate and normalize motifs before export
-    from export.export_validator import validate_export_data
+    from Utilities.export.export_validator import validate_export_data
     try:
         motifs = validate_export_data(motifs, auto_normalize=True, strict=False)
     except Exception as e:
@@ -3011,7 +3011,7 @@ def export_to_excel(motifs: List[Dict[str, Any]], filename: str = "nonbscanner_r
         return "No motifs to export"
     
     # Validate and normalize motifs before export
-    from export.export_validator import validate_export_data
+    from Utilities.export.export_validator import validate_export_data
     try:
         motifs = validate_export_data(motifs, auto_normalize=True, strict=False)
     except Exception as e:
