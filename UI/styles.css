@@ -240,6 +240,7 @@ h4 {
 /* ═══════════════════════════════════════════════════════════════
    COMPACT SUBMOTIF SELECTOR GRID
    High-density 24-class visibility without scrolling
+   Radio-dot style checkbox with class color glow
    ═══════════════════════════════════════════════════════════════ */
 
 /* Compact checkbox styling for submotif selector grid */
@@ -261,13 +262,45 @@ h4 {
 
 /* High-density column spacing for submotif selector grid */
 .submotif-grid [data-testid="column"] {
-    padding-left: 1px !important;
-    padding-right: 1px !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
 }
 
 /* Reduce vertical gaps in submotif grid rows */
 .submotif-grid [data-testid="stHorizontalBlock"] {
-    gap: 0.25rem !important;
+    gap: 0.15rem !important;
+    margin-bottom: 0.15rem !important;
+}
+
+/* Radio-dot checkbox styling - Convert square checkbox to circular dot */
+.submotif-grid [data-testid="stCheckbox"] > label > span:first-child {
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 50% !important;
+    border: 2px solid #94a3b8 !important;
+    background: transparent !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Hide the default SVG checkmark */
+.submotif-grid [data-testid="stCheckbox"] > label > span:first-child svg {
+    display: none !important;
+}
+
+/* Checked state - filled dot with glow */
+.submotif-grid [data-testid="stCheckbox"][data-checked="true"] > label > span:first-child {
+    border-color: var(--class-color, #3b82f6) !important;
+    background: var(--class-color, #3b82f6) !important;
+    box-shadow: 0 0 14px var(--class-color, #3b82f6) !important;
+}
+
+/* Hover state */
+.submotif-grid [data-testid="stCheckbox"] > label:hover > span:first-child {
+    border-color: var(--class-color, #3b82f6) !important;
+    transform: scale(1.05) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
