@@ -36,14 +36,14 @@ class GQuadruplexDetector(BaseMotifDetector):
 
     def get_patterns(self) -> Dict[str, List[Tuple]]:
         return {
-            'telomeric_g4': [(r'(?:TTAGGG){4,}', 'G4_TEL')],
-            'stacked_canonical_g4s': [(r'(?:(?:G{3,}[ACGT]{1,7}){3}G{3,}){2,}', 'G4_STK_CAN')],
-            'stacked_g4s_linker': [(r'(?:(?:G{3,}[ACGT]{1,7}){3}G{3,})(?:[ACGT]{0,20}(?:(?:G{3,}[ACGT]{1,7}){3}G{3,})){1,}', 'G4_STK_LNK')],
-            'canonical_g4': [(r'G{3,}[ACGT]{1,7}G{3,}[ACGT]{1,7}G{3,}[ACGT]{1,7}G{3,}', 'G4_CAN')],
-            'extended_loop_g4': [(r'G{3,}[ACGT]{1,12}G{3,}[ACGT]{1,12}G{3,}[ACGT]{1,12}G{3,}', 'G4_EXT')],
-            'higher_order_g4': [(r'(?:G{3,}[ACGT]{1,7}){7,}', 'G4_HIGH')],
-            'g_triplex': [(r'G{3,}[ACGT]{1,7}G{3,}[ACGT]{1,7}G{3,}', 'G4_TRX')],
-            'weak_pqs': [(r'G{2,}[ACGT]{1,7}G{2,}[ACGT]{1,7}G{2,}[ACGT]{1,7}G{2,}', 'G4_WEAK')],
+            'telomeric_g4': [(r'(?:TTAGGG){4,}', 'G4_TEL', 'Telomeric G4', 'Telomeric G4')],
+            'stacked_canonical_g4s': [(r'(?:(?:G{3,}[ACGT]{1,7}){3}G{3,}){2,}', 'G4_STK_CAN', 'Stacked canonical G4s', 'Stacked canonical G4s')],
+            'stacked_g4s_linker': [(r'(?:(?:G{3,}[ACGT]{1,7}){3}G{3,})(?:[ACGT]{0,20}(?:(?:G{3,}[ACGT]{1,7}){3}G{3,})){1,}', 'G4_STK_LNK', 'Stacked G4s with linker', 'Stacked G4s with linker')],
+            'canonical_g4': [(r'G{3,}[ACGT]{1,7}G{3,}[ACGT]{1,7}G{3,}[ACGT]{1,7}G{3,}', 'G4_CAN', 'Canonical intramolecular G4', 'Canonical intramolecular G4')],
+            'extended_loop_g4': [(r'G{3,}[ACGT]{1,12}G{3,}[ACGT]{1,12}G{3,}[ACGT]{1,12}G{3,}', 'G4_EXT', 'Extended-loop canonical', 'Extended-loop canonical')],
+            'higher_order_g4': [(r'(?:G{3,}[ACGT]{1,7}){7,}', 'G4_HIGH', 'Higher-order G4 array/G4-wire', 'Higher-order G4 array/G4-wire')],
+            'g_triplex': [(r'G{3,}[ACGT]{1,7}G{3,}[ACGT]{1,7}G{3,}', 'G4_TRX', 'Intramolecular G-triplex', 'Intramolecular G-triplex')],
+            'weak_pqs': [(r'G{2,}[ACGT]{1,7}G{2,}[ACGT]{1,7}G{2,}[ACGT]{1,7}G{2,}', 'G4_WEAK', 'Two-tetrad weak PQS', 'Two-tetrad weak PQS')],
         }
 
     # -------------------------
