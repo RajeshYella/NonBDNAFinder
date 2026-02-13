@@ -615,31 +615,6 @@ def render():
         # Add radio-dot CSS styling (replaces checkbox tick with vibrant dot)
         st.markdown(f"""
         <style>
-        /* Radio-dot checkbox styling for submotif selector */
-        .submotif-grid .stCheckbox > label > div[data-testid="stMarkdownContainer"] {{
-            position: relative;
-            padding-left: 22px;
-        }}
-        .submotif-grid .stCheckbox input[type="checkbox"] {{
-            appearance: none !important;
-            -webkit-appearance: none !important;
-            width: {DOT_SIZE}px !important;
-            height: {DOT_SIZE}px !important;
-            border-radius: 50% !important;
-            border: 2px solid #94a3b8 !important;
-            background: transparent !important;
-            cursor: pointer !important;
-            transition: all 0.2s ease !important;
-            position: relative !important;
-        }}
-        .submotif-grid .stCheckbox input[type="checkbox"]:checked {{
-            border-color: var(--class-color, #3b82f6) !important;
-            background: var(--class-color, #3b82f6) !important;
-            box-shadow: 0 0 {GLOW_SIZE}px var(--class-color, #3b82f6) !important;
-        }}
-        .submotif-grid .stCheckbox input[type="checkbox"]:hover {{
-            border-color: var(--class-color, #3b82f6) !important;
-        }}
         /* Compact row spacing */
         .submotif-grid [data-testid="stHorizontalBlock"] {{
             gap: {ROW_GAP} !important;
@@ -657,25 +632,12 @@ def render():
         for row in rows:
             cols = st.columns(GRID_COLUMNS, gap="small")
             for col, (class_name, subclass) in zip(cols, row):
-                color = CLASS_COLORS.get(class_name, "#2563eb")
+                # Use gray as fallback for unmapped classes (consistent with original)
+                color = CLASS_COLORS.get(class_name, "#cbd5e1")
                 color_name = CLASS_COLOR_NAMES.get(class_name, "gray")
                 key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
                 # Use abbreviated label for display, full name in tooltip
                 abbrev_label = get_abbreviated_label(subclass)
-
-                # Inject per-class glow styling
-                st.markdown(f"""
-                <style>
-                [data-testid="stCheckbox"][data-key="{key}"] input[type="checkbox"] {{
-                    --class-color: {color} !important;
-                }}
-                [data-testid="stCheckbox"][data-key="{key}"] input[type="checkbox"]:checked {{
-                    border-color: {color} !important;
-                    background: {color} !important;
-                    box-shadow: 0 0 {GLOW_SIZE}px {color} !important;
-                }}
-                </style>
-                """, unsafe_allow_html=True)
 
                 with col:
                     st.checkbox(
