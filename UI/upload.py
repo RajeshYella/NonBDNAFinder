@@ -104,6 +104,15 @@ SUBMOTIF_ABBREVIATIONS = {
     'Dynamic clusters': 'Cluster',
 }
 
+# ============================================================
+# SUBMOTIF GRID CONFIG (TUNABLE)
+# ============================================================
+GRID_COLUMNS = 3        # 3 × 8 layout
+GRID_GAP = "0.25rem"    # horizontal gap
+ROW_GAP = "0.15rem"     # vertical gap
+DOT_SIZE = 16           # px
+GLOW_SIZE = 14          # glow intensity
+
 
 def get_abbreviated_label(subclass: str) -> str:
     """
@@ -596,19 +605,34 @@ def render():
                 st.session_state[key] = True
 
         # ------------------------------------------------------------------
-        # Render high-density 6-column grid for full 24-class visibility
-        # (6 columns × 4 rows = 24 submotifs visible without scrolling)
+        # Render compact 3-column grid for full 24-class visibility
+        # (3 columns × 8 rows = 24 submotifs visible without scrolling)
         # ------------------------------------------------------------------
-        NUM_COLUMNS = 6
-        rows = [flat_submotifs[i:i + NUM_COLUMNS]
-                for i in range(0, len(flat_submotifs), NUM_COLUMNS)]
+        rows = [flat_submotifs[i:i + GRID_COLUMNS]
+                for i in range(0, len(flat_submotifs), GRID_COLUMNS)]
 
         # Wrap grid in container with CSS class for targeted styling
-        st.markdown('<div class="submotif-grid">', unsafe_allow_html=True)
+        # Add radio-dot CSS styling (replaces checkbox tick with vibrant dot)
+        st.markdown(f"""
+        <style>
+        /* Compact row spacing */
+        .submotif-grid [data-testid="stHorizontalBlock"] {{
+            gap: {ROW_GAP} !important;
+            margin-bottom: {ROW_GAP} !important;
+        }}
+        /* Compact column spacing */
+        .submotif-grid [data-testid="column"] {{
+            padding-left: 2px !important;
+            padding-right: 2px !important;
+        }}
+        </style>
+        <div class="submotif-grid">
+        """, unsafe_allow_html=True)
         
         for row in rows:
-            cols = st.columns(NUM_COLUMNS, gap="small")
+            cols = st.columns(GRID_COLUMNS, gap="small")
             for col, (class_name, subclass) in zip(cols, row):
+                # Use gray as fallback for unmapped classes (consistent with original)
                 color = CLASS_COLORS.get(class_name, "#cbd5e1")
                 color_name = CLASS_COLOR_NAMES.get(class_name, "gray")
                 key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
@@ -616,22 +640,11 @@ def render():
                 abbrev_label = get_abbreviated_label(subclass)
 
                 with col:
-                    st.markdown(f"""
-                    <div style="
-                        border-left: 3px solid {color};
-                        padding-left: 2px;
-                        margin-bottom: 0;
-                        font-size: 0.65rem;
-                    ">
-                    """, unsafe_allow_html=True)
-
                     st.checkbox(
                         f"**:{color_name}[{abbrev_label}]**",
                         key=key,
                         help=f"{subclass} ({class_name.replace('_', ' ')})"
                     )
-
-                    st.markdown("</div>", unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
 
