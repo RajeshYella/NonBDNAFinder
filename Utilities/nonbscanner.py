@@ -85,7 +85,9 @@ def create_progress_callback(progress: AnalysisProgress) -> Callable:
 def create_enhanced_progress_callback(progress: AnalysisProgress, print_updates: bool = False, on_detector_complete: Optional[Callable] = None) -> Callable:
     def callback(detector_name: str, completed: int, total: int, elapsed: float, motif_count: int):
         progress.update_detector(detector_name, completed=True, motifs=motif_count, elapsed=elapsed)
-        if print_updates: print(f"\r  {progress.format_progress_bar(40)} | {DETECTOR_DISPLAY_NAMES.get(detector_name, detector_name)}: {elapsed:.3f}s ({motif_count} motifs)", end=''); completed == total and print()
+        if print_updates:
+            print(f"\r  {progress.format_progress_bar(40)} | {DETECTOR_DISPLAY_NAMES.get(detector_name, detector_name)}: {elapsed:.3f}s ({motif_count} motifs)", end='')
+            if completed == total: print()
         if on_detector_complete: on_detector_complete(detector_name, completed, total, elapsed, motif_count)
     return callback
 
@@ -206,6 +208,7 @@ def analyze_sequence(sequence: str, sequence_name: str = "sequence", use_fast_mo
     return _analyze_sequence_chunked(sequence, sequence_name, chunk_size, chunk_overlap, progress_callback, use_parallel_chunks, enabled_classes)
 
 def _analyze_sequence_chunked(sequence: str, sequence_name: str, chunk_size: int, chunk_overlap: int, progress_callback: Optional[Callable[[int, int, int, float, float], None]] = None, use_parallel_chunks: bool = True, enabled_classes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def _throughput(bp, elapsed): return bp / elapsed if elapsed > 0 else 0
     seq_len = len(sequence); scanner = _get_cached_scanner(); chunks = []; start = 0
     while start < seq_len:
         end = min(start + chunk_size, seq_len); chunks.append((start, end))
@@ -223,7 +226,7 @@ def _analyze_sequence_chunked(sequence: str, sequence_name: str, chunk_size: int
             futures = {executor.submit(process_chunk, (i, chunk)): i for i, chunk in enumerate(chunks)}; results_by_idx = {}
             for future in as_completed(futures):
                 chunk_idx, chunk_len, chunk_motifs = future.result(); results_by_idx[chunk_idx] = chunk_motifs; bp_processed += chunk_len
-                if progress_callback: elapsed = time.time() - start_time; progress_callback(chunk_idx + 1, total_chunks, bp_processed, elapsed, bp_processed / elapsed if elapsed > 0 else 0)
+                if progress_callback: elapsed = time.time() - start_time; progress_callback(chunk_idx + 1, total_chunks, bp_processed, elapsed, _throughput(bp_processed, elapsed))
             for i in range(total_chunks): all_motifs.extend(results_by_idx.get(i, []))
     else:
         for chunk_idx, (chunk_start, chunk_end) in enumerate(chunks):
@@ -231,7 +234,7 @@ def _analyze_sequence_chunked(sequence: str, sequence_name: str, chunk_size: int
             chunk_motifs = scanner.analyze_sequence(chunk_seq, chunk_name, enabled_classes=enabled_classes)
             for motif in chunk_motifs: motif['Start'] += chunk_start; motif['End'] += chunk_start; motif['ID'] = motif['ID'].replace(chunk_name, sequence_name); motif['Sequence_Name'] = sequence_name
             all_motifs.extend(chunk_motifs); bp_processed += chunk_end - chunk_start
-            if progress_callback: elapsed = time.time() - start_time; progress_callback(chunk_idx + 1, total_chunks, bp_processed, elapsed, bp_processed / elapsed if elapsed > 0 else 0)
+            if progress_callback: elapsed = time.time() - start_time; progress_callback(chunk_idx + 1, total_chunks, bp_processed, elapsed, _throughput(bp_processed, elapsed))
     deduplicated_motifs = _deduplicate_motifs(all_motifs); deduplicated_motifs.sort(key=lambda x: x.get('Start', 0))
     return deduplicated_motifs
 
