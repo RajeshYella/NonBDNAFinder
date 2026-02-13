@@ -28,6 +28,37 @@ class TriplexDetector(BaseMotifDetector):
     def get_motif_class_name(self) -> str:
         return "Triplex"
 
+    def get_patterns(self) -> Dict[str, List[Tuple]]:
+        """Return patterns for Triplex/H-DNA detection."""
+        return {
+            'mirror_triplex': [
+                (r'', 'TRX_MIRROR', 'Mirror repeat triplex', 'H-DNA', self.MIN_ARM, 'structural_triplex_score', 0.25, 'Seed-based mirror repeat detection', 'Frank-Kamenetskii 1995')
+            ],
+            'sticky_dna': [
+                (r'(?:GAA){4,}', 'TRX_STICKY_GAA', 'GAA repeat (Sticky DNA)', 'Sticky_DNA', 12, 'sticky_dna_score', 0.20, 'Friedreich ataxia-associated GAA repeat', 'Soyfer & Potaman 1995'),
+                (r'(?:TTC){4,}', 'TRX_STICKY_TTC', 'TTC repeat (Sticky DNA)', 'Sticky_DNA', 12, 'sticky_dna_score', 0.20, 'TTC repeat (complement of GAA)', 'Soyfer & Potaman 1995'),
+            ]
+        }
+
+    def calculate_score(self, sequence: str, pattern_info: Tuple) -> float:
+        """Calculate triplex score based on pattern type."""
+        if not sequence:
+            return 0.0
+        
+        seq = sequence.upper()
+        
+        # Check if this is a sticky DNA pattern
+        if pattern_info and len(pattern_info) > 1:
+            pattern_id = pattern_info[1]
+            if 'STICKY' in pattern_id:
+                return self._sticky_dna_score(seq)
+        
+        # For mirror-based triplex, use structural score with default loop length
+        # When called from base class detect_motifs, we don't have arm/loop info
+        # so we estimate based on sequence length
+        estimated_loop = min(self.MAX_LOOP, max(1, len(seq) // 10))
+        return self._structural_triplex_score(seq, estimated_loop)
+
     # ---------------------------------------------------
     # Structural Stability Model (Non-thermodynamic)
     # ---------------------------------------------------
