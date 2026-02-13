@@ -9,17 +9,15 @@ Subclasses:
 
 import math
 from typing import List, Dict, Any, Tuple
-from collections import defaultdict
-
 from ..base.base_detector import BaseMotifDetector
 from Utilities.core.motif_normalizer import normalize_class_subclass
 
 
 class SlippedDNADetector(BaseMotifDetector):
 
-    # -----------------------------
+    # ----------------------------------------------------
     # Strict Literature Parameters
-    # -----------------------------
+    # ----------------------------------------------------
 
     MIN_TRACT_LENGTH = 20
     MIN_PURITY = 0.90
@@ -29,7 +27,7 @@ class SlippedDNADetector(BaseMotifDetector):
 
     # Literature-informed minimum copies
     MIN_COPIES_TABLE = {
-        1: 10,   # Homopolymers unstable below ~10
+        1: 10,
         2: 6,
         3: 5,
         4: 4,
@@ -44,13 +42,13 @@ class SlippedDNADetector(BaseMotifDetector):
         return {"short_tandem_repeats": [], "direct_repeats": []}
 
     # ----------------------------------------------------
-    # Primitive Motif (fast version)
+    # Primitive Motif (strict)
     # ----------------------------------------------------
 
     @staticmethod
     def compute_primitive_motif(sequence: str) -> str:
         n = len(sequence)
-        for period in range(1, min(50, n // 2 + 1)):
+        for period in range(1, min(n // 2 + 1, 50)):
             if n % period != 0:
                 continue
             unit = sequence[:period]
@@ -70,7 +68,8 @@ class SlippedDNADetector(BaseMotifDetector):
         return matches / len(sequence)
 
     # ----------------------------------------------------
-    # 🚀 Seed-Accelerated Detection (O(n))
+    # 🚀 High-Performance Seed-Based Detection
+    # (Mirrors C-style extension logic)
     # ----------------------------------------------------
 
     def find_all_tandem_repeats(self, sequence: str) -> List[Dict[str, Any]]:
@@ -79,7 +78,6 @@ class SlippedDNADetector(BaseMotifDetector):
         n = len(seq)
         candidates = []
 
-        # iterate possible unit sizes
         for k in range(1, min(self.MAX_UNIT_SIZE, n // 2) + 1):
 
             min_copies = self.MIN_COPIES_TABLE.get(k, 3)
@@ -89,15 +87,15 @@ class SlippedDNADetector(BaseMotifDetector):
 
                 unit = seq[i:i+k]
 
-                # fast seed check:
-                # require next copy to match before full extension
+                # Fast seed check (avoid expensive extension)
                 if seq[i+k:i+2*k] != unit:
                     i += 1
                     continue
 
-                # extend copies
+                # Extend contiguous copies (O(n))
                 j = i
                 copies = 0
+
                 while j + k <= n and seq[j:j+k] == unit:
                     copies += 1
                     j += k
@@ -123,14 +121,17 @@ class SlippedDNADetector(BaseMotifDetector):
                             'purity': purity
                         })
 
-                    i = j  # skip whole tract (performance critical)
+                    # Critical performance optimization:
+                    # Skip entire tract once detected
+                    i = j
                 else:
                     i += 1
 
         return candidates
 
     # ----------------------------------------------------
-    # Copy-Dominant Slippage Score
+    # Mechanistic Slippage Score
+    # Literature-Aligned, Copy-Dominant
     # ----------------------------------------------------
 
     def compute_slippage_energy_score(self,
@@ -142,21 +143,28 @@ class SlippedDNADetector(BaseMotifDetector):
         tract_length = len(sequence)
         unit_size = len(unit)
 
+        # Copy number is dominant instability driver
         copy_factor = min(1.0, copy_number / 30.0)
+
+        # Length supports loop-out stabilization
         length_factor = min(1.0, tract_length / 100.0)
+
+        # Purity strongly influences slippage
         purity_factor = purity
+
+        # Larger units reduce slippage probability
         unit_penalty = 1.0 / math.log2(unit_size + 1)
 
         raw_score = (
-            0.5 * copy_factor +
-            0.3 * length_factor +
-            0.2 * purity_factor
+            0.55 * copy_factor +
+            0.30 * length_factor +
+            0.15 * purity_factor
         ) * unit_penalty
 
         return round(min(1.0, raw_score), 6)
 
     # ----------------------------------------------------
-    # Redundancy Elimination
+    # Non-overlapping locus enforcement
     # ----------------------------------------------------
 
     def eliminate_redundancy(self, candidates):
