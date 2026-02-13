@@ -7323,7 +7323,7 @@ def plot_linear_motif_track(motifs: List[Dict[str, Any]],
             # Draw motif as rectangle
             rect = patches.Rectangle(
                 (start, y_pos - track_height/2), length, track_height,
-                facecolor=color, edgecolor='black', linewidth=0.5, alpha=0.8
+                facecolor=color, edgecolor=color, linewidth=0.5, alpha=0.8
             )
             ax.add_patch(rect)
             
@@ -7431,7 +7431,7 @@ def plot_linear_subclass_track(motifs: List[Dict[str, Any]],
             # Draw motif as rectangle
             rect = patches.Rectangle(
                 (start, y_pos - track_height/2), length, track_height,
-                facecolor=color, edgecolor='black', linewidth=0.5, alpha=0.8
+                facecolor=color, edgecolor=color, linewidth=0.5, alpha=0.8
             )
             ax.add_patch(rect)
         
@@ -7775,7 +7775,7 @@ def plot_genome_landscape_track(motifs: List[Dict[str, Any]],
             # Draw motif as rectangle
             rect = patches.Rectangle(
                 (start_kb, y_pos - track_height/2), length_kb, track_height,
-                facecolor=color, edgecolor='black', linewidth=0.3, alpha=0.8
+                facecolor=color, edgecolor=color, linewidth=0.3, alpha=0.8
             )
             ax2.add_patch(rect)
     
