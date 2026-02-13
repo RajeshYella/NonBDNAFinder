@@ -61,8 +61,6 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
-
 
 class APhilicDetector(BaseMotifDetector):
     """A-philic DNA detector using 10-mer scoring table."""
