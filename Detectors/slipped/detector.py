@@ -1,5 +1,11 @@
-"""Slipped DNA detector: STRs (k=1-9) and direct repeats (k≥10) (Sinden 1994, Pearson 2005).""""""Slipped DNA detector: seed-accelerated tandem repeat detection
-(Streisinger 1966; Sinden 1994; Pearson 2005; Mirkin 2007)."""
+"""
+Slipped DNA detector: seed-accelerated tandem repeat detection
+(Streisinger 1966; Sinden 1994; Pearson 2005; Mirkin 2007)
+
+Subclasses:
+- Slipped STRs (k = 1–9)
+- Slipped DRs (k ≥ 10)
+"""
 
 import math
 from typing import List, Dict, Any, Tuple
@@ -10,25 +16,20 @@ from Utilities.core.motif_normalizer import normalize_class_subclass
 
 
 class SlippedDNADetector(BaseMotifDetector):
-    """
-    Literature-strict slipped DNA detector.
-    STR (k=1–9) and Direct Repeats (k≥10).
-    Seed-accelerated detection.
-    """
 
     # -----------------------------
-    # Literature-Supported Parameters
+    # Strict Literature Parameters
     # -----------------------------
 
     MIN_TRACT_LENGTH = 20
     MIN_PURITY = 0.90
     MAX_UNIT_SIZE = 100
     STR_DIRECT_REPEAT_THRESHOLD = 10
-    SCORE_THRESHOLD = 0.3
+    SCORE_THRESHOLD = 0.30
 
-    # Unit-dependent minimum copies (literature)
+    # Literature-informed minimum copies
     MIN_COPIES_TABLE = {
-        1: 10,
+        1: 10,   # Homopolymers unstable below ~10
         2: 6,
         3: 5,
         4: 4,
@@ -43,16 +44,17 @@ class SlippedDNADetector(BaseMotifDetector):
         return {"short_tandem_repeats": [], "direct_repeats": []}
 
     # ----------------------------------------------------
-    # Primitive Motif Computation
+    # Primitive Motif (fast version)
     # ----------------------------------------------------
 
     @staticmethod
     def compute_primitive_motif(sequence: str) -> str:
         n = len(sequence)
-        for period in range(1, n // 2 + 1):
+        for period in range(1, min(50, n // 2 + 1)):
+            if n % period != 0:
+                continue
             unit = sequence[:period]
-            if all(sequence[i:i+period] == unit[:len(sequence[i:i+period])]
-                   for i in range(0, n, period)):
+            if unit * (n // period) == sequence:
                 return unit
         return sequence
 
@@ -60,78 +62,75 @@ class SlippedDNADetector(BaseMotifDetector):
     def compute_repeat_purity(sequence: str, unit: str) -> float:
         if not unit:
             return 0.0
-        unit_len = len(unit)
-        matches = sum(sequence[i] == unit[i % unit_len]
-                      for i in range(len(sequence)))
+        ulen = len(unit)
+        matches = 0
+        for i, base in enumerate(sequence):
+            if base == unit[i % ulen]:
+                matches += 1
         return matches / len(sequence)
 
     # ----------------------------------------------------
-    # Seed-Based Tandem Detection
+    # 🚀 Seed-Accelerated Detection (O(n))
     # ----------------------------------------------------
 
     def find_all_tandem_repeats(self, sequence: str) -> List[Dict[str, Any]]:
+
         seq = sequence.upper()
         n = len(seq)
         candidates = []
 
-        # Seed index (1–6 bp seeds)
-        seed_index = defaultdict(list)
-        max_seed = min(6, n)
-
-        for k in range(1, max_seed + 1):
-            for i in range(n - k + 1):
-                seed_index[(k, seq[i:i+k])].append(i)
-
-        visited = set()
-
-        for (k, seed), positions in seed_index.items():
-
-            if k > self.MAX_UNIT_SIZE:
-                continue
+        # iterate possible unit sizes
+        for k in range(1, min(self.MAX_UNIT_SIZE, n // 2) + 1):
 
             min_copies = self.MIN_COPIES_TABLE.get(k, 3)
 
-            for pos in positions:
-                if (pos, k) in visited:
+            i = 0
+            while i <= n - k * min_copies:
+
+                unit = seq[i:i+k]
+
+                # fast seed check:
+                # require next copy to match before full extension
+                if seq[i+k:i+2*k] != unit:
+                    i += 1
                     continue
 
-                copies = 1
-                next_pos = pos + k
-
-                while next_pos + k <= n and seq[next_pos:next_pos+k] == seed:
+                # extend copies
+                j = i
+                copies = 0
+                while j + k <= n and seq[j:j+k] == unit:
                     copies += 1
-                    next_pos += k
+                    j += k
 
-                tract_len = copies * k
+                tract_length = copies * k
 
-                if copies >= min_copies and tract_len >= self.MIN_TRACT_LENGTH:
-                    sequence_block = seq[pos:next_pos]
+                if copies >= min_copies and tract_length >= self.MIN_TRACT_LENGTH:
 
+                    sequence_block = seq[i:j]
                     primitive = self.compute_primitive_motif(sequence_block)
                     purity = self.compute_repeat_purity(sequence_block, primitive)
 
-                    if purity < self.MIN_PURITY:
-                        continue
+                    if purity >= self.MIN_PURITY:
 
-                    candidates.append({
-                        'start': pos,
-                        'end': next_pos,
-                        'length': tract_len,
-                        'unit': seed,
-                        'primitive_unit': primitive,
-                        'unit_size': len(primitive),
-                        'copies': copies,
-                        'sequence': sequence_block,
-                        'purity': purity
-                    })
+                        candidates.append({
+                            'start': i,
+                            'end': j,
+                            'length': tract_length,
+                            'primitive_unit': primitive,
+                            'unit_size': len(primitive),
+                            'copies': copies,
+                            'sequence': sequence_block,
+                            'purity': purity
+                        })
 
-                    for i in range(pos, next_pos):
-                        visited.add((i, k))
+                    i = j  # skip whole tract (performance critical)
+                else:
+                    i += 1
 
         return candidates
 
     # ----------------------------------------------------
-    # Mechanistic Slippage Score (Copy-Dominant)
+    # Copy-Dominant Slippage Score
     # ----------------------------------------------------
 
     def compute_slippage_energy_score(self,
@@ -139,24 +138,13 @@ class SlippedDNADetector(BaseMotifDetector):
                                       unit: str,
                                       copy_number: float,
                                       purity: float) -> float:
-        """
-        Literature-aligned instability proxy.
-        Copy number dominant driver.
-        """
 
         tract_length = len(sequence)
         unit_size = len(unit)
 
-        # Copy dominance
         copy_factor = min(1.0, copy_number / 30.0)
-
-        # Length contribution
         length_factor = min(1.0, tract_length / 100.0)
-
-        # Purity linear
         purity_factor = purity
-
-        # Unit size penalty (larger units less slippage-prone)
         unit_penalty = 1.0 / math.log2(unit_size + 1)
 
         raw_score = (
@@ -171,31 +159,31 @@ class SlippedDNADetector(BaseMotifDetector):
     # Redundancy Elimination
     # ----------------------------------------------------
 
-    def eliminate_redundancy(self, candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def eliminate_redundancy(self, candidates):
+
         if not candidates:
             return []
 
-        sorted_cands = sorted(candidates,
-                              key=lambda c: (c['start'], -c['unit_size']))
+        candidates.sort(key=lambda x: (x['start'], -x['unit_size']))
 
-        non_redundant = []
-        used_intervals = []
+        final = []
+        occupied = []
 
-        for cand in sorted_cands:
+        for cand in candidates:
             s, e = cand['start'], cand['end']
-            overlap = any(not (e <= us or s >= ue)
-                          for us, ue in used_intervals)
+            overlap = any(not (e <= os or s >= oe) for os, oe in occupied)
             if not overlap:
-                non_redundant.append(cand)
-                used_intervals.append((s, e))
+                final.append(cand)
+                occupied.append((s, e))
 
-        return non_redundant
+        return final
 
     # ----------------------------------------------------
     # Annotation Pipeline
     # ----------------------------------------------------
 
-    def annotate_sequence(self, sequence: str) -> List[Dict[str, Any]]:
+    def annotate_sequence(self, sequence: str):
+
         candidates = self.find_all_tandem_repeats(sequence)
         non_redundant = self.eliminate_redundancy(candidates)
 
@@ -213,9 +201,7 @@ class SlippedDNADetector(BaseMotifDetector):
     # Detection Interface
     # ----------------------------------------------------
 
-    def detect_motifs(self,
-                      sequence: str,
-                      sequence_name: str = "sequence") -> List[Dict[str, Any]]:
+    def detect_motifs(self, sequence: str, sequence_name: str = "sequence"):
 
         self.audit['invoked'] = True
         self.audit['windows_scanned'] = 1
@@ -229,7 +215,11 @@ class SlippedDNADetector(BaseMotifDetector):
 
         for i, ann in enumerate(annotations):
 
-            subclass = 'STR' if ann['unit_size'] < self.STR_DIRECT_REPEAT_THRESHOLD else 'Direct Repeat'
+            subclass = (
+                'Slipped STRs'
+                if ann['unit_size'] < self.STR_DIRECT_REPEAT_THRESHOLD
+                else 'Slipped DRs'
+            )
 
             canonical_class, canonical_subclass = normalize_class_subclass(
                 self.get_motif_class_name(),
