@@ -1,148 +1,38 @@
-"""
-NBDScanner - Non-B DNA Motif Finder
+import streamlit as st; import pandas as pd; import os; import sys; import logging
 
-ARCHITECTURE:
-    Input → Detection → Scoring → Overlap Resolution → Visualization → Export
+ENTREZ_EMAIL = "raazbiochem@gmail.com"; ENTREZ_API_KEY = None
+PAGES = {"Home": "Overview", "Upload & Analyze": "Sequence Upload and Motif Analysis", "Results": "Analysis Results and Visualization", "Download": "Export Data", "Documentation": "Scientific Documentation & References"}
+DEFAULT_THEME_MODE = 'light'; DEFAULT_TABLE_DENSITY = 'relaxed'; DEFAULT_COLOR_THEME = 'scientific_blue'
+SESSION_DEFAULTS = {'seqs': [], 'names': [], 'results': [], 'summary_df': pd.DataFrame(), 'analysis_status': "Ready", 'selected_classes': [], 'selected_subclasses': [], 'selected_classes_used': [], 'selected_subclasses_used': [], 'current_job_id': None}
 
-This is the main application entry point. All configuration, UI utilities, and page
-logic have been modularized into separate packages for better maintainability.
-"""
-
-import streamlit as st
-import pandas as pd
-import os
-import sys
-import logging
-
-# Ensure the current directory is in the Python path for module imports
-# This is needed for Streamlit Cloud deployment to find local modules
 _current_dir = os.path.dirname(os.path.abspath(__file__))
-if _current_dir not in sys.path:
-    sys.path.insert(0, _current_dir)
+if _current_dir not in sys.path: sys.path.insert(0, _current_dir)
 
-# Import configuration modules with explicit error handling
-try:
-    from Utilities.config.text import UI_TEXT
-    from Utilities.config.layout import LAYOUT_CONFIG
-    from Utilities.config.themes import TAB_THEMES
-except ImportError as e:
-    raise ImportError(f"Failed to import configuration modules: {e}. Current dir: {_current_dir}, sys.path: {sys.path[:5]}")
+from Utilities.config.text import UI_TEXT; from Utilities.config.layout import LAYOUT_CONFIG; from Utilities.config.themes import TAB_THEMES
+from UI.css import load_css; from UI import home, upload, results, download, documentation
+from Utilities.nonbscanner import get_motif_info as get_motif_classification_info
 
-# Import UI utilities
-try:
-    from UI.css import load_css
-except ImportError as e:
-    raise ImportError(f"Failed to import UI.css: {e}. Current dir: {_current_dir}, sys.path: {sys.path[:5]}")
+try: from Bio import Entrez, SeqIO; BIO_AVAILABLE = True
+except ImportError: BIO_AVAILABLE = False
 
-# Import page modules with explicit error handling
-try:
-    from UI import home, upload, results, download, documentation
-except ImportError as e:
-    raise ImportError(f"Failed to import UI page modules: {e}. Current dir: {_current_dir}, sys.path: {sys.path[:5]}")
+logger = logging.getLogger(__name__); HYPERSCAN_AVAILABLE = False; HYPERSCAN_VERSION = None; HYPERSCAN_ERROR = None
+try: import hyperscan; HYPERSCAN_AVAILABLE = True; HYPERSCAN_VERSION = getattr(hyperscan, '__version__', 'unknown'); logger.info(f"Hyperscan loaded (v{HYPERSCAN_VERSION})")
+except ImportError as e: HYPERSCAN_ERROR = f"Hyperscan not installed: {e}"; logger.info(HYPERSCAN_ERROR)
+except Exception as e: HYPERSCAN_ERROR = f"Hyperscan init failed: {e}"; logger.warning(HYPERSCAN_ERROR)
 
-# Import core scanner functionality
-try:
-    from Utilities.nonbscanner import get_motif_info as get_motif_classification_info
-except ImportError as e:
-    raise ImportError(f"Failed to import nonbscanner: {e}. Current dir: {_current_dir}, sys.path: {sys.path[:5]}")
-
-# Optional imports with fallbacks
-try:
-    from Bio import Entrez, SeqIO
-    BIO_AVAILABLE = True
-except ImportError:
-    BIO_AVAILABLE = False
-
-# Try to import Hyperscan (optional for acceleration)
-logger = logging.getLogger(__name__)
-
-HYPERSCAN_AVAILABLE = False
-HYPERSCAN_VERSION = None
-HYPERSCAN_ERROR = None
-
-try:
-    import hyperscan
-    HYPERSCAN_AVAILABLE = True
-    try:
-        HYPERSCAN_VERSION = hyperscan.__version__
-    except AttributeError:
-        HYPERSCAN_VERSION = 'unknown'
-    logger.info(f"Hyperscan loaded successfully (version: {HYPERSCAN_VERSION})")
-except ImportError as e:
-    HYPERSCAN_ERROR = f"Hyperscan Python bindings not installed: {e}"
-    logger.info(f"Hyperscan not available - using pure Python fallback. {HYPERSCAN_ERROR}")
-except Exception as e:
-    HYPERSCAN_ERROR = f"Hyperscan initialization failed: {e}"
-    logger.warning(f"Hyperscan not available - using pure Python fallback. {HYPERSCAN_ERROR}")
-
-# ---------- PAGE CONFIG ----------
-st.set_page_config(
-    page_title=f"{UI_TEXT['app_title']} - Non-B DNA Motif Finder",
-    layout=LAYOUT_CONFIG['layout_mode'],
-    page_icon=None,
-    menu_items={'About': f"NBDScanner | Developed by {UI_TEXT['author']}"}
-)
-
-# Get motif classification info
+st.set_page_config(page_title=f"{UI_TEXT['app_title']} - Non-B DNA Motif Finder", layout=LAYOUT_CONFIG['layout_mode'], page_icon=None, menu_items={'About': f"NBDScanner | Developed by {UI_TEXT['author']}"})
 CLASSIFICATION_INFO = get_motif_classification_info()
+if BIO_AVAILABLE: Entrez.email = ENTREZ_EMAIL; Entrez.api_key = ENTREZ_API_KEY
 
-# Configure Entrez if available
-if BIO_AVAILABLE:
-    Entrez.email = "raazbiochem@gmail.com"
-    Entrez.api_key = None
+if 'theme_mode' not in st.session_state: st.session_state.theme_mode = DEFAULT_THEME_MODE
+if 'table_density' not in st.session_state: st.session_state.table_density = DEFAULT_TABLE_DENSITY
+if 'color_theme' not in st.session_state: st.session_state.color_theme = DEFAULT_COLOR_THEME
+for k, v in SESSION_DEFAULTS.items():
+    if k not in st.session_state: st.session_state[k] = v
 
-# Define pages
-PAGES = {
-    "Home": "Overview",
-    "Upload & Analyze": "Sequence Upload and Motif Analysis",
-    "Results": "Analysis Results and Visualization",
-    "Download": "Export Data",
-    "Documentation": "Scientific Documentation & References"
-}
-
-# Initialize theme state in session state
-if 'theme_mode' not in st.session_state:
-    st.session_state.theme_mode = 'light'
-if 'table_density' not in st.session_state:
-    st.session_state.table_density = 'relaxed'
-if 'color_theme' not in st.session_state:
-    st.session_state.color_theme = 'scientific_blue'
-
-# Streamlined session state initialization
-for k, v in {
-    'seqs': [],
-    'names': [],
-    'results': [],
-    'summary_df': pd.DataFrame(),
-    'analysis_status': "Ready",
-    'selected_classes': [],  # Initialize empty list for motif class selection
-    'selected_subclasses': [],  # Initialize empty list for subclass selection
-    'selected_classes_used': [],  # Classes used in last analysis
-    'selected_subclasses_used': [],  # Subclasses used in last analysis
-    'current_job_id': None  # Current job ID for result delivery
-}.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
-
-# ---- TABS WITHOUT EXTRA HEADER SPACING ----
-# Header removed per user request - page headings on each tab are sufficient
-
-# ---- TABS WITHOUT ICONS ----
-tabs = st.tabs(list(PAGES.keys()))
-tab_pages = dict(zip(PAGES.keys(), tabs))
-
-# Render each page in its respective tab
-with tab_pages["Home"]:
-    home.render()
-
-with tab_pages["Upload & Analyze"]:
-    upload.render()
-
-with tab_pages["Results"]:
-    results.render()
-
-with tab_pages["Download"]:
-    download.render()
-
-with tab_pages["Documentation"]:
-    documentation.render()
+tabs = st.tabs(list(PAGES.keys())); tab_pages = dict(zip(PAGES.keys(), tabs))
+with tab_pages["Home"]: home.render()
+with tab_pages["Upload & Analyze"]: upload.render()
+with tab_pages["Results"]: results.render()
+with tab_pages["Download"]: download.render()
+with tab_pages["Documentation"]: documentation.render()
