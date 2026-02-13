@@ -275,7 +275,7 @@ def render():
     # Analysis execution moves to full-width section below
     # ============================================================
 
-    left_col, right_col = st.columns([1, 1.5])
+    left_col, right_col = st.columns([0.7, 1.8])
 
     # ============================================================
     # LEFT COLUMN — SEQUENCE CONTEXT
