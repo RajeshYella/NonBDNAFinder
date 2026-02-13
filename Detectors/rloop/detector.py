@@ -38,8 +38,29 @@ class RLoopDetector(BaseMotifDetector):
             self._compile_hyperscan_patterns()
 
     # --------------------------------------------------
-    # Required abstract method
+    # Required abstract methods
     # --------------------------------------------------
+
+    def get_patterns(self) -> Dict[str, List[Tuple]]:
+        """
+        Return patterns for R-loop detection (QmRLFS algorithm).
+        
+        R-loops are detected using two models based on G-rich patterns:
+        - Model 1: Standard G-cluster pattern for RIZ detection
+        - Model 2: Extended G-tract pattern for RIZ detection
+        """
+        return {
+            'qmrlfs_model_1': [
+                (r'G{3,}[ATCG]{1,10}?G{3,}(?:[ATCG]{1,10}?G{3,}){1,}?',
+                 'RLOOP_M1', 'QmRLFS Model 1', 'R-loop formation sites',
+                 12, 'qmrlfs_score', 0.4, 'G-cluster RIZ pattern', 'Jenjaroenpun 2016')
+            ],
+            'qmrlfs_model_2': [
+                (r'G{4,}(?:[ATCG]{1,10}?G{4,}){1,}?',
+                 'RLOOP_M2', 'QmRLFS Model 2', 'R-loop formation sites',
+                 8, 'qmrlfs_score', 0.4, 'Extended G-tract RIZ pattern', 'Jenjaroenpun 2016')
+            ]
+        }
 
     def calculate_score(self, sequence: str, pattern_info: Tuple = None) -> float:
         annotations = self.annotate_sequence(sequence)
