@@ -646,7 +646,7 @@ def render():
         # ------------------------------------------------------------------
         # Build class entries from MOTIF_CLASSIFICATION (sorted by class ID)
         # ------------------------------------------------------------------
-        class_entries = sorted(MOTIF_CLASSIFICATION.values(), key=lambda x: list(MOTIF_CLASSIFICATION.keys())[list(MOTIF_CLASSIFICATION.values()).index(x)])
+        class_entries = [MOTIF_CLASSIFICATION[class_id] for class_id in sorted(MOTIF_CLASSIFICATION.keys())]
 
         # Initialize session state for class toggles (all ON by default)
         for entry in class_entries:
@@ -681,6 +681,7 @@ def render():
                 is_on = st.session_state.get(key, "ON") == "ON"
 
                 # Glow effect when ON
+                # Color opacity suffixes: 'cc' = 80% opacity for gradient end, '66' = 40% for glow
                 glow_style = f"""
                     background: linear-gradient(135deg, {color} 0%, {color}cc 100%);
                     box-shadow: 0 0 {GLOW_INTENSITY}px {color}66;
