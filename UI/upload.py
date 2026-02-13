@@ -541,7 +541,7 @@ def render():
     
     # ============================================================
     # RIGHT COLUMN — DETECTION SCOPE
-    # All 24 classes + submotifs visible via color-encoded grid
+    # All 11 motif classes visible via vibrant radio selector grid
     # ============================================================
     with right_col:
         st.markdown("""
@@ -563,91 +563,166 @@ def render():
         st.session_state.analysis_mode_used = "Submotif Level"
     
         # ============================================================
-        # 24-CLASS SUBMOTIF SELECTOR (COLOR-ENCODED, HIGH-DENSITY GRID)
+        # CLASS SELECTOR LAYOUT CONFIG (TUNABLE)
         # ============================================================
-        # All 24 submotifs always visible via compact grid layout.
-        # Color-encoding provides implicit class identity (via CLASS_COLORS).
-        # No scrolling required - all detection targets visible at once.
-        # User selects individual motifs from the 24 available options.
+        GRID_COLUMNS = 3   # Change to 4, 6, etc.
+        CARD_HEIGHT = 78   # px
+        HORIZONTAL_GAP = "0.4rem"
+        VERTICAL_GAP = "0.4rem"
+        GLOW_INTENSITY = 18  # px glow strength
+
+        # ============================================================
+        # 11-CLASS VIBRANT RADIO SELECTOR (GLOW ON STATE)
+        # ============================================================
+        # Class-level radio buttons with ON/OFF toggle.
+        # ON state: Vibrant gradient + soft glow in class color.
+        # OFF state: Muted gray card.
+        # Clean scientific aesthetic with configurable layout.
         # ============================================================
 
         # ------------------------------------------------------------------
-        # Use CLASS_COLORS from config.colors for color encoding
-        # (single source of truth for motif class colors)
+        # Vibrant ON / Muted OFF CSS Styles
         # ------------------------------------------------------------------
-
-        def _sanitize_key(name: str) -> str:
-            return name.replace(' ', '_').replace('-', '_').replace('/', '_')
-
-        # ------------------------------------------------------------------
-        # Build flat ordered list of all subclasses (taxonomy order)
-        # ------------------------------------------------------------------
-        flat_submotifs = []
-        for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
-            entry = MOTIF_CLASSIFICATION[class_id]
-            class_name = entry['class']
-            for subclass in entry['subclasses']:
-                flat_submotifs.append((class_name, subclass))
-
-        # Initialize session state (all ON by default)
-        for class_name, subclass in flat_submotifs:
-            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-            if key not in st.session_state:
-                st.session_state[key] = True
-
-        # ------------------------------------------------------------------
-        # Render high-density 6-column grid for full 24-class visibility
-        # (6 columns × 4 rows = 24 submotifs visible without scrolling)
-        # ------------------------------------------------------------------
-        NUM_COLUMNS = 6
-        rows = [flat_submotifs[i:i + NUM_COLUMNS]
-                for i in range(0, len(flat_submotifs), NUM_COLUMNS)]
-
-        # Wrap grid in container with CSS class for targeted styling
-        st.markdown('<div class="submotif-grid">', unsafe_allow_html=True)
+        st.markdown(f"""
+        <style>
+        /* Motif card container */
+        .motif-card-on, .motif-card-off {{
+            border-radius: 10px;
+            padding: 8px 10px;
+            min-height: {CARD_HEIGHT}px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            margin-bottom: {VERTICAL_GAP};
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }}
         
+        /* ON state: Vibrant gradient + glow */
+        .motif-card-on {{
+            color: white;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }}
+        
+        /* OFF state: Muted gray */
+        .motif-card-off {{
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+            color: #6b7280;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }}
+        
+        /* Card label styling */
+        .motif-card-label {{
+            font-size: 0.75rem;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }}
+        
+        /* Radio button container styling (hide default) */
+        .motif-radio-container .stRadio > div {{
+            flex-direction: row;
+            gap: 4px;
+        }}
+        
+        .motif-radio-container .stRadio > div > label {{
+            padding: 2px 8px;
+            font-size: 0.65rem;
+            border-radius: 4px;
+            margin: 0;
+        }}
+        
+        /* Grid container */
+        .motif-selector-grid {{
+            display: grid;
+            grid-template-columns: repeat({GRID_COLUMNS}, 1fr);
+            gap: {HORIZONTAL_GAP};
+        }}
+        </style>
+        """, unsafe_allow_html=True)
+
+        # ------------------------------------------------------------------
+        # Build class entries from MOTIF_CLASSIFICATION (sorted by class ID)
+        # ------------------------------------------------------------------
+        class_entries = sorted(MOTIF_CLASSIFICATION.values(), key=lambda x: list(MOTIF_CLASSIFICATION.keys())[list(MOTIF_CLASSIFICATION.values()).index(x)])
+
+        # Initialize session state for class toggles (all ON by default)
+        for entry in class_entries:
+            class_name = entry['class']
+            key = f"class_toggle_{class_name}"
+            if key not in st.session_state:
+                st.session_state[key] = "ON"
+
+        # ------------------------------------------------------------------
+        # Render 3-column grid with glowing class cards
+        # ------------------------------------------------------------------
+        st.markdown("""
+        <div style='margin-bottom: 8px; padding: 4px 0;'>
+            <span style='font-size: 0.7rem; color: #64748b; font-weight: 500;'>
+                Toggle classes ON/OFF to include in analysis
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Split into grid rows
+        rows = [class_entries[i:i + GRID_COLUMNS]
+                for i in range(0, len(class_entries), GRID_COLUMNS)]
+
         for row in rows:
-            cols = st.columns(NUM_COLUMNS, gap="small")
-            for col, (class_name, subclass) in zip(cols, row):
-                color = CLASS_COLORS.get(class_name, "#cbd5e1")
-                color_name = CLASS_COLOR_NAMES.get(class_name, "gray")
-                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                # Use abbreviated label for display, full name in tooltip
-                abbrev_label = get_abbreviated_label(subclass)
+            cols = st.columns(GRID_COLUMNS, gap="small")
+            for col, entry in zip(cols, row):
+                class_name = entry['class']
+                display_name = class_name.replace("_", " ")
+                color = CLASS_COLORS.get(class_name, "#6366f1")
+                key = f"class_toggle_{class_name}"
+
+                is_on = st.session_state.get(key, "ON") == "ON"
+
+                # Glow effect when ON
+                glow_style = f"""
+                    background: linear-gradient(135deg, {color} 0%, {color}cc 100%);
+                    box-shadow: 0 0 {GLOW_INTENSITY}px {color}66;
+                """ if is_on else ""
+
+                card_class = "motif-card-on" if is_on else "motif-card-off"
 
                 with col:
                     st.markdown(f"""
-                    <div style="
-                        border-left: 3px solid {color};
-                        padding-left: 2px;
-                        margin-bottom: 0;
-                        font-size: 0.65rem;
-                    ">
+                    <div class="{card_class}" style="{glow_style}">
+                        <div class="motif-card-label">{display_name}</div>
+                    </div>
                     """, unsafe_allow_html=True)
 
-                    st.checkbox(
-                        f"**:{color_name}[{abbrev_label}]**",
+                    # Radio button for ON/OFF toggle
+                    st.radio(
+                        label=display_name,
+                        options=["ON", "OFF"],
+                        index=0 if is_on else 1,
                         key=key,
-                        help=f"{subclass} ({class_name.replace('_', ' ')})"
+                        horizontal=True,
+                        label_visibility="collapsed"
                     )
 
-                    st.markdown("</div>", unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+        # ------------------------------------------------------------------
+        # Build enabled class list from radio selector states
+        # ------------------------------------------------------------------
+        enabled_classes = [
+            entry['class']
+            for entry in class_entries
+            if st.session_state.get(f"class_toggle_{entry['class']}") == "ON"
+        ]
 
-        # ------------------------------------------------------------------
-        # Build enabled class & subclass lists (for downstream analysis)
-        # ------------------------------------------------------------------
-        enabled_classes = set()
+        st.session_state.selected_classes = enabled_classes
+
+        # Build enabled subclasses list (all subclasses for enabled classes)
         enabled_subclasses = []
+        for entry in class_entries:
+            class_name = entry['class']
+            if class_name in enabled_classes:
+                enabled_subclasses.extend(entry['subclasses'])
 
-        for class_name, subclass in flat_submotifs:
-            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-            if st.session_state.get(key, True):
-                enabled_classes.add(class_name)
-                enabled_subclasses.append(subclass)
-
-        st.session_state.selected_classes = list(enabled_classes)
         st.session_state.selected_subclasses = enabled_subclasses
 
         # Also update motif_selector_data for any code that uses it (in taxonomy order)
@@ -655,17 +730,19 @@ def render():
         for class_id in sorted(MOTIF_CLASSIFICATION.keys()):
             entry = MOTIF_CLASSIFICATION[class_id]
             class_name = entry['class']
+            is_enabled = class_name in enabled_classes
             for subclass in entry['subclasses']:
-                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
                 st.session_state.motif_selector_data.append({
-                    'Enabled': st.session_state.get(key, True),
+                    'Enabled': is_enabled,
                     'Motif Class': class_name,
                     'Submotif': subclass
                 })
 
         # Compact summary with publication-grade terminology
-        num_enabled = len(enabled_subclasses)
-        total_submotifs = len(flat_submotifs)
+        num_enabled_classes = len(enabled_classes)
+        num_enabled_subclasses = len(enabled_subclasses)
+        total_classes = len(class_entries)
+        total_subclasses = sum(len(e['subclasses']) for e in class_entries)
 
         if enabled_classes:
             st.markdown(f"""
@@ -673,12 +750,12 @@ def render():
                         padding: 6px 10px; border-radius: 6px; margin-top: 8px;
                         border: 1px solid #bfdbfe; font-size: 0.78rem;'>
                 <span style='font-weight: 600; color: #1e40af;'>
-                    {len(enabled_classes)} classes · {num_enabled}/{total_submotifs} submotifs
+                    {num_enabled_classes}/{total_classes} classes · {num_enabled_subclasses}/{total_subclasses} submotifs
                 </span>
             </div>
             """, unsafe_allow_html=True)
         else:
-            st.warning("Select at least one submotif to enable analysis.")
+            st.warning("Select at least one class to enable analysis.")
     
         # ============================================================
         # ANALYSIS OPTIONS - Always ON, Hidden from UI
