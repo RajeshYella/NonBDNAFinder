@@ -24,7 +24,7 @@ class CruciformDetector(BaseMotifDetector):
     MIN_ARM = 8
     MAX_ARM = 50
     MAX_LOOP = 12
-    MAX_MISMATCHES = 2
+    MAX_MISMATCHES = 1
     MAX_SEQUENCE_LENGTH = 200000
     SCORE_THRESHOLD = 0.2
 
