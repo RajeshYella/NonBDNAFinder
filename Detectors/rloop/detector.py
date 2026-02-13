@@ -1,7 +1,6 @@
 """
 R-Loop detector: QmRLFS algorithm (Jenjaroenpun 2016)
-Seed-accelerated + Hyperscan optimized
-Literature-faithful implementation
+Hyperscan + Seed-accelerated REZ detection (high performance)
 """
 
 import re
@@ -16,15 +15,13 @@ try:
 except Exception:
     HS_AVAILABLE = False
 
-try:
-    from motif_patterns import RLOOP_PATTERNS
-except ImportError:
-    RLOOP_PATTERNS = {}
-
 
 class RLoopDetector(BaseMotifDetector):
+    """QmRLFS-finder R-loop detector (literature-faithful, accelerated)."""
 
-    # Literature parameters (UNCHANGED)
+    # ----------------------------
+    # QmRLFS Literature Parameters
+    # ----------------------------
     MIN_PERC_G_RIZ = 50
     NUM_LINKER = 50
     WINDOW_STEP = 100
@@ -36,227 +33,277 @@ class RLoopDetector(BaseMotifDetector):
         super().__init__()
         self.hs_db = None
         self.hs_id_to_model = {}
+
         if HS_AVAILABLE:
             self._compile_hyperscan_patterns()
+
+    # --------------------------------------------------
+    # Required abstract method
+    # --------------------------------------------------
+
+    def calculate_score(self, sequence: str, pattern_info: Tuple = None) -> float:
+        annotations = self.annotate_sequence(sequence)
+        if not annotations:
+            return 0.0
+
+        best = max(
+            (ann['riz_perc_g'] / 100.0) +
+            (ann.get('rez_perc_g', 0) / 100.0)
+            for ann in annotations
+        )
+
+        return min(1.0, round(best, 6))
+
+    def passes_quality_threshold(self,
+                                  sequence: str,
+                                  score: float,
+                                  pattern_info: Tuple = None) -> bool:
+        return score >= self.QUALITY_THRESHOLD
+
+    # --------------------------------------------------
 
     def get_motif_class_name(self) -> str:
         return "R-Loop"
 
-    def get_patterns(self) -> Dict[str, List[Tuple]]:
-        return self._load_patterns(RLOOP_PATTERNS, lambda: {
-            'qmrlfs_model_1': [(r'G{3,}[ATCG]{1,10}?G{3,}(?:[ATCG]{1,10}?G{3,}){1,}?',)],
-            'qmrlfs_model_2': [(r'G{4,}(?:[ATCG]{1,10}?G{4,}){1,}?',)]
-        })
-
-    # ------------------------------------------------------------
+    # --------------------------------------------------
     # Hyperscan Compilation
-    # ------------------------------------------------------------
+    # --------------------------------------------------
 
     def _compile_hyperscan_patterns(self):
         try:
-            expressions = []
-            ids = []
-            flags = []
-            next_id = 1
+            expressions = [
+                br"G{3,}[ATCG]{1,10}?G{3,}(?:[ATCG]{1,10}?G{3,}){1,}?",
+                br"G{4,}(?:[ATCG]{1,10}?G{4,}){1,}?"
+            ]
+            ids = [1, 2]
+            flags = [hyperscan.HS_FLAG_DOTALL] * 2
 
-            for model, plist in self.get_patterns().items():
-                for p in plist:
-                    expressions.append(p[0].encode())
-                    ids.append(next_id)
-                    flags.append(hyperscan.HS_FLAG_DOTALL)
-                    self.hs_id_to_model[next_id] = model
-                    next_id += 1
+            self.hs_db = hyperscan.Database()
+            self.hs_db.compile(expressions=expressions,
+                               ids=ids,
+                               flags=flags)
 
-            if expressions:
-                self.hs_db = hyperscan.Database()
-                self.hs_db.compile(expressions=expressions, ids=ids, flags=flags)
+            self.hs_id_to_model = {1: 'qmrlfs_model_1',
+                                   2: 'qmrlfs_model_2'}
         except Exception:
             self.hs_db = None
 
-    # ------------------------------------------------------------
-    # FAST GC via prefix sum (O(1))
-    # ------------------------------------------------------------
-
-    def _build_g_prefix(self, seq: str):
-        prefix = [0]
-        for base in seq:
-            prefix.append(prefix[-1] + (1 if base == "G" else 0))
-        return prefix
-
-    def _percent_g_fast(self, prefix, start, end):
-        length = end - start
-        if length == 0:
-            return 0.0
-        g_count = prefix[end] - prefix[start]
-        return (g_count / length) * 100.0
-
-    # ------------------------------------------------------------
-    # Seed-Accelerated RIZ Search
-    # ------------------------------------------------------------
+    # --------------------------------------------------
+    # RIZ Detection
+    # --------------------------------------------------
 
     def _riz_search(self, seq: str, model: str) -> List[Dict[str, Any]]:
 
-        if HS_AVAILABLE and self.hs_db:
-            results = []
+        results = []
+
+        if HS_AVAILABLE and self.hs_db is not None:
+
             seq_bytes = seq.encode()
 
-            def on_match(id, from_, to, flags, context):
+            def on_match(id, start, end, flags, context):
                 if self.hs_id_to_model.get(id) == model:
-                    results.append((from_, to))
+                    riz_seq = seq[start:end]
+                    if self._percent_g(riz_seq) >= self.MIN_PERC_G_RIZ:
+                        results.append({
+                            'start': start,
+                            'end': end,
+                            'sequence': riz_seq
+                        })
                 return 0
 
             self.hs_db.scan(seq_bytes, match_event_handler=on_match)
+
         else:
-            pattern = re.compile(self.get_patterns()[model][0][0])
-            results = [(m.start(), m.end()) for m in pattern.finditer(seq)]
+            if model == 'qmrlfs_model_1':
+                pattern = re.compile(
+                    r"G{3,}[ATCG]{1,10}?G{3,}(?:[ATCG]{1,10}?G{3,}){1,}?",
+                    re.IGNORECASE
+                )
+            else:
+                pattern = re.compile(
+                    r"G{4,}(?:[ATCG]{1,10}?G{4,}){1,}?",
+                    re.IGNORECASE
+                )
 
-        prefix = self._build_g_prefix(seq)
-        riz_list = []
+            for m in pattern.finditer(seq):
+                riz_seq = m.group(0)
+                if self._percent_g(riz_seq) >= self.MIN_PERC_G_RIZ:
+                    results.append({
+                        'start': m.start(),
+                        'end': m.end(),
+                        'sequence': riz_seq
+                    })
 
-        for start, end in results:
-            perc_g = self._percent_g_fast(prefix, start, end)
-            if perc_g >= self.MIN_PERC_G_RIZ:
-                riz_list.append({
-                    "start": start,
-                    "end": end,
-                    "length": end - start,
-                    "perc_g": perc_g,
-                    "seq": seq[start:end]
-                })
+        return results
 
-        return riz_list
+    # --------------------------------------------------
+    # 🚀 Seed-Accelerated REZ Detection
+    # Uses prefix-sum GC array (O(n))
+    # --------------------------------------------------
 
-    # ------------------------------------------------------------
-    # Seed-Accelerated REZ Search (Optimized)
-    # ------------------------------------------------------------
+    def _find_rez(self,
+                  seq: str,
+                  riz_end: int) -> Optional[Dict[str, Any]]:
 
-    def _find_rez(self, seq: str, riz_end: int, prefix) -> Optional[Dict[str, Any]]:
-
+        seq_len = len(seq)
         search_start = riz_end + self.NUM_LINKER
-        if search_start >= len(seq):
+        if search_start >= seq_len:
             return None
 
-        best_rez = None
-        max_len = 0
+        # Prefix G count for O(1) GC window computation
+        prefix_g = [0] * (seq_len + 1)
+        for i in range(seq_len):
+            prefix_g[i + 1] = prefix_g[i] + (1 if seq[i] == 'G' else 0)
 
-        # seed prefilter: must contain at least one GGG
-        for i in range(search_start,
-                       min(len(seq), riz_end + self.MAX_LENGTH_REZ),
-                       self.WINDOW_STEP):
+        best = None
+        max_score = 0.0
 
-            if "GGG" not in seq[i:i+100]:
+        max_end = min(seq_len, riz_end + self.MAX_LENGTH_REZ)
+
+        for start in range(search_start, max_end, self.WINDOW_STEP):
+
+            # quick seed prefilter (skip low G density regions)
+            window_seed_end = min(start + 100, seq_len)
+            seed_g = prefix_g[window_seed_end] - prefix_g[start]
+            seed_len = window_seed_end - start
+
+            if seed_len == 0:
                 continue
 
-            for j in range(i + 100,
-                           min(len(seq), i + self.MAX_LENGTH_REZ),
-                           100):
+            if (seed_g / seed_len) * 100 < self.MIN_PERC_G_REZ:
+                continue
 
-                perc_g = self._percent_g_fast(prefix, i, j)
+            for end in range(start + 50,
+                             max_end,
+                             50):
+
+                length = end - start
+                g_count = prefix_g[end] - prefix_g[start]
+                perc_g = (g_count / length) * 100
+
                 if perc_g >= self.MIN_PERC_G_REZ:
-                    length = j - i
-                    if length > max_len:
-                        max_len = length
-                        best_rez = {
-                            "start": i,
-                            "end": j,
-                            "length": length,
-                            "perc_g": perc_g,
-                            "seq": seq[i:j]
+                    score = perc_g * length / 100.0
+                    if score > max_score:
+                        max_score = score
+                        best = {
+                            'start': start,
+                            'end': end,
+                            'length': length,
+                            'sequence': seq[start:end],
+                            'perc_g': round(perc_g, 2)
                         }
 
-        return best_rez
+        return best
 
-    # ------------------------------------------------------------
-    # Core Annotation
-    # ------------------------------------------------------------
+    # --------------------------------------------------
 
-    def annotate_sequence(self, sequence: str,
-                          models: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def _percent_g(self, seq: str) -> float:
+        return round((seq.count("G") / float(len(seq))) * 100.0, 2) if seq else 0.0
+
+    # --------------------------------------------------
+
+    def annotate_sequence(self,
+                          sequence: str,
+                          models: Optional[List[str]] = None
+                          ) -> List[Dict[str, Any]]:
 
         seq = sequence.upper()
-        prefix = self._build_g_prefix(seq)
         models = models or ['qmrlfs_model_1', 'qmrlfs_model_2']
         results = []
 
         for model in models:
+
             riz_regions = self._riz_search(seq, model)
 
             for riz in riz_regions:
-                rez = self._find_rez(seq, riz["end"], prefix)
 
-                total_end = rez["end"] if rez else riz["end"]
+                rez = self._find_rez(seq, riz['end'])
 
-                results.append({
-                    "model": model,
-                    "riz_start": riz["start"],
-                    "riz_end": riz["end"],
-                    "riz_length": riz["length"],
-                    "riz_perc_g": riz["perc_g"],
-                    "riz_sequence": riz["seq"],
-                    "rez_start": rez["start"] if rez else None,
-                    "rez_end": rez["end"] if rez else None,
-                    "rez_length": rez["length"] if rez else 0,
-                    "rez_perc_g": rez["perc_g"] if rez else 0.0,
-                    "rez_sequence": rez["seq"] if rez else "",
-                    "total_start": riz["start"],
-                    "total_end": total_end,
-                    "total_length": total_end - riz["start"]
-                })
+                result = {
+                    'model': model,
+                    'riz_start': riz['start'],
+                    'riz_end': riz['end'],
+                    'riz_length': riz['end'] - riz['start'],
+                    'riz_sequence': riz['sequence'],
+                    'riz_perc_g': self._percent_g(riz['sequence']),
+                    'total_start': riz['start'],
+                    'total_end': riz['end'],
+                    'total_length': riz['end'] - riz['start']
+                }
+
+                if rez:
+                    result.update({
+                        'rez_start': rez['start'],
+                        'rez_end': rez['end'],
+                        'rez_length': rez['length'],
+                        'rez_sequence': rez['sequence'],
+                        'rez_perc_g': rez['perc_g'],
+                        'total_end': rez['end'],
+                        'total_length': rez['end'] - riz['start']
+                    })
+
+                results.append(result)
 
         return results
 
-    # ------------------------------------------------------------
-    # Detection Interface (UNCHANGED STRUCTURE)
-    # ------------------------------------------------------------
+    # --------------------------------------------------
 
-    def detect_motifs(self, sequence: str,
-                      sequence_name: str = "sequence"):
+    def detect_motifs(self,
+                      sequence: str,
+                      sequence_name: str = "sequence"
+                      ) -> List[Dict[str, Any]]:
 
         self.audit['invoked'] = True
+        self.audit['windows_scanned'] = 2
+        self.audit['candidates_seen'] = 0
+        self.audit['reported'] = 0
         self.audit['both_strands_scanned'] = True
 
         motifs = []
 
-        for strand, seq in [("+", sequence.upper()),
-                            ("-", revcomp(sequence.upper()))]:
+        for strand, seq in [('+', sequence.upper()),
+                            ('-', revcomp(sequence.upper()))]:
 
             annotations = self.annotate_sequence(seq)
+            self.audit['candidates_seen'] += len(annotations)
 
             seq_len = len(sequence)
 
             for i, ann in enumerate(annotations):
 
-                if strand == "-":
-                    start = seq_len - ann["total_end"]
-                    end = seq_len - ann["total_start"]
+                if strand == '-':
+                    start = seq_len - ann['total_end']
+                    end = seq_len - ann['total_start']
                 else:
-                    start = ann["total_start"]
-                    end = ann["total_end"]
+                    start = ann['total_start']
+                    end = ann['total_end']
+
+                score = (
+                    ann['riz_perc_g'] / 100.0 +
+                    ann.get('rez_perc_g', 0) / 100.0
+                )
 
                 canonical_class, canonical_subclass = normalize_class_subclass(
                     self.get_motif_class_name(),
-                    "R-loop formation sites",
+                    'R-loop formation sites',
                     strict=False,
                     auto_correct=True
                 )
 
                 motifs.append({
-                    "ID": f"{sequence_name}_RLOOP_{start+1}",
-                    "Sequence_Name": sequence_name,
-                    "Class": canonical_class,
-                    "Subclass": canonical_subclass,
-                    "Start": start + 1,
-                    "End": end,
-                    "Length": end - start,
-                    "Sequence": sequence[start:end],
-                    "Score": round(
-                        (ann["riz_perc_g"]/100) +
-                        (ann["rez_perc_g"]/100),
-                        3
-                    ),
-                    "Strand": strand,
-                    "Method": "QmRLFS_detection",
-                    "Pattern_ID": f"QmRLFS_{i+1}"
+                    'ID': f"{sequence_name}_RLOOP_{start+1}",
+                    'Sequence_Name': sequence_name,
+                    'Class': canonical_class,
+                    'Subclass': canonical_subclass,
+                    'Start': start + 1,
+                    'End': end,
+                    'Length': end - start,
+                    'Sequence': sequence[start:end],
+                    'Score': round(min(score, 1.0), 3),
+                    'Strand': strand,
+                    'Method': 'QmRLFS_detection'
                 })
+
+                self.audit['reported'] += 1
 
         return motifs
