@@ -107,7 +107,7 @@ SUBMOTIF_ABBREVIATIONS = {
 # ============================================================
 # SUBMOTIF GRID CONFIG (TUNABLE)
 # ============================================================
-GRID_COLUMNS = 3        # 3 × 8 layout
+GRID_COLUMNS = 8        # 3 × 8 layout
 GRID_GAP = "0.25rem"    # horizontal gap
 ROW_GAP = "0.15rem"     # vertical gap
 DOT_SIZE = 16           # px
