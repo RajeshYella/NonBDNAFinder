@@ -2,9 +2,8 @@
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ i-Motif DNA Detector - Canonical C-rich structures and HUR AC-motifs         │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.2            │
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
 │ References: Gehring 1993, Hur 2021                                           │
-│ Optimization: Uses shared SeedEngine for ~10000x performance gain            │
 └──────────────────────────────────────────────────────────────────────────────┘
 """
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -15,7 +14,6 @@ from typing import Dict, List, Tuple, Any
 from ..base.base_detector import BaseMotifDetector
 from Utilities.detectors_utils import revcomp
 from Utilities.core.motif_normalizer import normalize_class_subclass
-from Utilities.core.seed_engine import get_seed_engine
 
 try: from motif_patterns import IMOTIF_PATTERNS
 except ImportError: IMOTIF_PATTERNS = {}
@@ -26,8 +24,6 @@ except ImportError: IMOTIF_PATTERNS = {}
 MIN_REGION_LEN = 10; CLASS_PRIORITIES = {'canonical_imotif': 1, 'hur_ac_motif': 2}
 VALIDATED_SEQS = [("IM_VAL_001", "CCCCTCCCCTCCCCTCCCC", "Validated i-motif 1", "Gehring 1993"),
                   ("IM_VAL_002", "CCCCACCCCACCCCACCCC", "Validated i-motif 2", "Leroy 1995")]
-SEED_WINDOW_BEFORE = 50
-SEED_WINDOW_AFTER = 200
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _class_prio_idx(class_name: str) -> int: return CLASS_PRIORITIES.get(class_name, 999)
@@ -78,40 +74,13 @@ class IMotifDetector(BaseMotifDetector):
         candidates.sort(key=lambda x: x['start']); return candidates
 
     def _find_regex_candidates(self, sequence: str) -> List[Dict[str, Any]]:
-        """Find regex candidates using seeded approach with C-tract positions."""
-        seq = sequence.upper()
-        seed_engine = get_seed_engine()
-        patterns = self.get_patterns()
-        out = []
-        
-        # Use seeded approach: only scan windows around C-tracts
-        c_tracts = seed_engine.get_c_tracts(seq)
-        
-        if not c_tracts:
-            return []
-        
-        scanned_windows = set()
-        
-        for tract_start, tract_end in c_tracts:
-            window_start = max(0, tract_start - SEED_WINDOW_BEFORE)
-            window_end = min(len(seq), tract_end + SEED_WINDOW_AFTER)
-            window_key = (window_start, window_end)
-            
-            if window_key in scanned_windows:
-                continue
-            scanned_windows.add(window_key)
-            
-            window_seq = seq[window_start:window_end]
-            
-            for class_name, pats in patterns.items():
-                for patt in pats:
-                    regex = patt[0]
-                    pid = patt[1] if len(patt) > 1 else f"{class_name}_pat"
-                    for m in re.finditer(regex, window_seq, flags=re.IGNORECASE | re.ASCII):
-                        s, e = window_start + m.start(), window_start + m.end()
-                        if (e - s) >= MIN_REGION_LEN:
-                            out.append({'class_name': class_name, 'pattern_id': pid, 'start': s, 'end': e, 'matched_seq': seq[s:e]})
-        
+        seq = sequence.upper(); patterns = self.get_patterns(); out = []
+        for class_name, pats in patterns.items():
+            for patt in pats:
+                regex = patt[0]; pid = patt[1] if len(patt) > 1 else f"{class_name}_pat"
+                for m in re.finditer(regex, seq, flags=re.IGNORECASE | re.ASCII):
+                    s, e = m.start(), m.end()
+                    if (e - s) >= MIN_REGION_LEN: out.append({'class_name': class_name, 'pattern_id': pid, 'start': s, 'end': e, 'matched_seq': seq[s:e]})
         return out
 
     def _score_imotif_candidate(self, matched_seq: str) -> float:

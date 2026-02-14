@@ -2,9 +2,8 @@
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ R-Loop Detector - QmRLFS algorithm (Jenjaroenpun 2016)                       │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.2            │
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
 │ Hyperscan + Seed-accelerated REZ detection (high performance)                │
-│ Optimization: Uses shared SeedEngine for ~10000x performance gain            │
 └──────────────────────────────────────────────────────────────────────────────┘
 """
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -15,7 +14,6 @@ from typing import List, Dict, Any, Tuple, Optional
 from ..base.base_detector import BaseMotifDetector
 from Utilities.detectors_utils import revcomp
 from Utilities.core.motif_normalizer import normalize_class_subclass
-from Utilities.core.seed_engine import get_seed_engine
 
 try: import hyperscan; HS_AVAILABLE = True
 except Exception: HS_AVAILABLE = False
@@ -164,7 +162,7 @@ class RLoopDetector(BaseMotifDetector):
 
     # --------------------------------------------------
     # 🚀 Seed-Accelerated REZ Detection
-    # Uses shared SeedEngine prefix sums (O(1) per query)
+    # Uses prefix-sum GC array (O(n))
     # --------------------------------------------------
 
     def _find_rez(self,
@@ -176,8 +174,10 @@ class RLoopDetector(BaseMotifDetector):
         if search_start >= seq_len:
             return None
 
-        # Use shared SeedEngine for O(1) G-content queries
-        seed_engine = get_seed_engine()
+        # Prefix G count for O(1) GC window computation
+        prefix_g = [0] * (seq_len + 1)
+        for i in range(seq_len):
+            prefix_g[i + 1] = prefix_g[i] + (1 if seq[i] == 'G' else 0)
 
         best = None
         max_score = 0.0
@@ -186,17 +186,15 @@ class RLoopDetector(BaseMotifDetector):
 
         for start in range(search_start, max_end, self.WINDOW_STEP):
 
-            # Quick seed prefilter using shared prefix sums (O(1) lookup)
+            # quick seed prefilter (skip low G density regions)
             window_seed_end = min(start + 100, seq_len)
+            seed_g = prefix_g[window_seed_end] - prefix_g[start]
             seed_len = window_seed_end - start
-            
+
             if seed_len == 0:
                 continue
-            
-            # Use seed engine for O(1) G-content check
-            seed_g_percent = seed_engine.get_g_percent_in_range(seq, start, window_seed_end)
 
-            if seed_g_percent < self.MIN_PERC_G_REZ:
+            if (seed_g / seed_len) * 100 < self.MIN_PERC_G_REZ:
                 continue
 
             for end in range(start + 50,
@@ -204,8 +202,8 @@ class RLoopDetector(BaseMotifDetector):
                              50):
 
                 length = end - start
-                # Use seed engine for O(1) G-content calculation
-                perc_g = seed_engine.get_g_percent_in_range(seq, start, end)
+                g_count = prefix_g[end] - prefix_g[start]
+                perc_g = (g_count / length) * 100
 
                 if perc_g >= self.MIN_PERC_G_REZ:
                     score = perc_g * length / 100.0

@@ -2,8 +2,7 @@
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ Z-DNA Detector - 10-mer scoring (Ho 1986) + eGZ-motifs (Herbert 1997)        │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.2            │
-│ Optimization: Uses shared SeedEngine for ~10000x performance gain            │
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
 └──────────────────────────────────────────────────────────────────────────────┘
 """
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -22,7 +21,6 @@ except ImportError:
 from .tenmer_table import TENMER_SCORE
 from . import hyperscan_backend
 from Utilities.core.motif_normalizer import normalize_class_subclass
-from Utilities.core.seed_engine import get_seed_engine
 
 try: from motif_patterns import ZDNA_PATTERNS
 except ImportError: ZDNA_PATTERNS = {}
@@ -33,11 +31,6 @@ logger = logging.getLogger(__name__)
 # TUNABLE PARAMETERS
 # ═══════════════════════════════════════════════════════════════════════════════
 MIN_EGZ_REPEATS = 3; EGZ_BASE_SCORE = 0.85; EGZ_MIN_SCORE_THRESHOLD = 0.80; MIN_Z_SCORE = 50.0
-SEED_WINDOW_BEFORE = 20
-SEED_WINDOW_AFTER = 50
-# Z-DNA primarily forms in GC-rich alternating regions (Ho et al. 1986)
-# 40% GC content is the minimum threshold for Z-DNA forming potential
-MIN_GC_PERCENT_ZDNA = 40.0
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
@@ -147,21 +140,7 @@ class ZDNADetector(BaseMotifDetector):
         return annotations
 
     def _find_10mer_matches(self, seq: str) -> List[Tuple[int, str, float]]:
-        """Find all exact 10-mer matches using seeded pre-filtering."""
-        # Use seed engine to identify potential Z-DNA regions (GC-rich areas)
-        seed_engine = get_seed_engine()
-        gc_dinuc = seed_engine.get_gc_dinuc(seq)
-        
-        # If no GC dinucleotide regions, use fast path check
-        if not gc_dinuc:
-            # Quick scan for any potential Z-DNA forming sequences
-            # Z-DNA primarily forms in GC-rich alternating regions (Ho et al. 1986)
-            gc_content = seed_engine.get_gc_percent_in_range(seq, 0, len(seq))
-            if gc_content < MIN_GC_PERCENT_ZDNA:  # Z-DNA requires high GC content
-                return []
-        
-        # Use hyperscan or vectorized matching for full scan
-        # The seed check above filters out sequences with no Z-DNA potential
+        """Find all exact 10-mer matches."""
         if hyperscan_backend.is_hyperscan_available():
             try: return hyperscan_backend.hs_find_matches(seq, TENMER_SCORE)
             except Exception as e:
