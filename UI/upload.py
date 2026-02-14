@@ -623,63 +623,70 @@ def render():
             motif_options.append(abbrev_label)
             motif_display_map[abbrev_label] = (class_name, subclass)
 
-        # Initialize session state for selection (default to first motif)
-        # Note: Don't set default in session_state AND widget - use only widget default
+        # Note: Avoid setting default in both session_state AND widget - this can cause
+        # state synchronization issues where the widget and session state disagree on 
+        # the initial value. We use only the widget's default parameter.
 
         # ------------------------------------------------------------------
         # Render vibrant pill-style selector (single selection radio behavior)
         # ------------------------------------------------------------------
-        st.markdown("""
-        <style>
-        /* Vibrant pill styling for motif selector - radio button behavior */
-        .motif-pill-selector [data-testid="stPills"] [role="group"] {
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: 6px !important;
-            padding: 10px !important;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            border-radius: 12px !important;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
-        }
-        .motif-pill-selector [data-testid="stPills"] button {
-            background: rgba(255, 255, 255, 0.9) !important;
-            border: 2px solid rgba(255, 255, 255, 0.5) !important;
-            border-radius: 20px !important;
-            padding: 6px 12px !important;
-            font-size: 0.75rem !important;
-            font-weight: 600 !important;
-            color: #334155 !important;
-            transition: all 0.2s ease !important;
-            min-width: auto !important;
-        }
-        .motif-pill-selector [data-testid="stPills"] button:hover {
-            background: white !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-        }
-        .motif-pill-selector [data-testid="stPills"] button[aria-pressed="true"] {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-            border-color: #047857 !important;
-            color: white !important;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
-            transform: translateY(-1px) !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
         
-        st.markdown('<div class="motif-pill-selector">', unsafe_allow_html=True)
-        
-        selected_motif = st.pills(
-            "Select Non-B DNA Motif:",
-            options=motif_options,
-            default=motif_options[0] if motif_options else None,
-            key="selected_motif_pill",
-            selection_mode="single",
-            label_visibility="collapsed",
-            help="Select the Non-B DNA motif type to detect in your sequences"
-        )
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Guard against empty motif options (shouldn't happen, but handle gracefully)
+        if not motif_options:
+            st.error("No motif options available. Please check the configuration.")
+            selected_motif = None
+        else:
+            st.markdown("""
+            <style>
+            /* Vibrant pill styling for motif selector - radio button behavior */
+            .motif-pill-selector [data-testid="stPills"] [role="group"] {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                padding: 10px !important;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+            }
+            .motif-pill-selector [data-testid="stPills"] button {
+                background: rgba(255, 255, 255, 0.9) !important;
+                border: 2px solid rgba(255, 255, 255, 0.5) !important;
+                border-radius: 20px !important;
+                padding: 6px 12px !important;
+                font-size: 0.75rem !important;
+                font-weight: 600 !important;
+                color: #334155 !important;
+                transition: all 0.2s ease !important;
+                min-width: auto !important;
+            }
+            .motif-pill-selector [data-testid="stPills"] button:hover {
+                background: white !important;
+                transform: translateY(-2px) !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            }
+            .motif-pill-selector [data-testid="stPills"] button[aria-pressed="true"] {
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+                border-color: #047857 !important;
+                color: white !important;
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+                transform: translateY(-1px) !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            st.markdown('<div class="motif-pill-selector">', unsafe_allow_html=True)
+            
+            selected_motif = st.pills(
+                "Select Non-B DNA Motif:",
+                options=motif_options,
+                default=motif_options[0],
+                key="selected_motif_pill",
+                selection_mode="single",
+                label_visibility="collapsed",
+                help="Select the Non-B DNA motif type to detect in your sequences"
+            )
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
         # ------------------------------------------------------------------
         # Build enabled class & subclass lists (for downstream analysis)
@@ -716,8 +723,9 @@ def render():
                 })
 
         # Compact summary with publication-grade terminology - vibrant box style
-        if enabled_classes:
-            selected_display = get_abbreviated_label(selected_subclass) if selected_subclass else "None"
+        # A default motif is always selected (first option), so this will always show
+        if enabled_classes and selected_subclass:
+            selected_display = get_abbreviated_label(selected_subclass)
             st.markdown(f"""
             <div style='background: linear-gradient(135deg, #10b981 0%, #059669 100%);
                         padding: 8px 12px; border-radius: 8px; margin-top: 10px;
@@ -728,8 +736,6 @@ def render():
                 </span>
             </div>
             """, unsafe_allow_html=True)
-        else:
-            st.warning("Select a motif to enable analysis.")
     
         # ============================================================
         # ANALYSIS OPTIONS - Always ON, Hidden from UI
