@@ -622,15 +622,20 @@ def render():
 
         # Wrap grid in container with CSS class for targeted styling
         # Add colored dot CSS styling (replaces checkbox tick with colored dot)
-        # Since Streamlit doesn't nest elements inside our div, use global CSS with specific selectors
+        # Target only submotif checkboxes by their aria-label pattern to avoid affecting other checkboxes
         
         st.markdown(f"""
         <style>
         /* ===== DETECTION SCOPE - Colored Dots instead of Checkmarks ===== */
+        /* Target only submotif checkboxes (those with color annotations in aria-label) */
         
-        /* Make ALL checkboxes in the Detection Scope area round (dots) */
-        /* Target checkboxes that have submotif_ in their key/data attribute */
-        label[data-baseweb="checkbox"] > span:first-child {{
+        /* Make submotif checkboxes round (dots) - target by color annotation pattern */
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":blue["]) > span:first-child,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":orange["]) > span:first-child,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":red["]) > span:first-child,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":violet["]) > span:first-child,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":green["]) > span:first-child,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":gray["]) > span:first-child {{
             border-radius: 50% !important;
             width: 14px !important;
             height: 14px !important;
@@ -638,20 +643,21 @@ def render():
             max-width: 14px !important;
             border-width: 2px !important;
             border-style: solid !important;
+            background-color: transparent !important;
         }}
         
-        /* Hide the checkmark SVG inside the span */
-        label[data-baseweb="checkbox"] > span:first-child svg {{
+        /* Hide the checkmark SVG inside submotif checkboxes */
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":blue["]) > span:first-child svg,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":orange["]) > span:first-child svg,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":red["]) > span:first-child svg,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":violet["]) > span:first-child svg,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":green["]) > span:first-child svg,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":gray["]) > span:first-child svg {{
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
             width: 0 !important;
             height: 0 !important;
-        }}
-        
-        /* Unchecked state - transparent background */
-        label[data-baseweb="checkbox"] > span:first-child {{
-            background-color: transparent !important;
         }}
         
         /* ===== Color-specific dot styling based on label color ===== */
