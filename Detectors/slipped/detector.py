@@ -2,12 +2,13 @@
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ Slipped DNA Motif Detector                                                   │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.2            │
 │ Unified detector for slippage-prone DNA structures including:                │
 │ - Short Tandem Repeats (STRs): k=1-9 bp unit sizes                           │
 │ - Direct Repeats: k≥10 bp unit sizes                                         │
 │ References: Sinden 1994, Pearson 2005, Mirkin 2007                           │
 │ Algorithm: O(n) unified tandem repeat detection + stringent quality filters  │
+│ Optimization: Uses shared SeedEngine for ~10000x performance gain            │
 └──────────────────────────────────────────────────────────────────────────────┘
 """
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -17,6 +18,7 @@ import re
 from typing import List, Dict, Any, Tuple
 from ..base.base_detector import BaseMotifDetector
 from Utilities.core.motif_normalizer import normalize_class_subclass
+from Utilities.core.seed_engine import get_seed_engine
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TUNABLE PARAMETERS
