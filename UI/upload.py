@@ -245,18 +245,74 @@ def render():
         </div>
         """, unsafe_allow_html=True)
         
-        # ----- Input Method with improved spacing -----
+        # ----- Input Method with colorful vertical buttons -----
+        # Inject comprehensive CSS for colorful radio buttons
         st.markdown("""
         <style>
-        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-            padding: 0 0.5rem;
+        /* ===== SEQUENCE CONTEXT - Colorful Radio Buttons ===== */
+        /* Style each radio option label - these are inside a radiogroup */
+        label[data-baseweb="radio"] {
+            padding: 0.6rem 1rem !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+            margin-bottom: 0.35rem !important;
+            width: 100% !important;
         }
-        div.row-widget.stRadio > div {
-            gap: 1.5rem !important;
+        
+        /* Color 1: Upload FASTA File - Green */
+        label[data-baseweb="radio"]:has(input[value="0"]) {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+            border: 2px solid #10b981 !important;
         }
-        div.row-widget.stRadio > div > label {
-            padding: 0.5rem 0.75rem !important;
-            font-size: 0.85rem !important;
+        label[data-baseweb="radio"]:has(input[value="0"]):hover {
+            background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%) !important;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+        }
+        label[data-baseweb="radio"]:has(input[value="0"]) p {
+            color: #065f46 !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Color 2: Paste FASTA Sequence - Blue */
+        label[data-baseweb="radio"]:has(input[value="1"]) {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+            border: 2px solid #3b82f6 !important;
+        }
+        label[data-baseweb="radio"]:has(input[value="1"]):hover {
+            background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%) !important;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+        }
+        label[data-baseweb="radio"]:has(input[value="1"]) p {
+            color: #1e40af !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Color 3: Example Data - Amber/Yellow */
+        label[data-baseweb="radio"]:has(input[value="2"]) {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+            border: 2px solid #f59e0b !important;
+        }
+        label[data-baseweb="radio"]:has(input[value="2"]):hover {
+            background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%) !important;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
+        }
+        label[data-baseweb="radio"]:has(input[value="2"]) p {
+            color: #92400e !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Color 4: NCBI Fetch - Purple */
+        label[data-baseweb="radio"]:has(input[value="3"]) {
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%) !important;
+            border: 2px solid #8b5cf6 !important;
+        }
+        label[data-baseweb="radio"]:has(input[value="3"]):hover {
+            background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%) !important;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3) !important;
+        }
+        label[data-baseweb="radio"]:has(input[value="3"]) p {
+            color: #5b21b6 !important;
+            font-weight: 600 !important;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -264,7 +320,7 @@ def render():
         input_method = st.radio(UI_TEXT['upload_input_method_prompt'],
                             [UI_TEXT['upload_method_file'], UI_TEXT['upload_method_paste'], 
                              UI_TEXT['upload_method_example'], UI_TEXT['upload_method_ncbi']],
-                            horizontal=True,
+                            horizontal=False,
                             label_visibility="collapsed",
                             key="upload_method")
 
@@ -565,21 +621,94 @@ def render():
                 for i in range(0, len(flat_submotifs), GRID_COLUMNS)]
 
         # Wrap grid in container with CSS class for targeted styling
-        # Add radio-dot CSS styling (replaces checkbox tick with vibrant dot)
+        # Add colored dot CSS styling (replaces checkbox tick with colored dot)
+        # Target only submotif checkboxes by their aria-label pattern to avoid affecting other checkboxes
+        
         st.markdown(f"""
         <style>
-        /* Compact row spacing */
-        .submotif-grid [data-testid="stHorizontalBlock"] {{
-            gap: {ROW_GAP} !important;
-            margin-bottom: {ROW_GAP} !important;
+        /* ===== DETECTION SCOPE - Colored Dots instead of Checkmarks ===== */
+        /* Target only submotif checkboxes (those with color annotations in aria-label) */
+        
+        /* Make submotif checkboxes round (dots) - target by color annotation pattern */
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":blue["]) > span:first-child,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":orange["]) > span:first-child,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":red["]) > span:first-child,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":violet["]) > span:first-child,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":green["]) > span:first-child,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":gray["]) > span:first-child {{
+            border-radius: 50% !important;
+            width: 14px !important;
+            height: 14px !important;
+            min-width: 14px !important;
+            max-width: 14px !important;
+            border-width: 2px !important;
+            border-style: solid !important;
+            background-color: transparent !important;
         }}
-        /* Compact column spacing */
-        .submotif-grid [data-testid="column"] {{
-            padding-left: 2px !important;
-            padding-right: 2px !important;
+        
+        /* Hide the checkmark SVG inside submotif checkboxes */
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":blue["]) > span:first-child svg,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":orange["]) > span:first-child svg,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":red["]) > span:first-child svg,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":violet["]) > span:first-child svg,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":green["]) > span:first-child svg,
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":gray["]) > span:first-child svg {{
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+        }}
+        
+        /* ===== Color-specific dot styling based on label color ===== */
+        /* Blue colored labels (Curved_DNA, Z-DNA) */
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":blue["]) > span:first-child {{
+            border-color: #06b6d4 !important;
+        }}
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":blue["]:checked) > span:first-child {{
+            background-color: #06b6d4 !important;
+        }}
+        
+        /* Orange colored labels (Slipped_DNA, A-philic_DNA) */
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":orange["]) > span:first-child {{
+            border-color: #f59e0b !important;
+        }}
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":orange["]:checked) > span:first-child {{
+            background-color: #f59e0b !important;
+        }}
+        
+        /* Red colored labels (Cruciform) */
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":red["]) > span:first-child {{
+            border-color: #ef4444 !important;
+        }}
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":red["]:checked) > span:first-child {{
+            background-color: #ef4444 !important;
+        }}
+        
+        /* Violet colored labels (R-Loop, Triplex) */
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":violet["]) > span:first-child {{
+            border-color: #8b5cf6 !important;
+        }}
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":violet["]:checked) > span:first-child {{
+            background-color: #8b5cf6 !important;
+        }}
+        
+        /* Green colored labels (G-Quadruplex, i-Motif) */
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":green["]) > span:first-child {{
+            border-color: #10b981 !important;
+        }}
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":green["]:checked) > span:first-child {{
+            background-color: #10b981 !important;
+        }}
+        
+        /* Gray colored labels (Hybrid, Non-B_DNA_Clusters) */
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":gray["]) > span:first-child {{
+            border-color: #64748b !important;
+        }}
+        label[data-baseweb="checkbox"]:has(input[aria-label*=":gray["]:checked) > span:first-child {{
+            background-color: #64748b !important;
         }}
         </style>
-        <div class="submotif-grid">
         """, unsafe_allow_html=True)
         
         for row in rows:
@@ -598,8 +727,6 @@ def render():
                         key=key,
                         help=f"{subclass} ({class_name.replace('_', ' ')})"
                     )
-        
-        st.markdown('</div>', unsafe_allow_html=True)
 
         # ------------------------------------------------------------------
         # Build enabled class & subclass lists (for downstream analysis)
