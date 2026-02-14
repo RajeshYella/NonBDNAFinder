@@ -175,7 +175,15 @@ class TriplexDetector(BaseMotifDetector):
                 copy_number = tract_length // 3
                 
                 # Calculate score based on copy number (more copies = higher pathogenic potential)
-                # Score range 1.0-3.0 (1=weak, 2=moderate, 3=strong)
+                # Scoring formula: score = 1.0 + (copies - 4) * 0.2, capped at 3.0
+                # - Base score 1.0 for minimum 4 copies (detection threshold)
+                # - Increment 0.2 per additional copy to reflect increasing instability
+                # - Cap at 3.0 (maximum pathogenic potential)
+                # Score interpretation by copy number:
+                #   - Weak (1.0-1.5):   4-6 copies
+                #   - Moderate (1.6-2.5): 7-11 copies
+                #   - Strong (2.6-3.0): 12+ copies
+                # Note: Pathogenic threshold for Friedreich ataxia is typically >66 copies
                 score = min(3.0, 1.0 + (copy_number - 4) * 0.2)
                 
                 hits.append({

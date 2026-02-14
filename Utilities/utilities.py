@@ -3765,7 +3765,10 @@ def test_triplex_sticky_dna():
     
     # Test 3: Overlap handling with Cruciform
     print("\n3. Testing overlap handling (Cruciform + Sticky DNA):")
-    # GAA...TTC sequence forms an inverted repeat (cruciform) and has sticky DNA regions
+    # Structure: GAA repeats (6 copies) + ATTA spacer + TTC repeats (5 copies)
+    # GAA and TTC are reverse complements, forming an inverted repeat that can extrude as cruciform.
+    # This sequence tests that both Sticky DNA (GAA/TTC disease repeats) and Cruciform 
+    # (inverted repeat) can be detected on the same region with proper overlap handling.
     mixed_seq = 'GAAGAAGAAGAAGAAGAAATTATTTTCTTCTTCTTCTTCTTC'
     
     triplex_mixed = triplex_detector.detect_motifs(mixed_seq, 'test_mixed')
