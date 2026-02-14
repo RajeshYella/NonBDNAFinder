@@ -12,7 +12,16 @@ import streamlit as st; import pandas as pd; import matplotlib.pyplot as plt; im
 from collections import Counter
 from Utilities.config.text import UI_TEXT; from Utilities.config.themes import TAB_THEMES; from Utilities.config.analysis import MAX_OVERLAP_DISPLAY
 from UI.css import load_css; from UI.headers import render_section_heading
-from Utilities.utilities import get_basic_stats, export_results_to_dataframe, optimize_dataframe_memory, calculate_genomic_density, calculate_positional_density, plot_motif_distribution, plot_nested_pie_chart, plot_linear_motif_track, plot_linear_subclass_track, plot_density_comparison, plot_cluster_size_distribution, plot_motif_cooccurrence_matrix, plot_motif_length_kde, plot_score_distribution
+from Utilities.utilities import (
+    get_basic_stats, export_results_to_dataframe, optimize_dataframe_memory, 
+    calculate_genomic_density, calculate_positional_density, 
+    plot_motif_distribution, plot_nested_pie_chart, plot_linear_motif_track, 
+    plot_linear_subclass_track, plot_density_comparison, plot_cluster_size_distribution, 
+    plot_motif_cooccurrence_matrix, plot_motif_length_kde, plot_score_distribution,
+    plot_score_violin, plot_structural_heatmap, plot_motif_network,
+    plot_chromosome_density, plot_spacer_loop_variation, plot_motif_clustering_distance,
+    plot_structural_competition_upset
+)
 from Utilities.visualization import NATURE_MOTIF_COLORS
 
 logger = logging.getLogger(__name__)
@@ -57,53 +66,96 @@ def render():
     if len(df) > 1000: df = optimize_dataframe_memory(df)
     stats = get_basic_stats(st.session_state.seqs[seq_idx], motifs); _render_analysis_summary_box(stats.get("Coverage%", 0), stats.get("Density", 0), len(motifs), slen)
     has_clusters = any(m.get('Class') == 'Non-B_DNA_Clusters' for m in motifs); has_hybrids = any(m.get('Class') == 'Hybrid' for m in motifs)
-    viz_tabs = st.tabs(["All Motifs", "Dynamic Clusters"])
+    
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # TWO-TAB VISUALIZATION LAYOUT (Nature Publication Standard)
+    # ═══════════════════════════════════════════════════════════════════════════════
+    viz_tabs = st.tabs(["Primary Visualizations", "Advanced Analysis"])
+    
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # TAB 1: PRIMARY VISUALIZATIONS
+    # ═══════════════════════════════════════════════════════════════════════════════
     with viz_tabs[0]:
-        _render_section_divider("Track")
+        _render_section_divider("Genome Track")
         try: fig = plot_linear_motif_track(motifs, slen, title="Class Track"); st.pyplot(fig); plt.close(fig)
         except Exception as e: st.error(f"Track error: {e}")
-        _render_section_divider("Subclass"); sm = [m for m in motifs if m.get('Class') not in CLUSTER_CLASSES]
+        
+        _render_section_divider("Subclass Track"); sm = [m for m in motifs if m.get('Class') not in CLUSTER_CLASSES]
         if sm:
             try: fig = plot_linear_subclass_track(sm, slen, title="Subclass Track"); st.pyplot(fig); plt.close(fig)
             except Exception as e: st.error(f"Subclass track error: {e}")
         else: st.info("No non-cluster motifs.")
+        
         _render_section_divider("Distribution"); c1, c2 = st.columns(2)
         with c1:
-            try: fig = plot_motif_distribution(motifs, by='Class', title="Class"); st.pyplot(fig); plt.close(fig)
+            try: fig = plot_motif_distribution(motifs, by='Class', title="Class Distribution"); st.pyplot(fig); plt.close(fig)
             except Exception as e: st.error(f"Class dist error: {e}")
         with c2:
-            try: fig = plot_motif_distribution(motifs, by='Subclass', title="Subclass"); st.pyplot(fig); plt.close(fig)
+            try: fig = plot_motif_distribution(motifs, by='Subclass', title="Subclass Distribution"); st.pyplot(fig); plt.close(fig)
             except Exception as e: st.error(f"Subclass dist error: {e}")
-        _render_section_divider("Density")
+        
+        _render_section_divider("Density Analysis")
         try:
             vk = f"seq_{seq_idx}"; cv = st.session_state.get('cached_visualizations', {}).get(vk, {}); cd = cv.get('densities', {})
             if cd: gd, pd_kbp = cd['class_genomic'], cd['class_positional']
             else: gd = calculate_genomic_density(motifs, slen, by_class=True); pd_kbp = calculate_positional_density(motifs, slen, unit='kbp', by_class=True)
             fig = plot_density_comparison(gd, pd_kbp, title="Density Analysis"); st.pyplot(fig); plt.close(fig)
         except Exception as e: st.error(f"Density error: {e}")
-        _render_section_divider("Length")
-        try: fig = plot_motif_length_kde(motifs, by_class=True, title="Length KDE"); st.pyplot(fig); plt.close(fig)
-        except Exception as e: st.error(f"KDE error: {e}")
-        _render_section_divider("Score")
-        try: fig = plot_score_distribution(motifs, by_class=True, title="Score (1-3)"); st.pyplot(fig); plt.close(fig)
+        
+        _render_section_divider("Length Distribution")
+        try: fig = plot_motif_length_kde(motifs, by_class=True, title="Length Distribution"); st.pyplot(fig); plt.close(fig)
+        except Exception as e: st.error(f"Length dist error: {e}")
+        
+        _render_section_divider("Score Distribution")
+        try: fig = plot_score_violin(motifs, by_class=True, title="Score Distribution"); st.pyplot(fig); plt.close(fig)
         except Exception as e: st.error(f"Score error: {e}")
+        
         _render_section_divider("Composition")
         try: fig = plot_nested_pie_chart(motifs, title="Class → Subclass"); st.pyplot(fig); plt.close(fig)
         except Exception as e: st.error(f"Pie error: {e}")
+    
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # TAB 2: ADVANCED ANALYSIS
+    # ═══════════════════════════════════════════════════════════════════════════════
     with viz_tabs[1]:
+        _render_section_divider("Structural Potential Heatmap")
+        try: fig = plot_structural_heatmap(motifs, slen, title="Structural Potential Heatmap"); st.pyplot(fig); plt.close(fig)
+        except Exception as e: st.error(f"Heatmap error: {e}")
+        
+        _render_section_divider("Co-occurrence Network")
+        try: fig = plot_motif_network(motifs, title="Motif Co-occurrence Network"); st.pyplot(fig); plt.close(fig)
+        except Exception as e: st.error(f"Network error: {e}")
+        
+        _render_section_divider("Co-occurrence Matrix")
+        try: fig = plot_motif_cooccurrence_matrix(motifs, title="Co-occurrence Matrix"); st.pyplot(fig); plt.close(fig)
+        except Exception as e: st.error(f"Co-occurrence error: {e}")
+        
+        _render_section_divider("Chromosome Density")
+        try: fig = plot_chromosome_density(motifs, title="Motif Density by Class"); st.pyplot(fig); plt.close(fig)
+        except Exception as e: st.error(f"Chromosome density error: {e}")
+        
+        _render_section_divider("Clustering Distance")
+        try: fig = plot_motif_clustering_distance(motifs, title="Inter-Motif Distance"); st.pyplot(fig); plt.close(fig)
+        except Exception as e: st.error(f"Clustering distance error: {e}")
+        
+        _render_section_divider("Spacer/Loop Variation (G4 & Triplex)")
+        try: fig = plot_spacer_loop_variation(motifs, title="Spacer/Loop Length Variation"); st.pyplot(fig); plt.close(fig)
+        except Exception as e: st.error(f"Spacer/loop error: {e}")
+        
         if has_clusters or has_hybrids:
-            _render_section_divider("Clusters"); chm = [m for m in motifs if m.get('Class') in CLUSTER_CLASSES]
+            _render_section_divider("Clusters & Hybrids"); chm = [m for m in motifs if m.get('Class') in CLUSTER_CLASSES]
             try: fig = plot_linear_motif_track(chm, slen, title="Hybrid & Cluster Track"); st.pyplot(fig); plt.close(fig)
             except Exception as e: st.error(f"Cluster track error: {e}")
             if has_clusters:
-                _render_section_divider("Stats")
+                _render_section_divider("Cluster Statistics")
                 try: fig = plot_cluster_size_distribution(motifs, title="Cluster Statistics"); st.pyplot(fig); plt.close(fig)
                 except Exception as e: st.error(f"Cluster size error: {e}")
-        else: st.markdown("<div style='padding:8px;background:#f0f9ff;border-radius:6px;color:#0369a1;font-size:0.8rem;text-align:center;'>No clusters or hybrids detected</div>", unsafe_allow_html=True)
-        _render_section_divider("Co-occurrence")
-        try: fig = plot_motif_cooccurrence_matrix(motifs, title="Co-occurrence"); st.pyplot(fig); plt.close(fig)
-        except Exception as e: st.error(f"Co-occurrence error: {e}")
-        _render_section_divider("Overlaps"); co, so = _calculate_overlaps(motifs, by='Class'), _calculate_overlaps(motifs, by='Subclass'); c1, c2 = st.columns(2)
+        
+        _render_section_divider("Structural Competition (UpSet)")
+        try: fig = plot_structural_competition_upset(motifs, title="Structural Competition"); st.pyplot(fig); plt.close(fig)
+        except Exception as e: st.error(f"UpSet error: {e}")
+        
+        _render_section_divider("Overlaps Summary"); co, so = _calculate_overlaps(motifs, by='Class'), _calculate_overlaps(motifs, by='Subclass'); c1, c2 = st.columns(2)
         with c1:
             if co: _render_overlap_matrix(co, "Class Overlaps")
             else: st.markdown('<div style="color:#64748b;font-size:0.8rem;">No class overlaps</div>', unsafe_allow_html=True)
