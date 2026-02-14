@@ -210,6 +210,8 @@ SUBCLASS_ALIASES: Dict[str, str] = {
     
     # Triplex subclasses
     'triplex': 'Triplex',
+    'triplex_motif': 'Triplex',  # Legacy alias for backward compatibility
+    'triplex motif': 'Triplex',  # Legacy alias for backward compatibility
     'sticky dna': 'Sticky DNA',
     'sticky_dna': 'Sticky DNA',
     
