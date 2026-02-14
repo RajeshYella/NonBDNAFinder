@@ -45,6 +45,10 @@ NBST_FILES = {
 }
 
 # Subclass to NBST mapping - defines which NBF subclasses correspond to which NBST classes
+# NOTE: This is a comprehensive mapping of all possible subclasses. Not all subclasses
+# will be present in every analysis run - only subclasses detected in the input sequence
+# will appear in the results. Some subclasses (e.g., Telomeric G4, Stacked G4s) may be
+# rare or absent depending on the sequence content.
 SUBCLASS_TO_NBST_MAP = {
     # G-Quadruplex subclasses all map to NBST GQ
     "Canonical intramolecular G4": "GQ",
