@@ -7736,7 +7736,8 @@ def plot_motif_length_kde(motifs: List[Dict[str, Any]],
     return fig
 
 
-# Alias for backward compatibility
+# Backward compatibility alias - the function now uses histogram but retains KDE name
+# to avoid breaking existing code that imports plot_motif_length_kde
 plot_motif_length_histogram = plot_motif_length_kde
 
 
@@ -8255,17 +8256,17 @@ def plot_spacer_loop_variation(motifs: List[Dict[str, Any]],
     
     # G4 loop lengths
     if g4_loops:
-        axes[0].hist(g4_loops, bins=min(20, max(g4_loops)), alpha=0.8,
+        n_bins = min(20, int(max(g4_loops)) if max(g4_loops) > 1 else 10)
+        axes[0].hist(g4_loops, bins=n_bins, alpha=0.8,
                     color=MOTIF_CLASS_COLORS.get('G-Quadruplex', '#10b981'),
                     edgecolor='white', linewidth=0.5)
         axes[0].set_xlabel('Loop Length (bp)', fontsize=10, fontweight='bold')
         axes[0].set_ylabel('Count', fontsize=10, fontweight='bold')
         axes[0].set_title('G-Quadruplex Loop Length', fontsize=10, fontweight='bold')
-        if g4_loops:
-            mean_loop = np.mean(g4_loops)
-            axes[0].axvline(mean_loop, color='red', linestyle='--', linewidth=1.5,
-                           label=f'Mean: {mean_loop:.1f}')
-            axes[0].legend(fontsize=7)
+        mean_loop = np.mean(g4_loops)
+        axes[0].axvline(mean_loop, color='red', linestyle='--', linewidth=1.5,
+                       label=f'Mean: {mean_loop:.1f}')
+        axes[0].legend(fontsize=7)
     else:
         axes[0].text(0.5, 0.5, 'No G4 loop data', ha='center', va='center',
                     transform=axes[0].transAxes, fontsize=11)
@@ -8275,17 +8276,17 @@ def plot_spacer_loop_variation(motifs: List[Dict[str, Any]],
     
     # Triplex spacer lengths
     if triplex_spacers:
-        axes[1].hist(triplex_spacers, bins=min(20, max(triplex_spacers)), alpha=0.8,
+        n_bins = min(20, int(max(triplex_spacers)) if max(triplex_spacers) > 1 else 10)
+        axes[1].hist(triplex_spacers, bins=n_bins, alpha=0.8,
                     color=MOTIF_CLASS_COLORS.get('Triplex', '#ec4899'),
                     edgecolor='white', linewidth=0.5)
         axes[1].set_xlabel('Spacer Length (bp)', fontsize=10, fontweight='bold')
         axes[1].set_ylabel('Count', fontsize=10, fontweight='bold')
         axes[1].set_title('Triplex Spacer Length', fontsize=10, fontweight='bold')
-        if triplex_spacers:
-            mean_spacer = np.mean(triplex_spacers)
-            axes[1].axvline(mean_spacer, color='red', linestyle='--', linewidth=1.5,
-                           label=f'Mean: {mean_spacer:.1f}')
-            axes[1].legend(fontsize=7)
+        mean_spacer = np.mean(triplex_spacers)
+        axes[1].axvline(mean_spacer, color='red', linestyle='--', linewidth=1.5,
+                       label=f'Mean: {mean_spacer:.1f}')
+        axes[1].legend(fontsize=7)
     else:
         axes[1].text(0.5, 0.5, 'No Triplex spacer data', ha='center', va='center',
                     transform=axes[1].transAxes, fontsize=11)

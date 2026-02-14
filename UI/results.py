@@ -70,7 +70,7 @@ def render():
     # ═══════════════════════════════════════════════════════════════════════════════
     # TWO-TAB VISUALIZATION LAYOUT (Nature Publication Standard)
     # ═══════════════════════════════════════════════════════════════════════════════
-    viz_tabs = st.tabs(["📊 Primary Visualizations", "🔬 Advanced Analysis"])
+    viz_tabs = st.tabs(["Primary Visualizations", "Advanced Analysis"])
     
     # ═══════════════════════════════════════════════════════════════════════════════
     # TAB 1: PRIMARY VISUALIZATIONS
