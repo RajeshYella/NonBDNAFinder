@@ -1,28 +1,26 @@
 """
-Ultra-fast G-Quadruplex detector:
-Seeded scanning + G-only G4Hunter scoring
-(Huppert 2005, Bedrat 2016 inspired)
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ G-Quadruplex Detector - Ultra-fast seeded G4 detection                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ References: Huppert 2005, Bedrat 2016                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
 """
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import Dict, List, Tuple, Any
 from ..base.base_detector import BaseMotifDetector
 from Utilities.core.motif_normalizer import normalize_class_subclass
 
-# Tunable constants
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
 WINDOW_SIZE_DEFAULT = 25
 MIN_REGION_LEN = 8
-
-CLASS_PRIORITY = [
-    "telomeric_g4",
-    "stacked_canonical_g4s",
-    "stacked_g4s_linker",
-    "canonical_g4",
-    "extended_loop_g4",
-    "higher_order_g4",
-    "g_triplex",
-    "weak_pqs"
-]
+CLASS_PRIORITY = ["telomeric_g4", "stacked_canonical_g4s", "stacked_g4s_linker", "canonical_g4", "extended_loop_g4", "higher_order_g4", "g_triplex", "weak_pqs"]
+# ═══════════════════════════════════════════════════════════════════════════════
 
 class GQuadruplexDetector(BaseMotifDetector):
     """Ultra-fast seeded G4 detector with priority logic retained."""

@@ -1,15 +1,18 @@
 """
-Base Detector Class - Abstract base for all Non-B DNA motif detectors
-Dr. Venkata Rajesh Yella | 2024.1 | MIT License
-
-O(n) regex matching | Pattern compilation & caching
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Base Detector Class - Abstract base for all Non-B DNA motif detectors        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ O(n) regex matching | Pattern compilation & caching                          │
+└──────────────────────────────────────────────────────────────────────────────┘
 """
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Tuple
 
-# Import shared utilities
 from Utilities.detectors_utils import (
     calc_gc_content,
     calc_at_content,
@@ -18,6 +21,12 @@ from Utilities.detectors_utils import (
     remove_overlaps_by_subclass,
     load_patterns_with_fallback
 )
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+DEFAULT_MIN_SCORE_THRESHOLD = 0.5
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 class BaseMotifDetector(ABC):
@@ -153,13 +162,10 @@ class BaseMotifDetector(ABC):
     
     def passes_quality_threshold(self, sequence: str, score: float, pattern_info: Tuple) -> bool:
         """Apply quality thresholds - can be overridden by subclasses"""
-        # Default threshold from pattern info if available
         if len(pattern_info) > 6:
-            min_threshold = pattern_info[6]  # confidence/threshold from pattern
+            min_threshold = pattern_info[6]
             return score >= min_threshold
-        
-        # Default minimum score threshold
-        return score >= 0.5
+        return score >= DEFAULT_MIN_SCORE_THRESHOLD
     
     def get_statistics(self) -> Dict[str, Any]:
         """Get detector statistics"""

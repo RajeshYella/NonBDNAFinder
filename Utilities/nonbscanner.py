@@ -1,4 +1,13 @@
-"""NonBScanner - Non-B DNA Motif Detection Suite | Dr. Venkata Rajesh Yella | MIT License"""
+"""
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ NonBScanner - Non-B DNA Motif Detection Suite                                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+└──────────────────────────────────────────────────────────────────────────────┘
+"""
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import os; import warnings; import time; import threading; import logging; import bisect; import multiprocessing; import pandas as pd
 from typing import List, Dict, Any, Optional, Union, Tuple, Callable, overload, Literal
 from collections import defaultdict
@@ -16,20 +25,10 @@ except ImportError: STREAMLIT_PROGRESS_AVAILABLE = False
 # TUNABLE PARAMETERS - All configuration values at the top for easy modification
 # ═══════════════════════════════════════════════════════════════════════════════
 __version__ = "2024.1"; __author__ = "Dr. Venkata Rajesh Yella"
-
-# Chunking Configuration
 CHUNK_THRESHOLD = 10000; DEFAULT_CHUNK_SIZE = 10000; DEFAULT_CHUNK_OVERLAP = 2500
-
-# Hybrid Detection Parameters
 HYBRID_MIN_OVERLAP = 0.50; HYBRID_MAX_OVERLAP = 0.99
-
-# Cluster Detection Parameters
 CLUSTER_WINDOW_SIZE = 300; CLUSTER_MIN_MOTIFS = 4; CLUSTER_MIN_CLASSES = 3
-
-# Detector Display Names
 DETECTOR_DISPLAY_NAMES = {'curved_dna': 'Curved DNA', 'slipped_dna': 'Slipped DNA', 'cruciform': 'Cruciform', 'r_loop': 'R-Loop', 'triplex': 'Triplex', 'g_quadruplex': 'G-Quadruplex', 'i_motif': 'i-Motif', 'z_dna': 'Z-DNA', 'a_philic': 'A-philic DNA'}
-
-# Class to Detector Mapping
 CLASS_TO_DETECTOR = {'Curved_DNA': 'curved_dna', 'Slipped_DNA': 'slipped_dna', 'Cruciform': 'cruciform', 'R-Loop': 'r_loop', 'Triplex': 'triplex', 'G-Quadruplex': 'g_quadruplex', 'i-Motif': 'i_motif', 'Z-DNA': 'z_dna', 'A-philic_DNA': 'a_philic'}
 DETECTOR_TO_CLASS = {v: k for k, v in CLASS_TO_DETECTOR.items()}
 # ═══════════════════════════════════════════════════════════════════════════════

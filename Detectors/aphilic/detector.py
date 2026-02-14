@@ -1,5 +1,13 @@
-"""A-philic DNA detector: 10-mer scoring table with hyperscan acceleration."""
-
+"""
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ A-philic DNA Detector - 10-mer scoring table with hyperscan acceleration     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+└──────────────────────────────────────────────────────────────────────────────┘
+"""
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import logging
 from typing import Any, Dict, List, Tuple
 
@@ -21,12 +29,17 @@ except ImportError: APHILIC_DNA_PATTERNS = {}
 
 logger = logging.getLogger(__name__)
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+MIN_SUM_LOG2 = 0.5  # Minimum sum_log2 for A-philic regions
+# ═══════════════════════════════════════════════════════════════════════════════
+
 
 class APhilicDetector(BaseMotifDetector):
     """A-philic DNA detector using 10-mer scoring table."""
 
-    # Tunable parameters
-    MIN_SUM_LOG2 = 0.5  # Minimum sum_log2 for A-philic regions
+    MIN_SUM_LOG2 = MIN_SUM_LOG2
 
     def get_motif_class_name(self) -> str: return "A-philic_DNA"
 

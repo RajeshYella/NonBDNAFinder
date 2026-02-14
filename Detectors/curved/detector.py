@@ -1,5 +1,14 @@
-"""Curved DNA detector: A-tract and T-tract phasing patterns (Koo 1986, Olson 1998)."""
-
+"""
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Curved DNA Detector - A-tract and T-tract phasing patterns                   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ References: Koo 1986, Olson 1998                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+"""
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import List, Dict, Any, Tuple
 from ..base.base_detector import BaseMotifDetector
@@ -7,13 +16,20 @@ from Utilities.detectors_utils import revcomp
 from .patterns import _generate_phased_repeat_patterns
 from Utilities.core.motif_normalizer import normalize_class_subclass
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+MIN_AT_TRACT = 3; MAX_AT_WINDOW = None; PHASING_CENTER_SPACING = 11.0
+PHASING_TOL_LOW = 9.9; PHASING_TOL_HIGH = 11.1; MIN_APR_TRACTS = 3; LOCAL_LONG_TRACT = 7; SCORE_THRESHOLD = 0.1
+# ═══════════════════════════════════════════════════════════════════════════════
+
 
 class CurvedDNADetector(BaseMotifDetector):
     """Curved DNA detector using A-tract and T-tract phasing patterns."""
 
-    # Tunable parameters
-    MIN_AT_TRACT = 3; MAX_AT_WINDOW = None; PHASING_CENTER_SPACING = 11.0
-    PHASING_TOL_LOW = 9.9; PHASING_TOL_HIGH = 11.1; MIN_APR_TRACTS = 3; LOCAL_LONG_TRACT = 7; SCORE_THRESHOLD = 0.1
+    MIN_AT_TRACT = MIN_AT_TRACT; MAX_AT_WINDOW = MAX_AT_WINDOW; PHASING_CENTER_SPACING = PHASING_CENTER_SPACING
+    PHASING_TOL_LOW = PHASING_TOL_LOW; PHASING_TOL_HIGH = PHASING_TOL_HIGH; MIN_APR_TRACTS = MIN_APR_TRACTS
+    LOCAL_LONG_TRACT = LOCAL_LONG_TRACT; SCORE_THRESHOLD = SCORE_THRESHOLD
 
     def get_motif_class_name(self) -> str: return "Curved_DNA"
 

@@ -1,53 +1,36 @@
 """
-Slipped DNA Motif Detector
-==========================
-
-Unified detector for slippage-prone DNA structures including:
-- Short Tandem Repeats (STRs): k=1-9 bp unit sizes
-- Direct Repeats: k≥10 bp unit sizes
-
-Requires ≥20 bp tracts with ≥90% purity for high-confidence detection.
-
-Scientific References:
----------------------
-- Sinden, R.R. (1994). DNA Structure and Function. Academic Press.
-  Describes the molecular basis of slipped-strand DNA formation and
-  its role in genetic instability.
-
-- Pearson, C.E., Nichol Edamura, K., and Cleary, J.D. (2005).
-  Repeat instability: mechanisms of dynamic mutations.
-  Nature Reviews Genetics 6(10):729-742.
-  Comprehensive review of repeat expansion mechanisms and slippage.
-
-- Mirkin, S.M. (2007). Expandable DNA repeats and human disease.
-  Nature 447:932-940.
-  Links slipped-strand structures to repeat expansion diseases.
-
-Algorithm:
-----------
-1. Unified tandem repeat detection for k=1 to MAX_UNIT_SIZE
-2. Stringent quality filters (length, purity, copy number, entropy)
-3. Redundancy elimination (one call per genomic locus)
-4. Mechanistic slippage energy scoring (1-3 scale)
-
-Performance:
------------
-- O(n) complexity with efficient algorithmic detection
-- No catastrophic regex backtracking
-- Handles sequences up to 100 Kbp efficiently
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Slipped DNA Motif Detector                                                   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ Unified detector for slippage-prone DNA structures including:                │
+│ - Short Tandem Repeats (STRs): k=1-9 bp unit sizes                           │
+│ - Direct Repeats: k≥10 bp unit sizes                                         │
+│ References: Sinden 1994, Pearson 2005, Mirkin 2007                           │
+│ Algorithm: O(n) unified tandem repeat detection + stringent quality filters  │
+└──────────────────────────────────────────────────────────────────────────────┘
 """
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import List, Dict, Any, Tuple
 from ..base.base_detector import BaseMotifDetector
 from Utilities.core.motif_normalizer import normalize_class_subclass
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+MIN_TRACT_LENGTH = 20; MIN_PURITY = 0.90; MIN_COPIES_STR = 3; MIN_COPIES_DIRECT = 2; MAX_UNIT_SIZE = 100
+STR_DIRECT_REPEAT_THRESHOLD = 10  # Unit size threshold: <10 = STR, >=10 = Direct Repeat
+# ═══════════════════════════════════════════════════════════════════════════════
+
 
 class SlippedDNADetector(BaseMotifDetector):
-    """Unified detector for slippage-prone DNA: STRs (k=1-9) and direct repeats (k≥10). Requires ≥20 bp tracts with ≥90% purity. References: Sinden (1994), Pearson (2005), Mirkin (2007)."""
+    """Unified detector for slippage-prone DNA: STRs (k=1-9) and direct repeats (k≥10). Requires ≥20 bp tracts with ≥90% purity."""
     
-    MIN_TRACT_LENGTH = 20; MIN_PURITY = 0.90; MIN_COPIES_STR = 3; MIN_COPIES_DIRECT = 2; MAX_UNIT_SIZE = 100
-    STR_DIRECT_REPEAT_THRESHOLD = 10  # Unit size threshold: <10 = STR, >=10 = Direct Repeat
+    MIN_TRACT_LENGTH = MIN_TRACT_LENGTH; MIN_PURITY = MIN_PURITY; MIN_COPIES_STR = MIN_COPIES_STR
+    MIN_COPIES_DIRECT = MIN_COPIES_DIRECT; MAX_UNIT_SIZE = MAX_UNIT_SIZE; STR_DIRECT_REPEAT_THRESHOLD = STR_DIRECT_REPEAT_THRESHOLD
     
     def get_motif_class_name(self) -> str:
         return "Slipped_DNA"

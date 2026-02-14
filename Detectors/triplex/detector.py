@@ -1,13 +1,25 @@
-"""Triplex DNA detector: seed-and-extend mirror repeats (H-DNA)
-Frank-Kamenetskii 1995; Soyfer & Potaman 1995
-Sticky DNA handled separately.
 """
-
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Triplex DNA Detector - Seed-and-extend mirror repeats (H-DNA)                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ References: Frank-Kamenetskii 1995; Soyfer & Potaman 1995                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+"""
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import List, Dict, Any, Tuple
 from collections import defaultdict
 from ..base.base_detector import BaseMotifDetector
 from Utilities.core.motif_normalizer import normalize_class_subclass
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS - Literature Parameters
+# ═══════════════════════════════════════════════════════════════════════════════
+MIN_ARM = 10; MAX_ARM = 100; MAX_LOOP = 8; PURITY_THRESHOLD = 0.90; SEED_SIZE = 6; SCORE_THRESHOLD = 0.25
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 def revcomp(seq: str) -> str:
@@ -17,13 +29,8 @@ def revcomp(seq: str) -> str:
 
 class TriplexDetector(BaseMotifDetector):
 
-    # Literature parameters
-    MIN_ARM = 10
-    MAX_ARM = 100
-    MAX_LOOP = 8
-    PURITY_THRESHOLD = 0.90
-    SEED_SIZE = 6
-    SCORE_THRESHOLD = 0.25
+    MIN_ARM = MIN_ARM; MAX_ARM = MAX_ARM; MAX_LOOP = MAX_LOOP
+    PURITY_THRESHOLD = PURITY_THRESHOLD; SEED_SIZE = SEED_SIZE; SCORE_THRESHOLD = SCORE_THRESHOLD
 
     def get_motif_class_name(self) -> str:
         return "Triplex"

@@ -1,6 +1,15 @@
-"""Cruciform DNA detector: thermodynamic inverted repeats using seed-and-extend indexing
-(Lilley 2000; SantaLucia 1998)."""
-
+"""
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Cruciform DNA Detector - Thermodynamic inverted repeats                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ References: Lilley 2000; SantaLucia 1998                                     │
+│ Algorithm: Seed-and-extend indexing                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+"""
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import math
 from typing import List, Dict, Any, Tuple, Optional
 from collections import defaultdict
@@ -9,35 +18,26 @@ from ..base.base_detector import BaseMotifDetector
 from Utilities.detectors_utils import revcomp, calc_gc_content
 from Utilities.core.motif_normalizer import normalize_class_subclass
 
-try:
-    from motif_patterns import CRUCIFORM_PATTERNS
-except ImportError:
-    CRUCIFORM_PATTERNS = {}
+try: from motif_patterns import CRUCIFORM_PATTERNS
+except ImportError: CRUCIFORM_PATTERNS = {}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS - Literature-Supported Parameters
+# ═══════════════════════════════════════════════════════════════════════════════
+MIN_ARM = 8; MAX_ARM = 50; MAX_LOOP = 12; MAX_MISMATCHES = 0; MAX_SEQUENCE_LENGTH = 200000; SCORE_THRESHOLD = 0.2
+SEED_SIZE = 6; DELTA_G_THRESHOLD = -5.0  # kcal/mol stability cutoff
+# SantaLucia-like nearest-neighbor ΔG°37 (kcal/mol)
+NN_ENERGY = {"AA": -1.0, "AC": -1.44, "AG": -1.28, "AT": -0.88, "CA": -1.45, "CC": -1.84, "CG": -2.17, "CT": -1.28,
+             "GA": -1.30, "GC": -2.24, "GG": -1.84, "GT": -1.44, "TA": -0.58, "TC": -1.30, "TG": -1.45, "TT": -1.0}
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 class CruciformDetector(BaseMotifDetector):
     """Cruciform (thermodynamic inverted repeat) DNA detector using seed-and-extend indexing."""
 
-    # -------------------------
-    # Literature-Supported Parameters
-    # -------------------------
-    MIN_ARM = 8
-    MAX_ARM = 50
-    MAX_LOOP = 12
-    MAX_MISMATCHES = 0
-    MAX_SEQUENCE_LENGTH = 200000
-    SCORE_THRESHOLD = 0.2
-
-    SEED_SIZE = 6
-    DELTA_G_THRESHOLD = -5.0  # kcal/mol stability cutoff
-
-    # SantaLucia-like nearest-neighbor ΔG°37 (kcal/mol)
-    NN_ENERGY = {
-        "AA": -1.0, "AC": -1.44, "AG": -1.28, "AT": -0.88,
-        "CA": -1.45, "CC": -1.84, "CG": -2.17, "CT": -1.28,
-        "GA": -1.30, "GC": -2.24, "GG": -1.84, "GT": -1.44,
-        "TA": -0.58, "TC": -1.30, "TG": -1.45, "TT": -1.0
-    }
+    MIN_ARM = MIN_ARM; MAX_ARM = MAX_ARM; MAX_LOOP = MAX_LOOP; MAX_MISMATCHES = MAX_MISMATCHES
+    MAX_SEQUENCE_LENGTH = MAX_SEQUENCE_LENGTH; SCORE_THRESHOLD = SCORE_THRESHOLD
+    SEED_SIZE = SEED_SIZE; DELTA_G_THRESHOLD = DELTA_G_THRESHOLD; NN_ENERGY = NN_ENERGY
 
     def get_motif_class_name(self) -> str:
         return "Cruciform"

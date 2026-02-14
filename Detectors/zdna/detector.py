@@ -1,5 +1,13 @@
-"""Z-DNA detector: 10-mer scoring (Ho 1986) + eGZ-motifs (Herbert 1997)."""
-
+"""
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Z-DNA Detector - 10-mer scoring (Ho 1986) + eGZ-motifs (Herbert 1997)        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+└──────────────────────────────────────────────────────────────────────────────┘
+"""
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import logging; import re
 from typing import Any, Dict, List, Tuple
 
@@ -19,13 +27,18 @@ except ImportError: ZDNA_PATTERNS = {}
 
 logger = logging.getLogger(__name__)
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+MIN_EGZ_REPEATS = 3; EGZ_BASE_SCORE = 0.85; EGZ_MIN_SCORE_THRESHOLD = 0.80; MIN_Z_SCORE = 50.0
+# ═══════════════════════════════════════════════════════════════════════════════
+
 
 class ZDNADetector(BaseMotifDetector):
     """Z-DNA detector: 10-mer scoring (Ho 1986) + eGZ-motifs (Herbert 1997)."""
 
-    # Tunable parameters
-    MIN_EGZ_REPEATS = 3; EGZ_BASE_SCORE = 0.85; EGZ_MIN_SCORE_THRESHOLD = 0.80
-    MIN_Z_SCORE = 50.0  # Minimum sum_score for Z-DNA regions
+    MIN_EGZ_REPEATS = MIN_EGZ_REPEATS; EGZ_BASE_SCORE = EGZ_BASE_SCORE; EGZ_MIN_SCORE_THRESHOLD = EGZ_MIN_SCORE_THRESHOLD
+    MIN_Z_SCORE = MIN_Z_SCORE
 
     def get_motif_class_name(self) -> str: return "Z-DNA"
 
