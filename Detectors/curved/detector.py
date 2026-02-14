@@ -2,9 +2,8 @@
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ Curved DNA Detector - A-tract and T-tract phasing patterns                   │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.2            │
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
 │ References: Koo 1986, Olson 1998                                             │
-│ Optimization: Uses shared SeedEngine for ~10000x performance gain            │
 └──────────────────────────────────────────────────────────────────────────────┘
 """
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -16,7 +15,6 @@ from ..base.base_detector import BaseMotifDetector
 from Utilities.detectors_utils import revcomp
 from .patterns import _generate_phased_repeat_patterns
 from Utilities.core.motif_normalizer import normalize_class_subclass
-from Utilities.core.seed_engine import get_seed_engine
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TUNABLE PARAMETERS
@@ -95,27 +93,20 @@ class CurvedDNADetector(BaseMotifDetector):
         return float(apr_sum + local_sum)
 
     def find_a_tracts(self, sequence: str, minAT: int = None, max_window: int = None) -> List[Dict[str, Any]]:
-        """Detect A-tract candidates using AT-window analysis with seeded approach."""
+        """Detect A-tract candidates using AT-window analysis. Returns dicts with start/end, maxATlen, maxTlen, a_center, call, window info."""
         seq = sequence.upper()
-        n = len(seq)
+        len(seq)
         if minAT is None:
             minAT = self.MIN_AT_TRACT
         if max_window is None:
             max_window = self.MAX_AT_WINDOW  # None allowed
 
-        # Use shared seed engine for fast AT-tract identification
-        seed_engine = get_seed_engine()
-        at_tracts = seed_engine.get_at_tracts(seq)
-        
         results: List[Dict[str, Any]] = []
-        
-        # Filter AT tracts that meet minimum length requirement
-        for wstart, wend in at_tracts:
-            window_len = wend - wstart
-            if window_len < minAT:
-                continue
-                
+
+        for m in re.finditer(r'[AT]{' + str(minAT) + r',}', seq):
+            wstart, wend = m.start(), m.end()  # [wstart, wend)
             window_seq = seq[wstart:wend]
+            window_len = wend - wstart
 
             # analyze forward strand window
             maxATlen, maxATend, maxTlen = self._analyze_at_window(window_seq)
