@@ -109,6 +109,18 @@ NonBDNAFinder implements biologically-informed overlap handling:
 
 **Critical Finding**: The tool correctly implements overlap removal within subclasses while preserving biologically meaningful cross-class overlaps.
 
+### 3.2.1 Per-Class Subclass Overlap Verification
+
+| Class | Total Motifs | Subclasses | Within-Subclass Overlaps |
+|-------|--------------|------------|--------------------------|
+| G-Quadruplex | 158 | 4 (Canonical, Extended-loop, G-triplex, Weak PQS) | **0** ✅ |
+| i-Motif | 10 | 2 (AC-motif, Canonical) | **0** ✅ |
+| Curved_DNA | 46 | 2 (Global, Local Curvature) | **0** ✅ |
+| Cruciform | 20 | 1 (Cruciform forming IRs) | **0** ✅ |
+| Slipped_DNA | 10 | 2 (STR, Direct Repeat) | **0** ✅ |
+
+**All classes pass subclass overlap removal validation.**
+
 ### 3.3 Cross-Class Overlap Distribution
 
 The 402 cross-class overlaps reflect genuine biological colocalization:
