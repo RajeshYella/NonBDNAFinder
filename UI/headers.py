@@ -1,19 +1,21 @@
 """
-Uniform section heading component for NonBDNAFinder.
-
-This module provides a single, consistent heading style used across all pages
-to ensure visual consistency following scientific dashboard design principles.
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Headers Module - Uniform section heading component                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ Provides consistent heading style across all pages                           │
+└──────────────────────────────────────────────────────────────────────────────┘
 """
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import streamlit as st
 import html
-
-# Import centralized color configuration
 from Utilities.config.colors import HOME_COLORS, GLOBAL_COLORS
 
-# Page-specific background color patterns for headings
-# Note: 'primary' is used for border color, 'secondary' is the middle gradient stop (for reference),
-# and 'pattern' defines the full gradient including a third color for the final stop.
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
 PAGE_HEADING_COLORS = {
     'Home': {'primary': '#0091FF', 'pattern': 'linear-gradient(135deg, #0091FF 0%, #00B4FF 50%, #00D4FF 100%)'},
     'Upload & Analyze': {'primary': '#10b981', 'pattern': 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)'},
@@ -21,6 +23,8 @@ PAGE_HEADING_COLORS = {
     'Downloads': {'primary': '#0ea5e9', 'pattern': 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%)'},
     'Documentation': {'primary': '#f59e0b', 'pattern': 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'},
 }
+HEADING_PADDING = "0.35rem 1.5rem"; HEADING_FONT_SIZE = "1.3rem"; HEADING_BORDER_RADIUS = "6px"
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 def render_section_heading(title: str, page: str = None):

@@ -1,9 +1,13 @@
 """
-Upload & Analyze Page
-
-This module contains the Upload & Analyze tab functionality for NonBDNAFinder.
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Upload & Analyze Page - Sequence Upload and Motif Analysis                   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+└──────────────────────────────────────────────────────────────────────────────┘
 """
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import streamlit as st
 import time
 import os
@@ -12,7 +16,6 @@ import numpy as np
 import pandas as pd
 import logging
 
-# Import configuration
 from Utilities.config.text import UI_TEXT
 from Utilities.config.typography import FONT_CONFIG
 from Utilities.config.themes import TAB_THEMES
@@ -24,13 +27,9 @@ from Utilities.config.motif_taxonomy import (
     get_enabled_from_selector_data
 )
 from Utilities.config.colors import CLASS_COLORS, CLASS_COLOR_NAMES
-
-# Import UI components
 from UI.css import load_css, get_page_colors
 from UI.formatters import format_time_scientific
 from UI.headers import render_section_heading
-
-# Import utilities
 from Utilities.utilities import (
     parse_fasta_chunked,
     get_file_preview,
@@ -41,77 +40,31 @@ from Utilities.utilities import (
     calculate_genomic_density,
     calculate_positional_density
 )
-
-# Import core analysis
 from Utilities.nonbscanner import analyze_sequence
-
-# Import job management
 from Utilities.job_manager import save_job_results, generate_job_id
 
-# Try to import Entrez for NCBI fetch functionality
-try:
-    from Bio import Entrez, SeqIO
-    BIO_AVAILABLE = True
-except ImportError:
-    BIO_AVAILABLE = False
+try: from Bio import Entrez, SeqIO; BIO_AVAILABLE = True
+except ImportError: BIO_AVAILABLE = False
 
-# Setup logger
 logger = logging.getLogger(__name__)
 
-# Configuration availability flag
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
 CONFIG_AVAILABLE = False
-
-# =============================================================================
-# ABBREVIATED SUBMOTIF LABELS FOR COMPACT DISPLAY
-# Maps full subclass names to short labels for the upload page grid
-# Full names preserved in tooltips for scientific accuracy
-# =============================================================================
+GRID_COLUMNS = 6; GRID_GAP = "0.10rem"; ROW_GAP = "0.10rem"; DOT_SIZE = 5; GLOW_SIZE = 5
 SUBMOTIF_ABBREVIATIONS = {
-    # Curved DNA
-    'Global Curvature': 'Global Curv',
-    'Local Curvature': 'Local Curv',
-    # Slipped DNA
-    'Direct Repeat': 'DR',
-    'STR': 'STR',
-    # Cruciform
-    'Cruciform forming IRs': 'Cruciform',
-    # R-Loop
-    'R-loop formation sites': 'R-loop',
-    # Triplex
-    'Triplex': 'Triplex',
-    'Sticky DNA': 'Sticky DNA',
-    # G-Quadruplex
-    'Telomeric G4': 'Telo G4',
-    'Stacked canonical G4s': 'Stacked G4',
-    'Stacked G4s with linker': 'Stacked G4 + Linker',
-    'Canonical intramolecular G4': 'Intra G4',
-    'Extended-loop canonical': 'Ext. Loop G4',
-    'Higher-order G4 array/G4-wire': 'G4 Array',
-    'Intramolecular G-triplex': 'G-triplex',
-    'Two-tetrad weak PQS': 'Weak PQS',
-    # i-Motif
-    'Canonical i-motif': 'i-Motif',
-    'Relaxed i-motif': 'Relaxed iM',
-    'AC-motif': 'AC Motif',
-    # Z-DNA
-    'Z-DNA': 'Z-DNA',
-    'eGZ': 'eGZ',
-    # A-philic DNA
-    'A-philic DNA': 'A-DNA',
-    # Hybrid
-    'Dynamic overlaps': 'Hybrid',
-    # Clusters
-    'Dynamic clusters': 'Cluster',
+    'Global Curvature': 'Global Curv', 'Local Curvature': 'Local Curv',
+    'Direct Repeat': 'DR', 'STR': 'STR', 'Cruciform forming IRs': 'Cruciform',
+    'R-loop formation sites': 'R-loop', 'Triplex': 'Triplex', 'Sticky DNA': 'Sticky DNA',
+    'Telomeric G4': 'Telo G4', 'Stacked canonical G4s': 'Stacked G4', 'Stacked G4s with linker': 'Stacked G4 + Linker',
+    'Canonical intramolecular G4': 'Intra G4', 'Extended-loop canonical': 'Ext. Loop G4',
+    'Higher-order G4 array/G4-wire': 'G4 Array', 'Intramolecular G-triplex': 'G-triplex', 'Two-tetrad weak PQS': 'Weak PQS',
+    'Canonical i-motif': 'i-Motif', 'Relaxed i-motif': 'Relaxed iM', 'AC-motif': 'AC Motif',
+    'Z-DNA': 'Z-DNA', 'eGZ': 'eGZ', 'A-philic DNA': 'A-DNA',
+    'Dynamic overlaps': 'Hybrid', 'Dynamic clusters': 'Cluster',
 }
-
-# ============================================================
-# SUBMOTIF GRID CONFIG (TUNABLE)
-# ============================================================
-GRID_COLUMNS = 6        # 3 × 8 layout
-GRID_GAP = "0.10rem"    # horizontal gap
-ROW_GAP = "0.10rem"     # vertical gap
-DOT_SIZE = 5          # px
-GLOW_SIZE = 5          # glow intensity
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 def get_abbreviated_label(subclass: str) -> str:

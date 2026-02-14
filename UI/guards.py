@@ -1,25 +1,33 @@
 """
-Validation and guard utilities for NBDScanner.
-
-This module contains validation and helper functions:
-- Motif subclass validation
-- Excel file generation
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Guards Module - Validation and guard utilities for NBDScanner                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ Functions for motif subclass validation, Excel file generation               │
+└──────────────────────────────────────────────────────────────────────────────┘
 """
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import os
 import tempfile
 from Utilities.utilities import export_to_excel
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+DEFAULT_SUBCLASS = 'Other'; EXCEL_SUFFIX = '.xlsx'
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 def ensure_subclass(motif):
     """Guarantee every motif has a string 'Subclass'"""
     if isinstance(motif, dict):
         if 'Subclass' not in motif or motif['Subclass'] is None:
-            motif['Subclass'] = motif.get('Subtype', 'Other')
+            motif['Subclass'] = motif.get('Subtype', DEFAULT_SUBCLASS)
         return motif
     else:
-        # Handle non-dict motifs gracefully
-        return {'Subclass': 'Other', 'Motif': motif}
+        return {'Subclass': DEFAULT_SUBCLASS, 'Motif': motif}
 
 
 def generate_excel_bytes(motifs, simple_format=True):

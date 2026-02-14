@@ -1,6 +1,22 @@
+"""
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ CSS Module - Theme and Style Management                                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+└──────────────────────────────────────────────────────────────────────────────┘
+"""
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import os; import streamlit as st
 from Utilities.config.colors import GLOBAL_COLORS, HOME_COLORS, INPUT_COLORS, ANALYSIS_COLORS, RESULTS_COLORS, VISUALIZATION_COLORS, DOWNLOAD_COLORS, DOCUMENTATION_COLORS, SEMANTIC_COLORS
 from Utilities.config.themes import COLOR_THEMES; from Utilities.config.typography import FONT_CONFIG; from Utilities.config.layout import LAYOUT_CONFIG; from Utilities.config.animation import ANIMATION_CONFIG
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+DEFAULT_THEME = "scientific_blue"; DNA_PATTERN_STROKE_WIDTH = 0.6; DNA_PATTERN_OPACITY = 0.12
+# ═══════════════════════════════════════════════════════════════════════════════
 
 def hex_to_rgb(hex_color): h = hex_color.lstrip("#"); return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
 

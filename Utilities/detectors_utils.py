@@ -1,12 +1,21 @@
 """
-Shared utilities for Non-B DNA motif detectors.
-Extracted common functions to reduce code repetition in detectors.py
-
-Author: Dr. Venkata Rajesh Yella
-Version: 2024.1
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Detectors Utils - Shared utilities for Non-B DNA motif detectors             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ Common functions extracted to reduce code repetition in detectors            │
+└──────────────────────────────────────────────────────────────────────────────┘
 """
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 from typing import List, Dict, Any, Callable, Optional
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+DEFAULT_UNKNOWN_SUBCLASS = 'unknown'
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 def revcomp(seq: str) -> str:
@@ -124,10 +133,9 @@ def remove_overlaps_by_subclass(motifs: List[Dict[str, Any]]) -> List[Dict[str, 
     
     from collections import defaultdict
     
-    # Group by subclass
     groups = defaultdict(list)
     for motif in motifs:
-        subclass = motif.get('Subclass', 'unknown')
+        subclass = motif.get('Subclass', DEFAULT_UNKNOWN_SUBCLASS)
         groups[subclass].append(motif)
     
     non_overlapping = []

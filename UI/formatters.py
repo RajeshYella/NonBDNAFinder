@@ -1,10 +1,21 @@
 """
-Formatting utilities for NBDScanner.
-
-This module contains functions for formatting:
-- Time values (scientific, compact, human-readable)
-- Sequence limits
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Formatters Module - Formatting utilities for NBDScanner                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ Functions for formatting time values, sequence limits                        │
+└──────────────────────────────────────────────────────────────────────────────┘
 """
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
+# No external imports required
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+TIME_FORMAT_PRECISION = 1  # Decimal places for seconds display
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 def format_time_scientific(seconds: float) -> str:

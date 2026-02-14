@@ -1,3 +1,13 @@
+"""
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Download Page - Export Data and Results                                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+└──────────────────────────────────────────────────────────────────────────────┘
+"""
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import streamlit as st; import pandas as pd; import numpy as np; import re; import io; import traceback
 from collections import Counter
 from Utilities.config.text import UI_TEXT; from Utilities.config.themes import TAB_THEMES
@@ -5,10 +15,16 @@ from UI.css import load_css; from UI.headers import render_section_heading; from
 from Utilities.utilities import export_to_csv, export_to_json, export_to_excel, export_to_pdf, export_to_bed
 from Utilities.export.export_validator import validate_export_data
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
+FILENAME_MAX_LENGTH = 50
+# ═══════════════════════════════════════════════════════════════════════════════
+
 def render():
     load_css(TAB_THEMES.get('Download', 'clinical_teal')); render_section_heading("Download & Export Results", page="Downloads")
     if not st.session_state.results: st.info(UI_TEXT['download_no_results']); st.markdown("<div style='background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);padding:1.2rem;border-radius:12px;margin-top:0.8rem;border:1px solid #bae6fd;text-align:center;'><h3 style='color:#0284c7;margin:0 0 0.6rem 0;'>Export Formats Available</h3><p style='color:#6b7280;margin:0 0 0.6rem 0;'>Once you analyze a sequence, export results in:</p><div style='display:flex;justify-content:center;gap:0.6rem;flex-wrap:wrap;'><span style='background:#0ea5e9;color:white;padding:0.35rem 0.8rem;border-radius:8px;font-weight:600;'>CSV</span><span style='background:#0ea5e9;color:white;padding:0.35rem 0.8rem;border-radius:8px;font-weight:600;'>Excel</span><span style='background:#0ea5e9;color:white;padding:0.35rem 0.8rem;border-radius:8px;font-weight:600;'>JSON</span><span style='background:#0ea5e9;color:white;padding:0.35rem 0.8rem;border-radius:8px;font-weight:600;'>BED</span><span style='background:#0ea5e9;color:white;padding:0.35rem 0.8rem;border-radius:8px;font-weight:600;'>PDF</span></div></div>", unsafe_allow_html=True); return
-    seq_name = st.session_state.names[0] if st.session_state.names else "Unknown"; safe_fn = re.sub(r'[^\w\-]', '_', seq_name)[:50].strip('_')
+    seq_name = st.session_state.names[0] if st.session_state.names else "Unknown"; safe_fn = re.sub(r'[^\w\-]', '_', seq_name)[:FILENAME_MAX_LENGTH].strip('_')
     cls_used = st.session_state.get('selected_classes_used', []); sub_used = st.session_state.get('selected_subclasses_used', []); mode_used = st.session_state.get('analysis_mode_used', 'Motif Level')
     if cls_used: st.markdown(f"<div style='background:linear-gradient(135deg,#fefce8 0%,#fef9c3 100%);padding:0.4rem;border-radius:6px;margin-bottom:0.5rem;border-left:3px solid #ca8a04;'><p style='color:#713f12;margin:0;font-size:0.8rem;'><strong>Data Filter:</strong> Exports contain selected classes ({len(cls_used)}) and subclasses ({len(sub_used)}) from {mode_used} analysis</p></div>", unsafe_allow_html=True)
     all_motifs = []

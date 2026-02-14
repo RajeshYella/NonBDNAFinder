@@ -1,33 +1,36 @@
 """
-R-Loop detector: QmRLFS algorithm (Jenjaroenpun 2016)
-Hyperscan + Seed-accelerated REZ detection (high performance)
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ R-Loop Detector - QmRLFS algorithm (Jenjaroenpun 2016)                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+│ Hyperscan + Seed-accelerated REZ detection (high performance)                │
+└──────────────────────────────────────────────────────────────────────────────┘
 """
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from typing import List, Dict, Any, Tuple, Optional
 from ..base.base_detector import BaseMotifDetector
 from Utilities.detectors_utils import revcomp
 from Utilities.core.motif_normalizer import normalize_class_subclass
 
-try:
-    import hyperscan
-    HS_AVAILABLE = True
-except Exception:
-    HS_AVAILABLE = False
+try: import hyperscan; HS_AVAILABLE = True
+except Exception: HS_AVAILABLE = False
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS - QmRLFS Literature Parameters
+# ═══════════════════════════════════════════════════════════════════════════════
+MIN_PERC_G_RIZ = 50; NUM_LINKER = 50; WINDOW_STEP = 100
+MAX_LENGTH_REZ = 2000; MIN_PERC_G_REZ = 40; QUALITY_THRESHOLD = 0.4
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 class RLoopDetector(BaseMotifDetector):
     """QmRLFS-finder R-loop detector (literature-faithful, accelerated)."""
 
-    # ----------------------------
-    # QmRLFS Literature Parameters
-    # ----------------------------
-    MIN_PERC_G_RIZ = 50
-    NUM_LINKER = 50
-    WINDOW_STEP = 100
-    MAX_LENGTH_REZ = 2000
-    MIN_PERC_G_REZ = 40
-    QUALITY_THRESHOLD = 0.4
+    MIN_PERC_G_RIZ = MIN_PERC_G_RIZ; NUM_LINKER = NUM_LINKER; WINDOW_STEP = WINDOW_STEP
+    MAX_LENGTH_REZ = MAX_LENGTH_REZ; MIN_PERC_G_REZ = MIN_PERC_G_REZ; QUALITY_THRESHOLD = QUALITY_THRESHOLD
 
     def __init__(self):
         super().__init__()

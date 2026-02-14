@@ -1,9 +1,23 @@
+"""
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Home Page - NonBDNAFinder Landing Page                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
+└──────────────────────────────────────────────────────────────────────────────┘
+"""
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
 import streamlit as st; import os
 from Utilities.config.text import UI_TEXT; from Utilities.config.themes import TAB_THEMES
 from Utilities.config.colors import MOTIF_CLASS_INFO, get_motif_card_style
 from UI.css import load_css, get_page_colors; from UI.headers import render_section_heading
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
+# ═══════════════════════════════════════════════════════════════════════════════
 IMAGE_PATHS = ["nbdcircle.JPG", "archive/nbdcircle.JPG", "./nbdcircle.JPG"]
+# ═══════════════════════════════════════════════════════════════════════════════
 
 def _build_motif_class_card(info):
     s = get_motif_card_style(info['key'])
