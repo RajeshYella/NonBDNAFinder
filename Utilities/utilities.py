@@ -7650,14 +7650,14 @@ def plot_cluster_size_distribution(motifs: List[Dict[str, Any]],
 
 def plot_motif_length_kde(motifs: List[Dict[str, Any]], 
                           by_class: bool = True,
-                          title: str = "Motif Length Distribution (KDE)",
+                          title: str = "Motif Length Distribution",
                           figsize: Tuple[int, int] = None) -> plt.Figure:
     """
-    Plot kernel density estimation of motif length distributions.
+    Plot histogram of motif length distributions (Nature publication standard).
     
-    Shows smooth probability density curves for motif lengths,
-    useful for comparing length patterns across classes.
-    Publication-quality visualization.
+    Replaces KDE with stacked histograms for cleaner, more interpretable visualization.
+    Shows frequency counts for motif lengths grouped by class.
+    Publication-quality visualization following Nature guidelines.
     
     Args:
         motifs: List of motif dictionaries
@@ -7691,58 +7691,797 @@ def plot_motif_length_kde(motifs: List[Dict[str, Any]],
         if not classes:
             classes = sorted(set(m.get('Class', 'Unknown') for m in motifs))
         
+        # Collect all lengths and class labels
+        all_lengths = []
+        all_colors = []
+        all_labels = []
+        
         for class_name in classes:
             class_motifs = [m for m in motifs if m.get('Class') == class_name]
             lengths = [m.get('Length', 0) for m in class_motifs if m.get('Length', 0) > 0]
             
-            if len(lengths) > 1:
+            if lengths:
                 color = MOTIF_CLASS_COLORS.get(class_name, '#808080')
                 display_name = class_name.replace('_', ' ')
-                
-                # Plot KDE
-                try:
-                    from scipy import stats
-                    kde = stats.gaussian_kde(lengths)
-                    x_range = np.linspace(min(lengths), max(lengths), 200)
-                    density = kde(x_range)
-                    ax.plot(x_range, density, color=color, linewidth=2, 
-                           label=display_name, alpha=0.8)
-                    ax.fill_between(x_range, density, alpha=0.2, color=color)
-                except:
-                    # Fallback to histogram if KDE fails
-                    ax.hist(lengths, bins=20, alpha=0.3, color=color, 
-                           label=display_name, density=True, edgecolor='black', linewidth=0.5)
+                all_lengths.append(lengths)
+                all_colors.append(color)
+                all_labels.append(display_name)
+        
+        if all_lengths:
+            # Stacked histogram with transparency
+            ax.hist(all_lengths, bins=25, alpha=0.7, color=all_colors, 
+                   label=all_labels, edgecolor='white', linewidth=0.5, stacked=True)
     else:
         # Overall distribution
         lengths = [m.get('Length', 0) for m in motifs if m.get('Length', 0) > 0]
         
-        if len(lengths) > 1:
-            try:
-                from scipy import stats
-                kde = stats.gaussian_kde(lengths)
-                x_range = np.linspace(min(lengths), max(lengths), 200)
-                density = kde(x_range)
-                ax.plot(x_range, density, color='#0072B2', linewidth=2.5, alpha=0.8)
-                ax.fill_between(x_range, density, alpha=0.3, color='#0072B2')
-            except:
-                ax.hist(lengths, bins=30, alpha=0.7, color='#0072B2', 
-                       density=True, edgecolor='black', linewidth=0.5)
+        if lengths:
+            ax.hist(lengths, bins=30, alpha=0.8, color='#0072B2', 
+                   edgecolor='white', linewidth=0.5)
     
-    # Styling
-    ax.set_xlabel('Motif Length (bp)', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Probability Density', fontsize=12, fontweight='bold')
+    # Uniform axis labels (Nature standard)
+    ax.set_xlabel('Length (bp)', fontsize=10, fontweight='bold')
+    ax.set_ylabel('Count', fontsize=10, fontweight='bold')
     
     display_title = title.replace('_', ' ')
-    ax.set_title(display_title, fontsize=14, fontweight='bold', pad=10)
+    ax.set_title(display_title, fontsize=11, fontweight='bold', pad=10)
     
-    ax.grid(alpha=0.3, linestyle='--', linewidth=0.5)
-    
-    if by_class:
-        ax.legend(loc='upper right', fontsize=8, framealpha=0.9, ncol=2)
+    if by_class and all_lengths:
+        ax.legend(loc='upper right', fontsize=7, framealpha=0.9, ncol=2)
     
     # Apply Nature journal style
     _apply_nature_style(ax)
     
+    plt.tight_layout()
+    return fig
+
+
+# Alias for backward compatibility
+plot_motif_length_histogram = plot_motif_length_kde
+
+
+def plot_score_violin(motifs: List[Dict[str, Any]], 
+                      by_class: bool = True,
+                      title: str = "Score Distribution",
+                      figsize: Tuple[int, int] = None) -> plt.Figure:
+    """
+    Plot violin plot of motif score distributions (Nature publication standard).
+    
+    Shows distribution shape, median, and quartiles for each motif class.
+    Superior to box plots for showing distribution shape.
+    Publication-quality visualization following Nature guidelines.
+    
+    Args:
+        motifs: List of motif dictionaries
+        by_class: Whether to separate by motif class
+        title: Plot title
+        figsize: Figure size (width, height)
+        
+    Returns:
+        Matplotlib figure object (publication-ready)
+    """
+    plt, sns, patches, PdfPages = _ensure_matplotlib()
+    set_scientific_style()
+    
+    if figsize is None:
+        figsize = FIGURE_SIZES['one_and_half']
+    
+    if not motifs:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No motifs to display', ha='center', va='center',
+                transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    # Extract scores
+    scores_data = []
+    for motif in motifs:
+        score = motif.get('Score', motif.get('Normalized_Score'))
+        if isinstance(score, (int, float)) and score > 0:
+            class_name = motif.get('Class', 'Unknown')
+            if class_name not in CIRCOS_EXCLUDED_CLASSES:
+                scores_data.append({
+                    'Score': score,
+                    'Class': class_name.replace('_', ' ')
+                })
+    
+    if not scores_data:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No score data available', ha='center', va='center', 
+                transform=ax.transAxes)
+        ax.axis('off')
+        return fig
+    
+    fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+    
+    df = pd.DataFrame(scores_data)
+    
+    # Get colors for each class
+    unique_classes = df['Class'].unique()
+    palette = {cls: MOTIF_CLASS_COLORS.get(cls.replace(' ', '_'), '#808080') 
+               for cls in unique_classes}
+    
+    # Violin plot with inner box plot
+    sns.violinplot(data=df, x='Class', y='Score', ax=ax, palette=palette,
+                   linewidth=0.8, inner='box', cut=0)
+    
+    # Uniform axis labels (Nature standard)
+    ax.set_xlabel('Motif Class', fontsize=10, fontweight='bold')
+    ax.set_ylabel('Score (1-3)', fontsize=10, fontweight='bold')
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right', fontsize=8)
+    
+    display_title = title.replace('_', ' ')
+    ax.set_title(display_title, fontsize=11, fontweight='bold', pad=10)
+    
+    # Apply Nature journal style
+    _apply_nature_style(ax)
+    
+    plt.tight_layout()
+    return fig
+
+
+def plot_structural_heatmap(motifs: List[Dict[str, Any]], 
+                            sequence_length: int,
+                            n_bins: int = 50,
+                            title: str = "Structural Potential Heatmap",
+                            figsize: Tuple[int, int] = None) -> plt.Figure:
+    """
+    Create heatmap showing motif density across genomic bins (motif × bins).
+    
+    Visualizes structural potential landscape across the sequence.
+    Each row is a motif class, each column is a genomic bin.
+    Publication-quality visualization following Nature guidelines.
+    
+    Args:
+        motifs: List of motif dictionaries
+        sequence_length: Total sequence length in bp
+        n_bins: Number of genomic bins
+        title: Plot title
+        figsize: Figure size (width, height)
+        
+    Returns:
+        Matplotlib figure object (publication-ready)
+    """
+    plt, sns, patches, PdfPages = _ensure_matplotlib()
+    set_scientific_style()
+    
+    if figsize is None:
+        figsize = FIGURE_SIZES['double_column']
+    
+    if not motifs or sequence_length <= 0:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No motifs to display', ha='center', va='center',
+                transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    # Get unique classes (exclude meta-classes)
+    classes = sorted(set(m.get('Class', 'Unknown') for m in motifs
+                        if m.get('Class') not in CIRCOS_EXCLUDED_CLASSES))
+    
+    if not classes:
+        classes = sorted(set(m.get('Class', 'Unknown') for m in motifs))
+    
+    # Create density matrix
+    bin_size = sequence_length / n_bins
+    density_matrix = np.zeros((len(classes), n_bins))
+    
+    for i, class_name in enumerate(classes):
+        class_motifs = [m for m in motifs if m.get('Class') == class_name]
+        for m in class_motifs:
+            start = m.get('Start', 0)
+            end = m.get('End', start + 1)
+            # Assign to bins
+            start_bin = int(start / bin_size)
+            end_bin = int(end / bin_size)
+            for bin_idx in range(max(0, start_bin), min(n_bins, end_bin + 1)):
+                density_matrix[i, bin_idx] += 1
+    
+    # Normalize by row (each class)
+    for i in range(len(classes)):
+        row_max = density_matrix[i].max()
+        if row_max > 0:
+            density_matrix[i] = density_matrix[i] / row_max
+    
+    fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+    
+    # Create heatmap
+    im = ax.imshow(density_matrix, aspect='auto', cmap='YlOrRd', 
+                   interpolation='nearest', vmin=0, vmax=1)
+    
+    # Format axis labels
+    display_classes = [c.replace('_', ' ') for c in classes]
+    ax.set_yticks(range(len(classes)))
+    ax.set_yticklabels(display_classes, fontsize=8)
+    
+    # X-axis: show position in kb
+    n_xticks = min(10, n_bins)
+    tick_positions = np.linspace(0, n_bins-1, n_xticks, dtype=int)
+    tick_labels = [f'{int(p * bin_size / 1000)}' for p in tick_positions]
+    ax.set_xticks(tick_positions)
+    ax.set_xticklabels(tick_labels, fontsize=8)
+    
+    # Uniform axis labels (Nature standard)
+    ax.set_xlabel('Position (kb)', fontsize=10, fontweight='bold')
+    ax.set_ylabel('Motif Class', fontsize=10, fontweight='bold')
+    
+    # Colorbar
+    cbar = plt.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
+    cbar.set_label('Normalized Density', fontsize=9)
+    cbar.ax.tick_params(labelsize=7)
+    
+    display_title = title.replace('_', ' ')
+    ax.set_title(display_title, fontsize=11, fontweight='bold', pad=10)
+    
+    plt.tight_layout()
+    return fig
+
+
+def plot_gc_motif_correlation(motifs: List[Dict[str, Any]], 
+                              sequence: str = None,
+                              window_size: int = 1000,
+                              title: str = "GC Content vs Motif Density",
+                              figsize: Tuple[int, int] = None) -> plt.Figure:
+    """
+    Plot GC content correlation with motif density (sliding window).
+    
+    Shows relationship between local GC content and motif enrichment.
+    Publication-quality scatter plot with trend line.
+    
+    Args:
+        motifs: List of motif dictionaries
+        sequence: DNA sequence string (optional, for GC calculation)
+        window_size: Sliding window size in bp
+        title: Plot title
+        figsize: Figure size (width, height)
+        
+    Returns:
+        Matplotlib figure object (publication-ready)
+    """
+    plt, sns, patches, PdfPages = _ensure_matplotlib()
+    set_scientific_style()
+    
+    if figsize is None:
+        figsize = FIGURE_SIZES['one_and_half']
+    
+    if not motifs:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No motifs to display', ha='center', va='center',
+                transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    # Calculate motif positions (midpoints)
+    motif_positions = []
+    motif_classes = []
+    for m in motifs:
+        if m.get('Class') not in CIRCOS_EXCLUDED_CLASSES:
+            start = m.get('Start', 0)
+            end = m.get('End', start)
+            midpoint = (start + end) / 2
+            motif_positions.append(midpoint)
+            motif_classes.append(m.get('Class', 'Unknown'))
+    
+    if not motif_positions:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No motif position data', ha='center', va='center',
+                transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+    
+    # If sequence provided, calculate GC content correlation
+    if sequence:
+        seq_len = len(sequence)
+        n_windows = seq_len // window_size
+        
+        gc_values = []
+        motif_counts = []
+        
+        for i in range(n_windows):
+            start = i * window_size
+            end = start + window_size
+            window_seq = sequence[start:end].upper()
+            
+            # GC content
+            gc = (window_seq.count('G') + window_seq.count('C')) / len(window_seq) * 100
+            gc_values.append(gc)
+            
+            # Motif count in window
+            count = sum(1 for pos in motif_positions if start <= pos < end)
+            motif_counts.append(count)
+        
+        if gc_values and motif_counts:
+            # Scatter plot
+            ax.scatter(gc_values, motif_counts, alpha=0.6, s=30, c='#0072B2', edgecolor='white')
+            
+            # Trend line
+            z = np.polyfit(gc_values, motif_counts, 1)
+            p = np.poly1d(z)
+            x_line = np.linspace(min(gc_values), max(gc_values), 100)
+            ax.plot(x_line, p(x_line), 'r--', linewidth=1.5, alpha=0.8, label='Trend')
+            
+            ax.set_xlabel('GC Content (%)', fontsize=10, fontweight='bold')
+            ax.set_ylabel('Motif Count', fontsize=10, fontweight='bold')
+            ax.legend(fontsize=8)
+    else:
+        # Without sequence, show motif density distribution
+        ax.hist(motif_positions, bins=50, alpha=0.7, color='#0072B2', 
+               edgecolor='white', linewidth=0.5)
+        ax.set_xlabel('Position (bp)', fontsize=10, fontweight='bold')
+        ax.set_ylabel('Motif Count', fontsize=10, fontweight='bold')
+    
+    display_title = title.replace('_', ' ')
+    ax.set_title(display_title, fontsize=11, fontweight='bold', pad=10)
+    
+    _apply_nature_style(ax)
+    plt.tight_layout()
+    return fig
+
+
+def plot_motif_network(motifs: List[Dict[str, Any]], 
+                       overlap_threshold: int = 100,
+                       title: str = "Motif Co-occurrence Network",
+                       figsize: Tuple[int, int] = None) -> plt.Figure:
+    """
+    Create network graph showing motif class co-occurrence relationships.
+    
+    Nodes represent motif classes, edges represent co-occurrence frequency.
+    Edge width proportional to co-occurrence strength.
+    Publication-quality network visualization.
+    
+    Args:
+        motifs: List of motif dictionaries
+        overlap_threshold: Maximum distance (bp) to consider as co-occurrence
+        title: Plot title
+        figsize: Figure size (width, height)
+        
+    Returns:
+        Matplotlib figure object (publication-ready)
+    """
+    plt, sns, patches, PdfPages = _ensure_matplotlib()
+    set_scientific_style()
+    
+    if figsize is None:
+        figsize = FIGURE_SIZES['square']
+    
+    if not motifs:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No motifs to display', ha='center', va='center',
+                transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    # Get unique classes
+    classes = sorted(set(m.get('Class', 'Unknown') for m in motifs
+                        if m.get('Class') not in CIRCOS_EXCLUDED_CLASSES))
+    
+    if len(classes) < 2:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'Need at least 2 classes for network', ha='center', va='center',
+                transform=ax.transAxes, fontsize=12)
+        ax.set_title(title)
+        return fig
+    
+    # Calculate co-occurrences
+    cooccurrences = {}
+    for i, class_i in enumerate(classes):
+        motifs_i = [m for m in motifs if m.get('Class') == class_i]
+        for j, class_j in enumerate(classes):
+            if i >= j:
+                continue
+            motifs_j = [m for m in motifs if m.get('Class') == class_j]
+            
+            count = 0
+            for mi in motifs_i:
+                start_i, end_i = mi.get('Start', 0), mi.get('End', 0)
+                for mj in motifs_j:
+                    start_j, end_j = mj.get('Start', 0), mj.get('End', 0)
+                    distance = max(0, max(start_i, start_j) - min(end_i, end_j))
+                    if distance <= overlap_threshold:
+                        count += 1
+            
+            if count > 0:
+                cooccurrences[(class_i, class_j)] = count
+    
+    fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+    
+    if not cooccurrences:
+        ax.text(0.5, 0.5, 'No co-occurrences found', ha='center', va='center',
+                transform=ax.transAxes, fontsize=12)
+        ax.set_title(title)
+        return fig
+    
+    # Create circular layout for nodes
+    n = len(classes)
+    angles = np.linspace(0, 2 * np.pi, n, endpoint=False)
+    radius = 0.35
+    
+    node_positions = {}
+    for i, cls in enumerate(classes):
+        x = 0.5 + radius * np.cos(angles[i])
+        y = 0.5 + radius * np.sin(angles[i])
+        node_positions[cls] = (x, y)
+    
+    # Draw edges (connections)
+    max_cooc = max(cooccurrences.values())
+    for (cls_i, cls_j), count in cooccurrences.items():
+        x1, y1 = node_positions[cls_i]
+        x2, y2 = node_positions[cls_j]
+        width = 0.5 + 3 * (count / max_cooc)
+        alpha = 0.3 + 0.5 * (count / max_cooc)
+        ax.plot([x1, x2], [y1, y2], color='#64748b', linewidth=width, alpha=alpha, zorder=1)
+    
+    # Draw nodes
+    for cls in classes:
+        x, y = node_positions[cls]
+        color = MOTIF_CLASS_COLORS.get(cls, '#808080')
+        circle = plt.Circle((x, y), 0.06, color=color, ec='white', linewidth=2, zorder=2)
+        ax.add_patch(circle)
+        
+        # Label
+        display_name = cls.replace('_', ' ')
+        if len(display_name) > 10:
+            display_name = display_name[:9] + '…'
+        
+        # Position label outside the circle
+        label_radius = radius + 0.12
+        lx = 0.5 + label_radius * np.cos(angles[classes.index(cls)])
+        ly = 0.5 + label_radius * np.sin(angles[classes.index(cls)])
+        ax.text(lx, ly, display_name, ha='center', va='center', fontsize=7, fontweight='bold')
+    
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    
+    display_title = title.replace('_', ' ')
+    ax.set_title(display_title, fontsize=11, fontweight='bold', pad=10)
+    
+    plt.tight_layout()
+    return fig
+
+
+def plot_chromosome_density(motifs: List[Dict[str, Any]], 
+                            title: str = "Chromosome-wise Motif Density",
+                            figsize: Tuple[int, int] = None) -> plt.Figure:
+    """
+    Plot chromosome-wise motif density bar chart.
+    
+    Shows total motif count per class as stacked horizontal bars.
+    Publication-quality visualization following Nature guidelines.
+    
+    Args:
+        motifs: List of motif dictionaries
+        title: Plot title
+        figsize: Figure size (width, height)
+        
+    Returns:
+        Matplotlib figure object (publication-ready)
+    """
+    plt, sns, patches, PdfPages = _ensure_matplotlib()
+    set_scientific_style()
+    
+    if figsize is None:
+        figsize = FIGURE_SIZES['one_and_half']
+    
+    if not motifs:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No motifs to display', ha='center', va='center',
+                transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    # Count by class
+    class_counts = Counter(m.get('Class', 'Unknown') for m in motifs
+                          if m.get('Class') not in CIRCOS_EXCLUDED_CLASSES)
+    
+    if not class_counts:
+        class_counts = Counter(m.get('Class', 'Unknown') for m in motifs)
+    
+    # Sort by count
+    sorted_classes = sorted(class_counts.items(), key=lambda x: x[1], reverse=True)
+    classes = [c[0] for c in sorted_classes]
+    counts = [c[1] for c in sorted_classes]
+    colors = [MOTIF_CLASS_COLORS.get(c, '#808080') for c in classes]
+    
+    fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+    
+    # Horizontal bar chart
+    display_classes = [c.replace('_', ' ') for c in classes]
+    bars = ax.barh(display_classes, counts, color=colors, alpha=0.85, 
+                   edgecolor='white', linewidth=0.5)
+    
+    # Add count labels
+    for bar, count in zip(bars, counts):
+        width = bar.get_width()
+        ax.text(width + max(counts) * 0.01, bar.get_y() + bar.get_height()/2,
+               f'{count}', va='center', fontsize=8, fontweight='bold')
+    
+    # Uniform axis labels (Nature standard)
+    ax.set_xlabel('Count', fontsize=10, fontweight='bold')
+    ax.set_ylabel('Motif Class', fontsize=10, fontweight='bold')
+    
+    display_title = title.replace('_', ' ')
+    ax.set_title(display_title, fontsize=11, fontweight='bold', pad=10)
+    
+    _apply_nature_style(ax)
+    plt.tight_layout()
+    return fig
+
+
+def plot_spacer_loop_variation(motifs: List[Dict[str, Any]], 
+                               title: str = "Spacer/Loop Length Variation",
+                               figsize: Tuple[int, int] = None) -> plt.Figure:
+    """
+    Plot spacer and loop length variation for G4 and Triplex motifs.
+    
+    Shows distribution of structural parameters specific to complex motifs.
+    Publication-quality visualization following Nature guidelines.
+    
+    Args:
+        motifs: List of motif dictionaries
+        title: Plot title
+        figsize: Figure size (width, height)
+        
+    Returns:
+        Matplotlib figure object (publication-ready)
+    """
+    plt, sns, patches, PdfPages = _ensure_matplotlib()
+    set_scientific_style()
+    
+    if figsize is None:
+        figsize = FIGURE_SIZES['double_column']
+    
+    # Filter for G4 and Triplex motifs with loop data
+    g4_loops = []
+    triplex_spacers = []
+    
+    for m in motifs:
+        class_name = m.get('Class', '')
+        loop_length = m.get('Loop_Length')
+        spacer_length = m.get('Spacer_Length')
+        
+        if class_name == 'G-Quadruplex' and loop_length is not None:
+            if isinstance(loop_length, (int, float)) and loop_length > 0:
+                g4_loops.append(loop_length)
+        
+        if class_name == 'Triplex' and spacer_length is not None:
+            if isinstance(spacer_length, (int, float)) and spacer_length > 0:
+                triplex_spacers.append(spacer_length)
+    
+    fig, axes = plt.subplots(1, 2, figsize=figsize, dpi=PUBLICATION_DPI)
+    
+    # G4 loop lengths
+    if g4_loops:
+        axes[0].hist(g4_loops, bins=min(20, max(g4_loops)), alpha=0.8,
+                    color=MOTIF_CLASS_COLORS.get('G-Quadruplex', '#10b981'),
+                    edgecolor='white', linewidth=0.5)
+        axes[0].set_xlabel('Loop Length (bp)', fontsize=10, fontweight='bold')
+        axes[0].set_ylabel('Count', fontsize=10, fontweight='bold')
+        axes[0].set_title('G-Quadruplex Loop Length', fontsize=10, fontweight='bold')
+        if g4_loops:
+            mean_loop = np.mean(g4_loops)
+            axes[0].axvline(mean_loop, color='red', linestyle='--', linewidth=1.5,
+                           label=f'Mean: {mean_loop:.1f}')
+            axes[0].legend(fontsize=7)
+    else:
+        axes[0].text(0.5, 0.5, 'No G4 loop data', ha='center', va='center',
+                    transform=axes[0].transAxes, fontsize=11)
+        axes[0].set_title('G-Quadruplex Loop Length', fontsize=10, fontweight='bold')
+    
+    _apply_nature_style(axes[0])
+    
+    # Triplex spacer lengths
+    if triplex_spacers:
+        axes[1].hist(triplex_spacers, bins=min(20, max(triplex_spacers)), alpha=0.8,
+                    color=MOTIF_CLASS_COLORS.get('Triplex', '#ec4899'),
+                    edgecolor='white', linewidth=0.5)
+        axes[1].set_xlabel('Spacer Length (bp)', fontsize=10, fontweight='bold')
+        axes[1].set_ylabel('Count', fontsize=10, fontweight='bold')
+        axes[1].set_title('Triplex Spacer Length', fontsize=10, fontweight='bold')
+        if triplex_spacers:
+            mean_spacer = np.mean(triplex_spacers)
+            axes[1].axvline(mean_spacer, color='red', linestyle='--', linewidth=1.5,
+                           label=f'Mean: {mean_spacer:.1f}')
+            axes[1].legend(fontsize=7)
+    else:
+        axes[1].text(0.5, 0.5, 'No Triplex spacer data', ha='center', va='center',
+                    transform=axes[1].transAxes, fontsize=11)
+        axes[1].set_title('Triplex Spacer Length', fontsize=10, fontweight='bold')
+    
+    _apply_nature_style(axes[1])
+    
+    display_title = title.replace('_', ' ')
+    plt.suptitle(display_title, fontsize=11, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    return fig
+
+
+def plot_motif_clustering_distance(motifs: List[Dict[str, Any]], 
+                                   title: str = "Motif Clustering Distance",
+                                   figsize: Tuple[int, int] = None) -> plt.Figure:
+    """
+    Plot distribution of distances between consecutive motifs.
+    
+    Shows clustering patterns by measuring inter-motif distances.
+    Publication-quality visualization following Nature guidelines.
+    
+    Args:
+        motifs: List of motif dictionaries
+        title: Plot title
+        figsize: Figure size (width, height)
+        
+    Returns:
+        Matplotlib figure object (publication-ready)
+    """
+    plt, sns, patches, PdfPages = _ensure_matplotlib()
+    set_scientific_style()
+    
+    if figsize is None:
+        figsize = FIGURE_SIZES['one_and_half']
+    
+    if len(motifs) < 2:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'Need at least 2 motifs', ha='center', va='center',
+                transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    # Sort motifs by position
+    sorted_motifs = sorted(motifs, key=lambda m: m.get('Start', 0))
+    
+    # Calculate inter-motif distances
+    distances = []
+    for i in range(len(sorted_motifs) - 1):
+        end_i = sorted_motifs[i].get('End', sorted_motifs[i].get('Start', 0))
+        start_j = sorted_motifs[i + 1].get('Start', 0)
+        distance = max(0, start_j - end_i)
+        distances.append(distance)
+    
+    if not distances:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No distance data', ha='center', va='center',
+                transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+    
+    # Log scale for better visualization of clustering
+    log_distances = [np.log10(d + 1) for d in distances]
+    
+    ax.hist(log_distances, bins=30, alpha=0.8, color='#6366f1',
+           edgecolor='white', linewidth=0.5)
+    
+    # Add statistics
+    median_dist = np.median(distances)
+    ax.axvline(np.log10(median_dist + 1), color='red', linestyle='--', linewidth=1.5,
+              label=f'Median: {median_dist:.0f} bp')
+    
+    # Custom x-axis labels for log scale
+    ax.set_xlabel('Inter-motif Distance (log₁₀ bp)', fontsize=10, fontweight='bold')
+    ax.set_ylabel('Count', fontsize=10, fontweight='bold')
+    ax.legend(fontsize=8)
+    
+    display_title = title.replace('_', ' ')
+    ax.set_title(display_title, fontsize=11, fontweight='bold', pad=10)
+    
+    _apply_nature_style(ax)
+    plt.tight_layout()
+    return fig
+
+
+def plot_structural_competition_upset(motifs: List[Dict[str, Any]], 
+                                      title: str = "Structural Competition",
+                                      figsize: Tuple[int, int] = None) -> plt.Figure:
+    """
+    Create UpSet-style plot showing overlapping motif combinations.
+    
+    Visualizes which motif classes overlap and their frequencies.
+    Publication-quality visualization following Nature guidelines.
+    
+    Args:
+        motifs: List of motif dictionaries
+        title: Plot title
+        figsize: Figure size (width, height)
+        
+    Returns:
+        Matplotlib figure object (publication-ready)
+    """
+    plt, sns, patches, PdfPages = _ensure_matplotlib()
+    set_scientific_style()
+    
+    if figsize is None:
+        figsize = FIGURE_SIZES['double_column']
+    
+    if not motifs:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No motifs to display', ha='center', va='center',
+                transform=ax.transAxes, fontsize=14)
+        ax.set_title(title)
+        return fig
+    
+    # Get unique classes
+    all_classes = sorted(set(m.get('Class', 'Unknown') for m in motifs
+                            if m.get('Class') not in CIRCOS_EXCLUDED_CLASSES))
+    
+    if len(all_classes) < 2:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'Need at least 2 classes', ha='center', va='center',
+                transform=ax.transAxes, fontsize=12)
+        ax.set_title(title)
+        return fig
+    
+    # Find overlapping regions
+    overlap_combos = Counter()
+    sorted_motifs = sorted(motifs, key=lambda m: m.get('Start', 0))
+    
+    for i, m1 in enumerate(sorted_motifs):
+        if m1.get('Class') in CIRCOS_EXCLUDED_CLASSES:
+            continue
+        start1, end1 = m1.get('Start', 0), m1.get('End', 0)
+        overlapping = {m1.get('Class', 'Unknown')}
+        
+        for j in range(i + 1, len(sorted_motifs)):
+            m2 = sorted_motifs[j]
+            if m2.get('Class') in CIRCOS_EXCLUDED_CLASSES:
+                continue
+            start2 = m2.get('Start', 0)
+            if start2 >= end1:
+                break
+            overlapping.add(m2.get('Class', 'Unknown'))
+        
+        if len(overlapping) > 1:
+            combo = tuple(sorted(overlapping))
+            overlap_combos[combo] += 1
+    
+    if not overlap_combos:
+        fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
+        ax.text(0.5, 0.5, 'No overlapping regions found', ha='center', va='center',
+                transform=ax.transAxes, fontsize=12)
+        ax.set_title(title)
+        return fig
+    
+    # Get top combinations
+    top_combos = overlap_combos.most_common(10)
+    
+    fig, (ax_bar, ax_matrix) = plt.subplots(2, 1, figsize=figsize, 
+                                            gridspec_kw={'height_ratios': [2, 1]},
+                                            dpi=PUBLICATION_DPI)
+    
+    # Bar chart of combination frequencies
+    combo_labels = [' + '.join(c.replace('_', ' ') for c in combo) for combo, _ in top_combos]
+    combo_counts = [count for _, count in top_combos]
+    
+    # Truncate long labels
+    combo_labels = [l[:30] + '…' if len(l) > 30 else l for l in combo_labels]
+    
+    bars = ax_bar.barh(range(len(top_combos)), combo_counts, alpha=0.8,
+                       color='#8b5cf6', edgecolor='white', linewidth=0.5)
+    ax_bar.set_yticks(range(len(top_combos)))
+    ax_bar.set_yticklabels(combo_labels, fontsize=7)
+    ax_bar.set_xlabel('Overlap Count', fontsize=10, fontweight='bold')
+    ax_bar.invert_yaxis()
+    _apply_nature_style(ax_bar)
+    
+    # Matrix showing which classes are in each combination
+    matrix = np.zeros((len(top_combos), len(all_classes)))
+    for i, (combo, _) in enumerate(top_combos):
+        for cls in combo:
+            if cls in all_classes:
+                matrix[i, all_classes.index(cls)] = 1
+    
+    ax_matrix.imshow(matrix.T, aspect='auto', cmap='Blues', interpolation='nearest')
+    ax_matrix.set_xticks(range(len(top_combos)))
+    ax_matrix.set_xticklabels([])
+    ax_matrix.set_yticks(range(len(all_classes)))
+    ax_matrix.set_yticklabels([c.replace('_', ' ')[:15] for c in all_classes], fontsize=7)
+    ax_matrix.set_ylabel('Classes', fontsize=9, fontweight='bold')
+    
+    display_title = title.replace('_', ' ')
+    plt.suptitle(display_title, fontsize=11, fontweight='bold', y=1.02)
     plt.tight_layout()
     return fig
 
@@ -8101,7 +8840,7 @@ def create_consolidated_pdf(
         
         # Advanced visualizations
         figures.append(plot_motif_cooccurrence_matrix(motifs, title=f"Co-occurrence Matrix - {sequence_name}"))
-        figures.append(plot_motif_length_kde(motifs, by_class=True, title=f"Length KDE - {sequence_name}"))
+        figures.append(plot_motif_length_kde(motifs, by_class=True, title=f"Length Distribution - {sequence_name}"))
         
         # Circos plot
         figures.append(plot_circos_motif_density(motifs, sequence_length, title=f"Circos Density - {sequence_name}"))
@@ -8134,7 +8873,7 @@ def export_to_pdf(motifs: List[Dict[str, Any]],
     3. Class Distribution (Bar Chart)
     4. Subclass Distribution (Bar Chart)
     5. Density Analysis (Genomic + Positional)
-    6. Length KDE (Kernel Density Estimation)
+    6. Length Distribution (Histogram)
     7. Score Distribution
     8. Class-Subclass Pie Chart (Nested Donut)
     9. Hybrid & Cluster Track (if present)
@@ -8209,9 +8948,9 @@ def export_to_pdf(motifs: List[Dict[str, Any]],
         # SECTION 4: STATISTICAL DISTRIBUTIONS
         # ========================================
         
-        # 6. Length KDE (Kernel Density Estimation) - matches Results page
+        # 6. Length Distribution (Histogram) - matches Results page
         figures.append(plot_motif_length_kde(motifs, by_class=True, 
-                                             title=f"Length KDE - {sequence_name}"))
+                                             title=f"Length Distribution - {sequence_name}"))
         
         # 7. Score Distribution
         figures.append(plot_score_distribution(motifs, by_class=True,
@@ -8388,7 +9127,7 @@ The PDF contains publication-ready visualizations (300 DPI) ordered as follows:
 3. Class Distribution - Bar chart of motif counts by class
 4. Subclass Distribution - Bar chart of motif counts by subclass
 5. Density Analysis - Genomic density (%) and positional density (motifs/kbp)
-6. Length KDE - Kernel density estimation of motif lengths by class
+6. Length Distribution - Histogram of motif lengths by class
 7. Score Distribution - Score histogram by class
 8. Class → Subclass Pie - Nested donut chart showing class-subclass hierarchy
 9. Hybrid & Cluster Track - Position view of Hybrids and Clusters (if present)

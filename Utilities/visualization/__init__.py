@@ -79,6 +79,8 @@ from Utilities.utilities import (
     plot_score_distribution,
     plot_length_distribution,
     plot_motif_length_kde,
+    plot_motif_length_histogram,
+    plot_score_violin,
     
     # Comprehensive analysis plots
     plot_class_comparison,
@@ -115,6 +117,15 @@ from Utilities.utilities import (
     
     # Subclass-specific plots
     plot_subclass_density_heatmap,
+    
+    # Advanced visualization functions (Nature publication standard)
+    plot_structural_heatmap,
+    plot_gc_motif_correlation,
+    plot_motif_network,
+    plot_chromosome_density,
+    plot_spacer_loop_variation,
+    plot_motif_clustering_distance,
+    plot_structural_competition_upset,
 )
 
 # =============================================================================
@@ -159,6 +170,8 @@ __all__ = [
     'plot_score_distribution',
     'plot_length_distribution',
     'plot_motif_length_kde',
+    'plot_motif_length_histogram',
+    'plot_score_violin',
     
     # Comprehensive analysis plots
     'plot_class_comparison',
@@ -195,4 +208,13 @@ __all__ = [
     
     # Subclass-specific plots
     'plot_subclass_density_heatmap',
+    
+    # Advanced visualization functions (Nature publication standard)
+    'plot_structural_heatmap',
+    'plot_gc_motif_correlation',
+    'plot_motif_network',
+    'plot_chromosome_density',
+    'plot_spacer_loop_variation',
+    'plot_motif_clustering_distance',
+    'plot_structural_competition_upset',
 ]
