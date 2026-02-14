@@ -271,10 +271,34 @@ def render():
         seqs, names = [], []
 
         if input_method == UI_TEXT['upload_method_file']:
+            # Apply vibrant styling to file uploader via CSS
+            st.markdown("""
+            <style>
+            /* Vibrant file uploader styling */
+            [data-testid="stFileUploader"] {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                padding: 12px !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+            }
+            [data-testid="stFileUploader"] > div {
+                background: rgba(255,255,255,0.95) !important;
+                border-radius: 8px !important;
+                padding: 8px !important;
+            }
+            [data-testid="stFileUploader"] section {
+                background: white !important;
+                border: 2px dashed #667eea !important;
+                border-radius: 8px !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
             fasta_file = st.file_uploader(UI_TEXT['upload_file_prompt'], 
                                          type=["fa", "fasta", "txt", "fna"],
                                          label_visibility="visible",
                                          help=UI_TEXT['upload_file_help'])
+            
             if fasta_file:
                 # Compact file card after upload
                 file_size_mb = fasta_file.size / (1024 * 1024)
@@ -357,10 +381,33 @@ def render():
                         st.warning(UI_TEXT['upload_no_sequences'])
 
         elif input_method == UI_TEXT['upload_method_paste']:
+            # Apply vibrant styling to text area via CSS
+            st.markdown("""
+            <style>
+            /* Vibrant text area styling for paste section */
+            [data-testid="stTextArea"] {
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+                padding: 12px !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3) !important;
+            }
+            [data-testid="stTextArea"] > div {
+                background: rgba(255,255,255,0.95) !important;
+                border-radius: 8px !important;
+            }
+            [data-testid="stTextArea"] textarea {
+                background: white !important;
+                border: 2px solid #f093fb !important;
+                border-radius: 8px !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
             seq_input = st.text_area(UI_TEXT['upload_paste_prompt'], 
                                     height=120, 
                                     placeholder=UI_TEXT['upload_paste_placeholder'],
                                     help=UI_TEXT['upload_paste_help'])
+            
             if seq_input:
                 seqs, names = [], []
                 cur_seq, cur_name = "", ""
@@ -407,6 +454,15 @@ def render():
                     st.warning(UI_TEXT['analysis_no_sequences_warning'])
 
         elif input_method == "Example Data":
+            # Vibrant info card for example data section
+            st.markdown("""
+            <div style='background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%);
+                        padding: 10px 14px; border-radius: 10px; margin: 8px 0;
+                        box-shadow: 0 4px 15px rgba(0, 201, 255, 0.3); color: #065f46;'>
+                <span style='font-weight: 700; font-size: 0.85rem;'>📋 Load Example Sequences</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
             ex_type = st.radio("Example Type:", 
                              ["Single Example", "Multi-FASTA Example"], 
                              horizontal=True,
@@ -436,6 +492,15 @@ def render():
                     st.success(UI_TEXT['upload_example_multi_success'].format(count=len(seqs)))
 
         elif input_method == "NCBI Fetch":
+            # Vibrant info card for NCBI fetch section
+            st.markdown("""
+            <div style='background: linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 50%, #2BFF88 100%);
+                        padding: 10px 14px; border-radius: 10px; margin: 8px 0;
+                        box-shadow: 0 4px 15px rgba(250, 139, 255, 0.3); color: #1e3a5f;'>
+                <span style='font-weight: 700; font-size: 0.85rem;'>🔬 Fetch from NCBI Database</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
             db = st.radio("NCBI Database", ["nucleotide", "gene"], horizontal=True,
                           help="Only nucleotide and gene databases are applicable for DNA motif analysis")
             query = st.text_input("Enter query (accession, gene, etc.):", 
@@ -525,12 +590,11 @@ def render():
         st.session_state.analysis_mode_used = "Submotif Level"
     
         # ============================================================
-        # 24-CLASS SUBMOTIF SELECTOR (COLOR-ENCODED, HIGH-DENSITY GRID)
+        # 24-CLASS SUBMOTIF SELECTOR (RADIO BUTTON STYLE USING PILLS)
         # ============================================================
-        # All 24 submotifs always visible via compact grid layout.
+        # All 24 submotifs always visible via compact pill-style selection.
         # Color-encoding provides implicit class identity (via CLASS_COLORS).
-        # No scrolling required - all detection targets visible at once.
-        # User selects individual motifs from the 24 available options.
+        # User selects a single motif from the 24 available options.
         # ============================================================
 
         # ------------------------------------------------------------------
@@ -551,67 +615,86 @@ def render():
             for subclass in entry['subclasses']:
                 flat_submotifs.append((class_name, subclass))
 
-        # Initialize session state (all ON by default)
+        # Build options list for selection with abbreviated labels
+        motif_options = []
+        motif_display_map = {}  # Maps display name to (class_name, subclass)
         for class_name, subclass in flat_submotifs:
-            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-            if key not in st.session_state:
-                st.session_state[key] = True
+            abbrev_label = get_abbreviated_label(subclass)
+            motif_options.append(abbrev_label)
+            motif_display_map[abbrev_label] = (class_name, subclass)
+
+        # Initialize session state for selection (default to first motif)
+        # Note: Don't set default in session_state AND widget - use only widget default
 
         # ------------------------------------------------------------------
-        # Render compact 3-column grid for full 24-class visibility
-        # (3 columns × 8 rows = 24 submotifs visible without scrolling)
+        # Render vibrant pill-style selector (single selection radio behavior)
         # ------------------------------------------------------------------
-        rows = [flat_submotifs[i:i + GRID_COLUMNS]
-                for i in range(0, len(flat_submotifs), GRID_COLUMNS)]
-
-        # Wrap grid in container with CSS class for targeted styling
-        # Add radio-dot CSS styling (replaces checkbox tick with vibrant dot)
-        st.markdown(f"""
+        st.markdown("""
         <style>
-        /* Compact row spacing */
-        .submotif-grid [data-testid="stHorizontalBlock"] {{
-            gap: {ROW_GAP} !important;
-            margin-bottom: {ROW_GAP} !important;
-        }}
-        /* Compact column spacing */
-        .submotif-grid [data-testid="column"] {{
-            padding-left: 2px !important;
-            padding-right: 2px !important;
-        }}
+        /* Vibrant pill styling for motif selector - radio button behavior */
+        .motif-pill-selector [data-testid="stPills"] [role="group"] {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+            padding: 10px !important;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+        }
+        .motif-pill-selector [data-testid="stPills"] button {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border: 2px solid rgba(255, 255, 255, 0.5) !important;
+            border-radius: 20px !important;
+            padding: 6px 12px !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            color: #334155 !important;
+            transition: all 0.2s ease !important;
+            min-width: auto !important;
+        }
+        .motif-pill-selector [data-testid="stPills"] button:hover {
+            background: white !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        }
+        .motif-pill-selector [data-testid="stPills"] button[aria-pressed="true"] {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border-color: #047857 !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+            transform: translateY(-1px) !important;
+        }
         </style>
-        <div class="submotif-grid">
         """, unsafe_allow_html=True)
         
-        for row in rows:
-            cols = st.columns(GRID_COLUMNS, gap="small")
-            for col, (class_name, subclass) in zip(cols, row):
-                # Use gray as fallback for unmapped classes (consistent with original)
-                color = CLASS_COLORS.get(class_name, "#cbd5e1")
-                color_name = CLASS_COLOR_NAMES.get(class_name, "gray")
-                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-                # Use abbreviated label for display, full name in tooltip
-                abbrev_label = get_abbreviated_label(subclass)
-
-                with col:
-                    st.checkbox(
-                        f"**:{color_name}[{abbrev_label}]**",
-                        key=key,
-                        help=f"{subclass} ({class_name.replace('_', ' ')})"
-                    )
+        st.markdown('<div class="motif-pill-selector">', unsafe_allow_html=True)
+        
+        selected_motif = st.pills(
+            "Select Non-B DNA Motif:",
+            options=motif_options,
+            default=motif_options[0] if motif_options else None,
+            key="selected_motif_pill",
+            selection_mode="single",
+            label_visibility="collapsed",
+            help="Select the Non-B DNA motif type to detect in your sequences"
+        )
         
         st.markdown('</div>', unsafe_allow_html=True)
 
         # ------------------------------------------------------------------
         # Build enabled class & subclass lists (for downstream analysis)
+        # Based on radio button single selection
         # ------------------------------------------------------------------
         enabled_classes = set()
         enabled_subclasses = []
+        selected_class = None
+        selected_subclass = None
 
-        for class_name, subclass in flat_submotifs:
-            key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
-            if st.session_state.get(key, True):
-                enabled_classes.add(class_name)
-                enabled_subclasses.append(subclass)
+        # Get selected motif from radio button
+        if selected_motif and selected_motif in motif_display_map:
+            selected_class, selected_subclass = motif_display_map[selected_motif]
+            enabled_classes.add(selected_class)
+            enabled_subclasses.append(selected_subclass)
 
         st.session_state.selected_classes = list(enabled_classes)
         st.session_state.selected_subclasses = enabled_subclasses
@@ -622,29 +705,31 @@ def render():
             entry = MOTIF_CLASSIFICATION[class_id]
             class_name = entry['class']
             for subclass in entry['subclasses']:
-                key = f"submotif_{_sanitize_key(class_name)}_{_sanitize_key(subclass)}"
+                # Only enable the selected motif
+                is_enabled = (selected_class is not None and 
+                             selected_subclass is not None and 
+                             (class_name, subclass) == (selected_class, selected_subclass))
                 st.session_state.motif_selector_data.append({
-                    'Enabled': st.session_state.get(key, True),
+                    'Enabled': is_enabled,
                     'Motif Class': class_name,
                     'Submotif': subclass
                 })
 
-        # Compact summary with publication-grade terminology
-        num_enabled = len(enabled_subclasses)
-        total_submotifs = len(flat_submotifs)
-
+        # Compact summary with publication-grade terminology - vibrant box style
         if enabled_classes:
+            selected_display = get_abbreviated_label(selected_subclass) if selected_subclass else "None"
             st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-                        padding: 6px 10px; border-radius: 6px; margin-top: 8px;
-                        border: 1px solid #bfdbfe; font-size: 0.78rem;'>
-                <span style='font-weight: 600; color: #1e40af;'>
-                    {len(enabled_classes)} classes · {num_enabled}/{total_submotifs} submotifs
+            <div style='background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        padding: 8px 12px; border-radius: 8px; margin-top: 10px;
+                        border: 2px solid #047857; font-size: 0.82rem; color: white;
+                        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);'>
+                <span style='font-weight: 700;'>
+                    ✓ Selected: {selected_display} ({list(enabled_classes)[0].replace('_', ' ')})
                 </span>
             </div>
             """, unsafe_allow_html=True)
         else:
-            st.warning("Select at least one submotif to enable analysis.")
+            st.warning("Select a motif to enable analysis.")
     
         # ============================================================
         # ANALYSIS OPTIONS - Always ON, Hidden from UI
