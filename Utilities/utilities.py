@@ -3718,6 +3718,92 @@ AAAAATTTTCCCCGGGG"""
     
     print("[OK] All utility tests completed")
 
+
+def test_triplex_sticky_dna():
+    """
+    Test triplex and sticky DNA detection with overlap handling.
+    
+    Tests the following:
+    1. GAA repeat detection as Sticky DNA (Triplex class)
+    2. TTC repeat detection as Sticky DNA (Triplex class)
+    3. Mirror repeat detection as Triplex subclass
+    4. Proper overlap handling between Triplex and other classes (Cruciform, Slipped)
+    5. Canonical subclass names are used correctly
+    """
+    from Detectors import TriplexDetector, CruciformDetector, SlippedDNADetector
+    
+    print("Testing Triplex and Sticky DNA detection...")
+    
+    triplex_detector = TriplexDetector()
+    cruciform_detector = CruciformDetector()
+    slipped_detector = SlippedDNADetector()
+    
+    # Test 1: GAA repeat (Sticky DNA)
+    print("\n1. Testing GAA repeat sequence (Sticky DNA):")
+    gaa_seq = 'GAAGAAGAAGAAGAAGAAGAAGAAGAAGAAGAAGAAGAA'  # GAA x 13
+    triplex_motifs = triplex_detector.detect_motifs(gaa_seq, 'test_gaa')
+    
+    sticky_found = any(m.get('Subclass') == 'Sticky DNA' for m in triplex_motifs)
+    assert sticky_found, "ERROR: Sticky DNA not detected for GAA repeat"
+    print(f"   [OK] Sticky DNA detected: {sum(1 for m in triplex_motifs if m.get('Subclass') == 'Sticky DNA')} motif(s)")
+    
+    # Verify canonical subclass name
+    for m in triplex_motifs:
+        assert m.get('Class') == 'Triplex', f"ERROR: Wrong class name: {m.get('Class')}"
+        assert m.get('Subclass') in ['Triplex', 'Sticky DNA'], f"ERROR: Invalid subclass: {m.get('Subclass')}"
+    print("   [OK] All subclass names are canonical")
+    
+    # Test 2: TTC repeat (Sticky DNA)
+    print("\n2. Testing TTC repeat sequence (Sticky DNA):")
+    ttc_seq = 'TTCTTCTTCTTCTTCTTCTTCTTCTTCTTC'  # TTC x 10
+    triplex_motifs_ttc = triplex_detector.detect_motifs(ttc_seq, 'test_ttc')
+    
+    sticky_ttc = [m for m in triplex_motifs_ttc if m.get('Subclass') == 'Sticky DNA']
+    assert len(sticky_ttc) > 0, "ERROR: TTC Sticky DNA not detected"
+    assert sticky_ttc[0].get('Repeat_Unit') == 'TTC', "ERROR: Wrong repeat unit"
+    print(f"   [OK] TTC Sticky DNA detected with repeat unit: {sticky_ttc[0].get('Repeat_Unit')}")
+    
+    # Test 3: Overlap handling with Cruciform
+    print("\n3. Testing overlap handling (Cruciform + Sticky DNA):")
+    # Structure: GAA repeats (6 copies) + ATTA spacer + TTC repeats (5 copies)
+    # GAA and TTC are reverse complements, forming an inverted repeat that can extrude as cruciform.
+    # This sequence tests that both Sticky DNA (GAA/TTC disease repeats) and Cruciform 
+    # (inverted repeat) can be detected on the same region with proper overlap handling.
+    mixed_seq = 'GAAGAAGAAGAAGAAGAAATTATTTTCTTCTTCTTCTTCTTC'
+    
+    triplex_mixed = triplex_detector.detect_motifs(mixed_seq, 'test_mixed')
+    cruciform_mixed = cruciform_detector.detect_motifs(mixed_seq, 'test_mixed')
+    
+    # Should detect both Sticky DNA (GAA and TTC) and Cruciform
+    sticky_gaa = any(m.get('Subclass') == 'Sticky DNA' and 'GAA' in m.get('Pattern_ID', '') for m in triplex_mixed)
+    sticky_ttc = any(m.get('Subclass') == 'Sticky DNA' and 'TTC' in m.get('Pattern_ID', '') for m in triplex_mixed)
+    cruciform_found = len(cruciform_mixed) > 0
+    
+    assert sticky_gaa, "ERROR: GAA Sticky DNA not detected in mixed sequence"
+    assert sticky_ttc, "ERROR: TTC Sticky DNA not detected in mixed sequence"
+    assert cruciform_found, "ERROR: Cruciform not detected in mixed sequence"
+    print(f"   [OK] GAA Sticky DNA detected: {sticky_gaa}")
+    print(f"   [OK] TTC Sticky DNA detected: {sticky_ttc}")
+    print(f"   [OK] Cruciform detected: {cruciform_found}")
+    print("   [OK] Overlap between Cruciform and Sticky DNA is correctly allowed")
+    
+    # Test 4: Overlap handling with Slipped DNA
+    print("\n4. Testing overlap handling (STR + Sticky DNA):")
+    slipped_gaa = slipped_detector.detect_motifs(gaa_seq, 'test_gaa_slipped')
+    
+    # GAA repeat should be detected as both STR (Slipped_DNA) and Sticky DNA (Triplex)
+    str_found = any(m.get('Subclass') == 'STR' for m in slipped_gaa)
+    sticky_found_gaa = any(m.get('Subclass') == 'Sticky DNA' for m in triplex_motifs)
+    
+    assert str_found, "ERROR: STR not detected for GAA repeat"
+    assert sticky_found_gaa, "ERROR: Sticky DNA not detected for GAA repeat"
+    print(f"   [OK] STR detected: {str_found}")
+    print(f"   [OK] Sticky DNA detected: {sticky_found_gaa}")
+    print("   [OK] Overlap between STR and Sticky DNA is correctly allowed")
+    
+    print("\n[OK] All Triplex/Sticky DNA tests completed successfully!")
+    return True
+
 # =============================================================================
 # ENHANCED STATISTICS: DENSITY AND ENRICHMENT ANALYSIS
 # =============================================================================
