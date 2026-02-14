@@ -9,6 +9,11 @@ from .motif_normalizer import (
     validate_motif_dict,
 )
 
+from .seed_engine import (
+    SeedEngine,
+    get_seed_engine,
+)
+
 __all__ = [
     'MotifNormalizationError',
     'normalize_class_name',
@@ -16,4 +21,6 @@ __all__ = [
     'normalize_class_subclass',
     'normalize_motif_dict',
     'validate_motif_dict',
+    'SeedEngine',
+    'get_seed_engine',
 ]
