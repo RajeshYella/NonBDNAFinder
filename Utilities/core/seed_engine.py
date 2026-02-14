@@ -4,7 +4,8 @@
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.2            │
 │ Purpose: Eliminate repetitive computations by pre-computing seeds once       │
-│ Performance: ~10000x speedup through seed-first scanning                     │
+│ Performance: Significant speedup through seed-first scanning approach        │
+│              vs non-seeded full sequence scanning                            │
 └──────────────────────────────────────────────────────────────────────────────┘
 """
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -72,6 +73,21 @@ class SeedEngine:
         """Clear the seed cache."""
         if cls._instance is not None:
             cls._instance._cache.clear()
+    
+    def precompute(self, seq: str) -> Dict[str, Any]:
+        """
+        Pre-compute all seeds for a sequence.
+        
+        This public method should be called before running detectors to ensure
+        seeds are computed once and cached for all subsequent detector calls.
+        
+        Args:
+            seq: DNA sequence to pre-compute seeds for
+            
+        Returns:
+            Dictionary with seed statistics
+        """
+        return self._ensure_computed(seq)
     
     def _get_seq_hash(self, seq: str) -> int:
         """Get a fast hash for sequence caching."""

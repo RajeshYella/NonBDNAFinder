@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 # TUNABLE PARAMETERS
 # ═══════════════════════════════════════════════════════════════════════════════
 MIN_SUM_LOG2 = 0.5  # Minimum sum_log2 for A-philic regions
+# A-philic DNA requires A-rich regions; minimum AT content threshold
+MIN_AT_CONTENT_RATIO = 0.30  # 30% AT content minimum for A-philic potential
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
@@ -92,7 +94,7 @@ class APhilicDetector(BaseMotifDetector):
         if not a_tracts:
             # A-philic DNA requires A-rich regions
             at_content = seed_engine.get_at_count_in_range(seq, 0, len(seq))
-            if at_content < len(seq) * 0.3:  # Less than 30% AT content
+            if at_content < len(seq) * MIN_AT_CONTENT_RATIO:
                 return []
         
         # Use hyperscan or vectorized matching

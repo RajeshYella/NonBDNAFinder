@@ -35,6 +35,9 @@ logger = logging.getLogger(__name__)
 MIN_EGZ_REPEATS = 3; EGZ_BASE_SCORE = 0.85; EGZ_MIN_SCORE_THRESHOLD = 0.80; MIN_Z_SCORE = 50.0
 SEED_WINDOW_BEFORE = 20
 SEED_WINDOW_AFTER = 50
+# Z-DNA primarily forms in GC-rich alternating regions (Ho et al. 1986)
+# 40% GC content is the minimum threshold for Z-DNA forming potential
+MIN_GC_PERCENT_ZDNA = 40.0
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
@@ -152,9 +155,9 @@ class ZDNADetector(BaseMotifDetector):
         # If no GC dinucleotide regions, use fast path check
         if not gc_dinuc:
             # Quick scan for any potential Z-DNA forming sequences
-            # Z-DNA primarily forms in GC-rich alternating regions
+            # Z-DNA primarily forms in GC-rich alternating regions (Ho et al. 1986)
             gc_content = seed_engine.get_gc_percent_in_range(seq, 0, len(seq))
-            if gc_content < 40:  # Z-DNA requires high GC content
+            if gc_content < MIN_GC_PERCENT_ZDNA:  # Z-DNA requires high GC content
                 return []
         
         # Use hyperscan or vectorized matching for full scan

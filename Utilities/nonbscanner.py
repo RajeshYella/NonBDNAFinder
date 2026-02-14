@@ -123,7 +123,7 @@ class NonBScanner:
         # Pre-compute seeds ONCE for all detectors using shared SeedEngine
         # This eliminates redundant G-tract, C-tract, AT-tract scanning across 9 detectors
         seed_engine = get_seed_engine()
-        seed_engine._ensure_computed(sequence)  # Force pre-computation before any detector runs
+        seed_engine.precompute(sequence)  # Force pre-computation before any detector runs
         
         all_motifs = []
         if enabled_classes:
