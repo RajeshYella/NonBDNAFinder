@@ -135,8 +135,18 @@ warnings.filterwarnings("ignore")
 from Utilities.config.motif_taxonomy import (
     VALID_CLASSES,
     VALID_SUBCLASSES,
-    SUBCLASS_TO_CLASS
+    SUBCLASS_TO_CLASS,
+    get_all_classes_taxonomy_order,
+    get_all_subclasses_taxonomy_order,
+    MOTIF_CLASSIFICATION
 )
+
+# Import standardized GC content calculation and base counting
+from Utilities.detectors_utils import calc_gc_content, _count_bases
+
+# Pre-compiled regex to strip characters that are not valid IUPAC nucleotide codes
+# Keeps: A T G C N R Y S W K M B D H V (standard IUPAC, upper and lower case)
+_NON_IUPAC_RE = re.compile(r'[^ATGCNRYSWKMBDHVatgcnryswkmbdhv]')
 
 # Try to import plotly for interactive plots
 try:
@@ -310,7 +320,7 @@ DEFAULT_PDF_WINDOW_DIVISOR = 20      # Divisor for adaptive window sizing
 
 # Application version
 APP_NAME = "NonBDNAFinder"
-APP_VERSION = "2025.1"
+APP_VERSION = "2024.4"
 
 # File hosting settings - DEPRECATED
 # Note: file.io upload functionality has been removed in favor of direct downloads
@@ -483,7 +493,14 @@ SCORE_NORMALIZATION_PARAMS = {
 
 def normalize_score_to_1_3(raw_score: float, motif_class: str) -> float:
     """
+    DEPRECATED: Normalization now handled by detector classes.
+    
     Normalize raw detector score to 1-3 scale.
+    
+    **NEW ARCHITECTURE (2024.2+):**
+    - Each detector class has internal `_normalize_score()` method
+    - Normalization parameters are tunable class constants
+    - This function is maintained for backward compatibility only
     
     Scientific basis:
     - 1.0 = Minimal (below typical formation threshold)
@@ -503,6 +520,13 @@ def normalize_score_to_1_3(raw_score: float, motif_class: str) -> float:
         >>> normalize_score_to_1_3(0.8, 'G-Quadruplex')
         2.6
     """
+    import warnings
+    warnings.warn(
+        "normalize_score_to_1_3() is deprecated. Use detector._normalize_score() instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    
     # Get normalization parameters for this class
     params = SCORE_NORMALIZATION_PARAMS.get(motif_class)
     
@@ -566,7 +590,20 @@ def normalize_score_to_1_3(raw_score: float, motif_class: str) -> float:
 
 def normalize_motif_scores(motifs: list) -> list:
     """
-    Normalize all motif scores to universal 1-3 scale for cross-motif comparability.
+    DEPRECATED: Normalization now handled by detector classes.
+    
+    This function is maintained for backward compatibility but no longer performs
+    normalization since detector classes now self-normalize scores to the universal
+    1-3 scale during detection.
+    
+    **NEW ARCHITECTURE (2024.2+):**
+    - Each detector normalizes scores internally via `_normalize_score()` method
+    - Detectors return both 'Raw_Score' (detector-specific) and 'Score' (universal 1-3)
+    - Normalization parameters are tunable class constants in each detector
+    
+    **MIGRATION:**
+    - If using detectors directly: No changes needed, scores are already normalized
+    - If calling this function directly: Update code to use detector output directly
     
     UNIVERSAL SCORE DISCIPLINE (ΔG-inspired Scale):
     ═══════════════════════════════════════════════════════════════════════
@@ -607,7 +644,7 @@ def normalize_motif_scores(motifs: list) -> list:
         motifs: List of motif dictionaries with 'Score' and 'Class' fields
         
     Returns:
-        List of motifs with updated 'Score' field (1-3 scale)
+        List of motifs unchanged (already normalized by detectors)
         
     Note:
         Original raw score is preserved in 'Raw_Score' field for reference.
@@ -615,30 +652,24 @@ def normalize_motif_scores(motifs: list) -> list:
     
     Example:
         >>> motifs = [
-        ...     {'Class': 'G-Quadruplex', 'Score': 0.8},
-        ...     {'Class': 'Curved_DNA', 'Score': 0.6}
+        ...     {'Class': 'G-Quadruplex', 'Score': 2.5, 'Raw_Score': 0.8},
+        ...     {'Class': 'Curved_DNA', 'Score': 2.2, 'Raw_Score': 0.6}
         ... ]
         >>> normalized = normalize_motif_scores(motifs)
-        >>> # Both scores now on comparable 1-3 scale
-        >>> assert 1.0 <= normalized[0]['Score'] <= 3.0
-        >>> assert 1.0 <= normalized[1]['Score'] <= 3.0
+        >>> # Returns motifs unchanged (scores already normalized)
+        >>> assert normalized[0]['Score'] == 2.5
+        >>> assert normalized[1]['Score'] == 2.2
     """
-    normalized_motifs = []
+    import warnings
+    warnings.warn(
+        "normalize_motif_scores() is deprecated. Detectors now self-normalize scores. "
+        "This function returns motifs unchanged for backward compatibility.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     
-    for motif in motifs:
-        m = motif.copy()
-        raw_score = m.get('Score', 0.0)
-        motif_class = m.get('Class', 'Unknown')
-        
-        # Store raw score for reference (class-specific scale)
-        m['Raw_Score'] = raw_score
-        
-        # Normalize to universal 1-3 scale (cross-motif comparable)
-        m['Score'] = round(normalize_score_to_1_3(raw_score, motif_class), 2)
-        
-        normalized_motifs.append(m)
-    
-    return normalized_motifs
+    # Return motifs unchanged - they're already normalized by detectors
+    return motifs
 
 
 """
@@ -1160,11 +1191,8 @@ class PatternRegistry:
         'telomeric_g4': [
             (r'(?:TTAGGG){4,}', 'G4_TEL', 'Telomeric G4', 'Telomeric G4', 24, 'g4hunter_score', 0.95, 'Human telomeric G4 structure', 'Parkinson et al., Nature 2002'),
         ],
-        'stacked_canonical_g4s': [
-            (r'(?:(?:G{3,}[ATGC]{1,7}){3}G{3,}){2,}', 'G4_STK_CAN', 'Stacked canonical G4s', 'Stacked canonical G4s', 30, 'g4hunter_score', 0.90, 'Structural polymorphism & stacking', 'Phan et al., NAR 2007'),
-        ],
-        'stacked_g4s_linker': [
-            (r'(?:(?:G{3,}[ATGC]{1,7}){3}G{3,})(?:[ATGC]{0,20}(?:(?:G{3,}[ATGC]{1,7}){3}G{3,})){1,}', 'G4_STK_LNK', 'Stacked G4s with linker', 'Stacked G4s with linker', 30, 'g4hunter_score', 0.85, 'Clustered G4s in chromatin', 'Hänsel-Hertsch et al., Nat Genet 2016'),
+        'stacked_g4': [
+            (r'(?:(?:G{3,}[ATGC]{1,7}){3}G{3,})(?:[ATGC]{0,20}(?:(?:G{3,}[ATGC]{1,7}){3}G{3,}))+', 'G4_STK', 'Stacked G4 (multi-quadruplex assembly)', 'Stacked G4', 30, 'g4hunter_score', 0.90, 'Clustered G4s in chromatin', 'Hänsel-Hertsch et al., Nat Genet 2016'),
         ],
         'canonical_g4': [
             (r'G{3,}[ATGC]{1,7}G{3,}[ATGC]{1,7}G{3,}[ATGC]{1,7}G{3,}', 'G4_CAN', 'Canonical intramolecular G4', 'Canonical intramolecular G4', 15, 'g4hunter_score', 0.80, 'Canonical G4 structure', 'Huppert & Balasubramanian, NAR 2005'),
@@ -1180,6 +1208,9 @@ class PatternRegistry:
         ],
         'weak_pqs': [
             (r'G{2,}[ATGC]{1,7}G{2,}[ATGC]{1,7}G{2,}[ATGC]{1,7}G{2,}', 'G4_WEAK', 'Two-tetrad weak PQS', 'Two-tetrad weak PQS', 11, 'g4hunter_score', 0.25, 'QGRS Mapper weak PQS', 'Kikin et al., NAR 2006'),
+        ],
+        'bulged_g4': [
+            (r'(?:G{2,}[ATGC]G{1,}[ATGC]{1,7}){3}G{2,}[ATGC]G{1,}', 'G4_BUL', 'Bulged G4 (interrupted G-tract)', 'Bulged G4', 15, 'g4hunter_score', 0.70, 'G4 with internal G-tract bulge', 'Mukundan & Bhattacharyya, JACS 2011'),
         ]
     }
     
@@ -1963,8 +1994,10 @@ def parse_fasta(fasta_content: str, streaming: bool = False) -> Union[Dict[str, 
                 current_name = f"sequence_{len(sequences) + 1}"
             current_seq = []
         else:
-            # Add to current sequence
-            current_seq.append(line.upper())
+            # Add to current sequence, filtering non-IUPAC characters
+            filtered = _NON_IUPAC_RE.sub('', line.upper())
+            if filtered:
+                current_seq.append(filtered)
     
     # Save last sequence
     if current_name and current_seq:
@@ -2022,8 +2055,10 @@ def parse_fasta_streaming(fasta_content: str):
                 current_name = f"sequence_{sequence_counter}"
             current_seq = []
         else:
-            # Add to current sequence
-            current_seq.append(line.upper())
+            # Add to current sequence, filtering non-IUPAC characters
+            filtered = _NON_IUPAC_RE.sub('', line.upper())
+            if filtered:
+                current_seq.append(filtered)
     
     # Yield last sequence
     if current_name and current_seq:
@@ -2087,12 +2122,16 @@ def parse_fasta_chunked(file_object, chunk_size_mb: int = 2):
                     current_name = f"sequence_{id(line)}"
                 current_seq_parts = []
             else:
-                # Add to current sequence
-                current_seq_parts.append(line.upper())
+                # Add to current sequence, filtering non-IUPAC characters
+                filtered = _NON_IUPAC_RE.sub('', line.upper())
+                if filtered:
+                    current_seq_parts.append(filtered)
     
     # Process remaining buffer
     if buffer.strip() and not buffer.startswith('>'):
-        current_seq_parts.append(buffer.strip().upper())
+        filtered = _NON_IUPAC_RE.sub('', buffer.strip().upper())
+        if filtered:
+            current_seq_parts.append(filtered)
     
     # Yield last sequence
     if current_name and current_seq_parts:
@@ -2183,7 +2222,8 @@ def get_file_preview(file_object, max_sequences: int = 3, max_preview_chars: int
         
     Returns:
         Dict with keys: 'num_sequences', 'total_bp', 'previews' (list of dicts)
-        Each preview dict contains: 'name', 'length', 'preview', 'gc_percent', 'at_percent'
+        Each preview dict contains: 'name', 'length', 'preview', 'gc_percent', 'at_percent',
+        'a_count', 't_count', 'g_count', 'c_count', 'n_count'
     """
     file_object.seek(0)  # Reset to beginning
     
@@ -2200,6 +2240,8 @@ def get_file_preview(file_object, max_sequences: int = 3, max_preview_chars: int
             # Calculate stats from full sequence (not just preview)
             gc_pct = gc_content(seq)
             at_pct = 100.0 - gc_pct
+            a_count, t_count, g_count, c_count = _count_bases(seq)
+            n_count = seq.count('N')
             
             preview_seq = seq[:max_preview_chars]
             if len(seq) > max_preview_chars:
@@ -2210,7 +2252,12 @@ def get_file_preview(file_object, max_sequences: int = 3, max_preview_chars: int
                 'length': seq_len,
                 'preview': preview_seq,
                 'gc_percent': gc_pct,
-                'at_percent': at_pct
+                'at_percent': at_pct,
+                'a_count': a_count,
+                't_count': t_count,
+                'g_count': g_count,
+                'c_count': c_count,
+                'n_count': n_count,
             })
     
     file_object.seek(0)  # Reset for subsequent use
@@ -2315,7 +2362,10 @@ def reverse_complement(sequence: str) -> str:
 
 def gc_content(sequence: str) -> float:
     """
-    Calculate GC content of sequence
+    Calculate GC content of sequence using standardized method.
+    
+    This function delegates to calc_gc_content() from detectors_utils.py
+    to ensure consistency across all GC content calculations in the codebase.
     
     Args:
         sequence: DNA sequence string
@@ -2323,11 +2373,8 @@ def gc_content(sequence: str) -> float:
     Returns:
         GC content as percentage (0-100)
     """
-    if not sequence:
-        return 0.0
-    
-    gc_count = sequence.upper().count('G') + sequence.upper().count('C')
-    return (gc_count / len(sequence)) * 100
+    # Use the same method as detectors_utils.calc_gc_content for consistency
+    return calc_gc_content(sequence)
 
 def at_content(sequence: str) -> float:
     """
@@ -2513,31 +2560,183 @@ def calculate_motif_statistics(motifs: List[Dict[str, Any]], sequence_length: in
         
         return base_stats
     
-    # Count by class and subclass
-    class_counts = Counter(m.get('Class', 'Unknown') for m in motifs)
-    subclass_counts = Counter(m.get('Subclass', 'Unknown') for m in motifs)
-    
-    # Calculate coverage
+    # Separate main motifs (excluding Hybrid/Cluster) for overall coverage metrics
+    # Hybrid and Cluster are derived/composite features and would double-count positions
+    main_motifs = [m for m in motifs if m.get('Class') not in EXCLUDED_FROM_CONSOLIDATED]
+    hybrid_motifs = [m for m in motifs if m.get('Class') == 'Hybrid']
+    cluster_motifs = [m for m in motifs if m.get('Class') == 'Non-B_DNA_Clusters']
+
+    # Count by class and subclass (main motifs only for overall metrics)
+    class_counts = Counter(m.get('Class', 'Unknown') for m in main_motifs)
+    subclass_counts = Counter(m.get('Subclass', 'Unknown') for m in main_motifs)
+
+    # ── I. Basic Genome-Level Metrics ─────────────────────────────────────────
+    G = sequence_length
+    n = len(main_motifs)
+    C = len(class_counts)
+
+    # ── II. Motif Density (per kb) ─────────────────────────────────────────────
+    # Density = n / G × 1000
+    density = (n / G * 1000) if G > 0 else 0.0
+
+    # ── III. Structural Coverage ──────────────────────────────────────────────
+    # Total Coverage (bp): union of all main motif intervals (set-based, no double counting)
     # COORDINATE SYSTEM: Motifs use 1-based INCLUSIVE coordinates
-    # Example: Start=1, End=20 means positions 1-20 inclusive (20 bases)
-    # Convert to 0-based half-open for Python range(): range(0, 20)
+    # Convert to 0-based half-open for Python range(): range(start-1, end)
     covered_positions = set()
-    for motif in motifs:
+    for motif in main_motifs:
         start = motif.get('Start', 0) - 1  # Convert 1-based to 0-based
-        end = motif.get('End', 0)  # Inclusive end becomes exclusive in range()
-        covered_positions.update(range(start, end))
-    
-    coverage_percent = (len(covered_positions) / sequence_length * 100) if sequence_length > 0 else 0
-    density = len(motifs) / (sequence_length / 1000) if sequence_length > 0 else 0  # Motifs per kb
-    
+        end = motif.get('End', 0)           # Inclusive end becomes exclusive in range()
+        if end > start:
+            covered_positions.update(range(start, end))
+    total_covered_bases = len(covered_positions)
+    coverage_fraction = (total_covered_bases / G) if G > 0 else 0.0
+    coverage_percent = coverage_fraction * 100
+
+    # ── IV. Occupancy Metrics ─────────────────────────────────────────────────
+    # Raw Occupancy: sum of all motif lengths (allows overlap counting)
+    motif_lengths_main = [m.get('Length', 0) for m in main_motifs if isinstance(m.get('Length'), (int, float)) and m.get('Length', 0) > 0]
+    raw_occupancy = sum(motif_lengths_main)
+    # Normalized Occupancy = ∑Li / G
+    normalized_occupancy = (raw_occupancy / G) if G > 0 else 0.0
+    # Mean Motif Overlap Depth = ∑Li / Total Covered Bases
+    mean_overlap_depth = (raw_occupancy / total_covered_bases) if total_covered_bases > 0 else 0.0
+
+    # ── V. Class-Specific Coverage ────────────────────────────────────────────
+    class_coverage = {}      # fraction of genome covered by each class
+    class_covered_bases = {} # absolute covered bases per class
+    for cls in class_counts:
+        cls_positions = set()
+        for m in main_motifs:
+            if m.get('Class') == cls:
+                s = m.get('Start', 0) - 1
+                e = m.get('End', 0)
+                if e > s:
+                    cls_positions.update(range(s, e))
+        cls_bases = len(cls_positions)
+        class_covered_bases[cls] = cls_bases
+        class_coverage[cls] = round((cls_bases / G * 100) if G > 0 else 0.0, 4)
+
+    # Class contribution to total structural landscape
+    class_contribution = {
+        cls: round((class_covered_bases[cls] / total_covered_bases) if total_covered_bases > 0 else 0.0, 4)
+        for cls in class_counts
+    }
+
+    # ── VI. Structural Load Metrics ───────────────────────────────────────────
+    # SLI = ∑Li / G (same formula as normalized occupancy)
+    sli = normalized_occupancy
+    # Structural Intensity = ∑(Score_i × Li) / G
+    scores_main = [m.get('Score', 0) for m in main_motifs if isinstance(m.get('Score'), (int, float))]
+    score_length_products = [
+        m.get('Score', 0) * m.get('Length', 0)
+        for m in main_motifs
+        if isinstance(m.get('Score'), (int, float)) and isinstance(m.get('Length'), (int, float))
+    ]
+    structural_intensity = (sum(score_length_products) / G) if G > 0 else 0.0
+    # Weighted Structural Coverage = ∑(Normalized_Score_i × Li) / G
+    max_score = max(scores_main) if scores_main else 1.0
+    if max_score == 0:
+        max_score = 1.0
+    weighted_score_length_products = [
+        (m.get('Score', 0) / max_score) * m.get('Length', 0)
+        for m in main_motifs
+        if isinstance(m.get('Score'), (int, float)) and isinstance(m.get('Length'), (int, float))
+    ]
+    weighted_structural_coverage = (sum(weighted_score_length_products) / G) if G > 0 else 0.0
+
+    # ── VII. Motif Distribution Metrics ──────────────────────────────────────
+    # Inter-motif distances (sorted by start position, per-class to avoid cross-class noise)
+    sorted_main = sorted(main_motifs, key=lambda m: m.get('Start', 0))
+    inter_motif_distances = []
+    for i in range(len(sorted_main) - 1):
+        gap = sorted_main[i + 1].get('Start', 0) - sorted_main[i].get('End', 0)
+        inter_motif_distances.append(gap)
+    mean_inter_motif_distance = float(np.mean(inter_motif_distances)) if inter_motif_distances else 0.0
+    cv_spatial = 0.0
+    if inter_motif_distances and mean_inter_motif_distance != 0:
+        std_d = float(np.std(inter_motif_distances))
+        cv_spatial = round(std_d / abs(mean_inter_motif_distance), 4)
+
+    # ── X. Structural Diversity (Simpson Index) ──────────────────────────────
+    # D = 1 - ∑(nc/n)²
+    simpson_index = 0.0
+    effective_class_number = 0.0
+    if n > 0:
+        sum_sq = sum((nc / n) ** 2 for nc in class_counts.values())
+        simpson_index = round(1.0 - sum_sq, 4)
+        effective_class_number = round(1.0 / sum_sq, 4) if sum_sq > 0 else 0.0
+
+    # ── XI. Genome-Scale Comparative Metrics ─────────────────────────────────
+    # SCI = Coverage Fraction × Neff
+    sci = round(coverage_fraction * effective_class_number, 4)
+    # Structural Dominance Ratio = max(nc) / n
+    dominance_ratio = round(max(class_counts.values()) / n, 4) if n > 0 else 0.0
+
+    # ── Hybrid & Cluster Individual Metrics ──────────────────────────────────
+    hybrid_covered = set()
+    for m in hybrid_motifs:
+        s = m.get('Start', 0) - 1
+        e = m.get('End', 0)
+        if e > s:
+            hybrid_covered.update(range(s, e))
+    hybrid_coverage_bases = len(hybrid_covered)
+    hybrid_coverage_pct = round((hybrid_coverage_bases / G * 100) if G > 0 else 0.0, 4)
+    hybrid_density = round((len(hybrid_motifs) / G) if G > 0 else 0.0, 8)
+
+    cluster_covered = set()
+    for m in cluster_motifs:
+        s = m.get('Start', 0) - 1
+        e = m.get('End', 0)
+        if e > s:
+            cluster_covered.update(range(s, e))
+    cluster_coverage_bases = len(cluster_covered)
+    cluster_coverage_pct = round((cluster_coverage_bases / G * 100) if G > 0 else 0.0, 4)
+
     stats = {
-        'Total_Motifs': len(motifs),
+        # Basic counts
+        'Total_Motifs': n,
+        'Total_Motifs_All': len(motifs),   # including Hybrid/Cluster
+        'Hybrid_Count': len(hybrid_motifs),
+        'Cluster_Count': len(cluster_motifs),
+        # Coverage (main motifs only, no double-counting)
         'Coverage%': round(coverage_percent, 2),
+        'Coverage_Fraction': round(coverage_fraction, 6),
+        'Total_Covered_Bases': total_covered_bases,
+        # Density
         'Density': round(density, 2),
-        'Classes_Detected': len(class_counts),
+        # Class/subclass info
+        'Classes_Detected': C,
         'Subclasses_Detected': len(subclass_counts),
         'Class_Distribution': dict(class_counts),
-        'Subclass_Distribution': dict(subclass_counts)
+        'Subclass_Distribution': dict(subclass_counts),
+        # Occupancy metrics
+        'Raw_Occupancy_bp': raw_occupancy,
+        'Normalized_Occupancy': round(normalized_occupancy, 6),
+        'Mean_Overlap_Depth': round(mean_overlap_depth, 4),
+        # Class coverage
+        'Class_Coverage_Pct': class_coverage,
+        'Class_Contribution': class_contribution,
+        # Structural load
+        'SLI': round(sli, 6),
+        'Structural_Intensity': round(structural_intensity, 6),
+        'Weighted_Structural_Coverage': round(weighted_structural_coverage, 6),
+        # Distribution
+        'Mean_Inter_Motif_Distance': round(mean_inter_motif_distance, 2),
+        'CV_Spatial_Clustering': cv_spatial,
+        # Diversity
+        'Simpson_Diversity_Index': simpson_index,
+        'Effective_Class_Number': effective_class_number,
+        # Comparative
+        'SCI': sci,
+        'Dominance_Ratio': dominance_ratio,
+        # Hybrid metrics (individual)
+        'Hybrid_Coverage_bp': hybrid_coverage_bases,
+        'Hybrid_Coverage_Pct': hybrid_coverage_pct,
+        'Hybrid_Density': hybrid_density,
+        # Cluster metrics (individual)
+        'Cluster_Coverage_bp': cluster_coverage_bases,
+        'Cluster_Coverage_Pct': cluster_coverage_pct,
     }
     
     # NULL-MODEL COMPARISON: Add enrichment metrics if background provided
@@ -2561,8 +2760,8 @@ def calculate_motif_statistics(motifs: List[Dict[str, Any]], sequence_length: in
     else:
         stats['Null_Model_Available'] = False
     
-    # Score statistics
-    scores = [m.get('Score', 0) for m in motifs if isinstance(m.get('Score'), (int, float))]
+    # Score statistics (main motifs only, consistent with coverage metrics)
+    scores = [m.get('Score', 0) for m in main_motifs if isinstance(m.get('Score'), (int, float))]
     if scores:
         stats.update({
             'Score_Mean': round(np.mean(scores), 3),
@@ -2571,8 +2770,8 @@ def calculate_motif_statistics(motifs: List[Dict[str, Any]], sequence_length: in
             'Score_Max': round(max(scores), 3)
         })
     
-    # Length statistics
-    lengths = [m.get('Length', 0) for m in motifs if isinstance(m.get('Length'), int)]
+    # Length statistics (main motifs only)
+    lengths = [m.get('Length', 0) for m in main_motifs if isinstance(m.get('Length'), int)]
     if lengths:
         stats.update({
             'Length_Mean': round(np.mean(lengths), 1),
@@ -2582,6 +2781,204 @@ def calculate_motif_statistics(motifs: List[Dict[str, Any]], sequence_length: in
         })
     
     return stats
+
+
+def compute_comprehensive_genome_stats(
+    motifs: List[Dict[str, Any]],
+    sequence_length: int,
+    window_size: int = 1000
+) -> Dict[str, Any]:
+    """
+    Compute all 25 genome-level structural metrics described in the problem statement.
+
+    Overall coverage excludes Hybrid and Non-B_DNA_Clusters (which are composite/derived
+    features that would cause double-counting). Hybrid and Cluster coverage are reported
+    individually in separate metric groups.
+
+    Args:
+        motifs: Full list of detected motif dictionaries (including Hybrid/Cluster).
+        sequence_length: Total genome / sequence length in base pairs.
+        window_size: Sliding-window size (W) used for local density / cluster metrics.
+
+    Returns:
+        Dict with keys grouping all metrics by section.
+    """
+    G = sequence_length
+
+    # Partition motifs
+    main_motifs   = [m for m in motifs if m.get('Class') not in EXCLUDED_FROM_CONSOLIDATED]
+    hybrid_motifs = [m for m in motifs if m.get('Class') == 'Hybrid']
+    cluster_motifs = [m for m in motifs if m.get('Class') == 'Non-B_DNA_Clusters']
+
+    # ── I. Basic Genome-Level Metrics ─────────────────────────────────────────
+    n  = len(main_motifs)
+    C  = len(set(m.get('Class', 'Unknown') for m in main_motifs))
+    class_counts = Counter(m.get('Class', 'Unknown') for m in main_motifs)
+
+    # ── II. Motif Density (per kb) ─────────────────────────────────────────────
+    density_per_kb = (n / G * 1000) if G > 0 else 0.0
+
+    # ── III. Structural Coverage ──────────────────────────────────────────────
+    def _covered(mlist):
+        pos = set()
+        for m in mlist:
+            s = m.get('Start', 0) - 1
+            e = m.get('End', 0)
+            if e > s:
+                pos.update(range(s, e))
+        return pos
+
+    covered_main = _covered(main_motifs)
+    total_covered_bases = len(covered_main)
+    coverage_fraction   = (total_covered_bases / G) if G > 0 else 0.0
+    coverage_pct        = coverage_fraction * 100
+
+    # ── IV. Occupancy Metrics ─────────────────────────────────────────────────
+    motif_lens = [m.get('Length', 0) for m in main_motifs
+                  if isinstance(m.get('Length'), (int, float)) and m.get('Length', 0) > 0]
+    raw_occupancy        = sum(motif_lens)
+    normalized_occupancy = (raw_occupancy / G) if G > 0 else 0.0
+    mean_overlap_depth   = (raw_occupancy / total_covered_bases) if total_covered_bases > 0 else 0.0
+
+    # ── V. Class-Specific Coverage ────────────────────────────────────────────
+    class_covered_bases = {}
+    class_coverage_pct  = {}
+    class_contribution  = {}
+    for cls in class_counts:
+        cls_pos = _covered([m for m in main_motifs if m.get('Class') == cls])
+        cls_bases = len(cls_pos)
+        class_covered_bases[cls] = cls_bases
+        class_coverage_pct[cls]  = round((cls_bases / G * 100) if G > 0 else 0.0, 4)
+        class_contribution[cls]  = round((cls_bases / total_covered_bases) if total_covered_bases > 0 else 0.0, 4)
+
+    # ── VI. Structural Load Metrics ───────────────────────────────────────────
+    sli = normalized_occupancy
+    scores_main = [m.get('Score', 0) for m in main_motifs if isinstance(m.get('Score'), (int, float))]
+    sl_products = [m.get('Score', 0) * m.get('Length', 0)
+                   for m in main_motifs
+                   if isinstance(m.get('Score'), (int, float)) and isinstance(m.get('Length'), (int, float))]
+    structural_intensity = (sum(sl_products) / G) if G > 0 else 0.0
+    max_score = max(scores_main) if scores_main else 1.0
+    if max_score == 0:
+        max_score = 1.0
+    wsl_products = [(m.get('Score', 0) / max_score) * m.get('Length', 0)
+                    for m in main_motifs
+                    if isinstance(m.get('Score'), (int, float)) and isinstance(m.get('Length'), (int, float))]
+    weighted_structural_coverage = (sum(wsl_products) / G) if G > 0 else 0.0
+
+    # ── VII. Motif Distribution Metrics ──────────────────────────────────────
+    sorted_main = sorted(main_motifs, key=lambda m: m.get('Start', 0))
+    inter_distances = [
+        sorted_main[i + 1].get('Start', 0) - sorted_main[i].get('End', 0)
+        for i in range(len(sorted_main) - 1)
+    ]
+    mean_imd = float(np.mean(inter_distances)) if inter_distances else 0.0
+    cv_spatial = 0.0
+    if inter_distances and mean_imd != 0:
+        cv_spatial = round(float(np.std(inter_distances)) / abs(mean_imd), 4)
+
+    # ── VIII. Cluster / Hotspot Metrics (sliding window) ─────────────────────
+    W = max(window_size, 1)
+    max_local_density   = 0.0
+    max_class_diversity = 0
+    max_cluster_score   = 0.0
+    if n > 0 and G > 0:
+        starts = [m.get('Start', 0) for m in sorted_main]
+        for i, m in enumerate(sorted_main):
+            win_start = m.get('Start', 0)
+            win_end   = win_start + W
+            window_motifs = [sm for sm in sorted_main
+                             if sm.get('Start', 0) >= win_start and sm.get('Start', 0) < win_end]
+            wcount     = len(window_motifs)
+            wclasses   = len(set(wm.get('Class') for wm in window_motifs))
+            local_d    = wcount / W
+            clu_score  = (wcount * wclasses) / W
+            if local_d   > max_local_density:   max_local_density   = local_d
+            if wclasses  > max_class_diversity:  max_class_diversity = wclasses
+            if clu_score > max_cluster_score:    max_cluster_score   = clu_score
+
+    # ── IX. Hybridization Metrics ─────────────────────────────────────────────
+    hybrid_covered_bases  = len(_covered(hybrid_motifs))
+    hybrid_coverage_pct   = round((hybrid_covered_bases / G * 100) if G > 0 else 0.0, 4)
+    hybrid_density        = round((len(hybrid_motifs) / G) if G > 0 else 0.0, 8)
+    cluster_covered_bases = len(_covered(cluster_motifs))
+    cluster_coverage_pct  = round((cluster_covered_bases / G * 100) if G > 0 else 0.0, 4)
+
+    # Overlap fractions between adjacent main motifs (metric #19)
+    overlap_fractions = []
+    for i in range(len(sorted_main) - 1):
+        m1, m2 = sorted_main[i], sorted_main[i + 1]
+        inter_start = max(m1.get('Start', 0), m2.get('Start', 0))
+        inter_end   = min(m1.get('End', 0),   m2.get('End', 0))
+        inter_len   = max(0, inter_end - inter_start + 1)
+        if inter_len > 0:
+            min_len = min(
+                m1.get('Length', 1) or 1,
+                m2.get('Length', 1) or 1
+            )
+            overlap_fractions.append(round(inter_len / min_len, 4))
+    mean_overlap_fraction = round(float(np.mean(overlap_fractions)), 4) if overlap_fractions else 0.0
+
+    # ── X. Structural Diversity ───────────────────────────────────────────────
+    if n > 0:
+        sum_sq           = sum((nc / n) ** 2 for nc in class_counts.values())
+        simpson_index    = round(1.0 - sum_sq, 4)
+        effective_cls_n  = round(1.0 / sum_sq, 4) if sum_sq > 0 else 0.0
+    else:
+        simpson_index   = 0.0
+        effective_cls_n = 0.0
+
+    # ── XI. Genome-Scale Comparative Metrics ─────────────────────────────────
+    sci             = round(coverage_fraction * effective_cls_n, 4)
+    dominance_ratio = round(max(class_counts.values()) / n, 4) if n > 0 else 0.0
+
+    return {
+        'genome_length':              G,
+        'n_motifs':                   n,
+        'n_motifs_all':               len(motifs),
+        'n_classes':                  C,
+        # II
+        'density_per_kb':             round(density_per_kb, 4),
+        # III
+        'total_covered_bases':        total_covered_bases,
+        'coverage_fraction':          round(coverage_fraction, 6),
+        'coverage_pct':               round(coverage_pct, 4),
+        # IV
+        'raw_occupancy_bp':           raw_occupancy,
+        'normalized_occupancy':       round(normalized_occupancy, 6),
+        'mean_overlap_depth':         round(mean_overlap_depth, 4),
+        # V
+        'class_covered_bases':        class_covered_bases,
+        'class_coverage_pct':         class_coverage_pct,
+        'class_contribution':         class_contribution,
+        # VI
+        'sli':                        round(sli, 6),
+        'structural_intensity':       round(structural_intensity, 6),
+        'weighted_structural_coverage': round(weighted_structural_coverage, 6),
+        # VII
+        'mean_inter_motif_distance':  round(mean_imd, 2),
+        'cv_spatial_clustering':      round(cv_spatial, 4),
+        # VIII
+        'window_size':                W,
+        'max_local_density':          round(max_local_density, 6),
+        'max_class_diversity_window': max_class_diversity,
+        'max_cluster_score':          round(max_cluster_score, 6),
+        # IX
+        'hybrid_count':               len(hybrid_motifs),
+        'hybrid_covered_bases':       hybrid_covered_bases,
+        'hybrid_coverage_pct':        hybrid_coverage_pct,
+        'hybrid_density':             hybrid_density,
+        'cluster_count':              len(cluster_motifs),
+        'cluster_covered_bases':      cluster_covered_bases,
+        'cluster_coverage_pct':       cluster_coverage_pct,
+        'mean_overlap_fraction':      mean_overlap_fraction,
+        # X
+        'simpson_diversity_index':    simpson_index,
+        'effective_class_number':     effective_cls_n,
+        # XI
+        'sci':                        sci,
+        'dominance_ratio':            dominance_ratio,
+    }
 
 
 def analyze_class_subclass_detection(motifs: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -3122,6 +3519,83 @@ def export_to_excel(motifs: List[Dict[str, Any]], filename: str = "nonbscanner_r
     return f"Excel file exported successfully to {filename}"
 
 
+def export_multifasta_to_excel(
+    annotations_by_sequence: Dict[str, List[Dict[str, Any]]],
+    sequence_lengths: Dict[str, int],
+    filename: str = "multifasta_results.xlsx",
+    equal_length: bool = False,
+    seq_length: Optional[int] = None
+) -> str:
+    """
+    Export MultiFASTA analysis results to Excel with unified format.
+    
+    Creates Excel workbook with sheets:
+    - All_Motifs: All motifs with FASTA_ID column
+    - Sequence_Summary: Per-sequence statistics (Length, Total_Motifs, Motifs_per_kb)
+    - Class_Summary: Aggregated class/subclass counts
+    - Positional_Occurrence: Position-level counts (only if equal_length=True)
+    
+    Args:
+        annotations_by_sequence: Dict mapping FASTA_ID to list of motif annotations
+        sequence_lengths: Dict mapping FASTA_ID to sequence length
+        filename: Output Excel filename
+        equal_length: Whether all sequences have equal length
+        seq_length: Sequence length if equal_length is True
+        
+    Returns:
+        Success message string
+    """
+    try:
+        import openpyxl
+    except ImportError:
+        raise ImportError("openpyxl is required for Excel export. Install with: pip install openpyxl")
+    
+    from Utilities.multifasta_visualizer import prepare_multifasta_excel_data
+    
+    # Prepare all sheet data
+    sheet_data = prepare_multifasta_excel_data(
+        annotations_by_sequence,
+        sequence_lengths,
+        equal_length,
+        seq_length
+    )
+    
+    # Create Excel writer
+    with pd.ExcelWriter(filename, engine='openpyxl') as writer:
+        # Sheet 1: All motifs with FASTA_ID
+        if sheet_data['All_Motifs']:
+            # Add FASTA_ID as first column
+            all_motifs_data = []
+            for motif in sheet_data['All_Motifs']:
+                row = {'FASTA_ID': motif.get('FASTA_ID', 'Unknown')}
+                # Add core columns
+                for col in CORE_OUTPUT_COLUMNS:
+                    value = motif.get(col, DEFAULT_COLUMN_VALUES.get(col, 'NA'))
+                    row[col] = value
+                all_motifs_data.append(row)
+            
+            columns = ['FASTA_ID'] + CORE_OUTPUT_COLUMNS
+            df_all = pd.DataFrame(all_motifs_data, columns=columns)
+            df_all.to_excel(writer, sheet_name='All_Motifs', index=False)
+        
+        # Sheet 2: Sequence Summary
+        if sheet_data['Sequence_Summary']:
+            df_seq = pd.DataFrame(sheet_data['Sequence_Summary'])
+            df_seq.to_excel(writer, sheet_name='Sequence_Summary', index=False)
+        
+        # Sheet 3: Class Summary
+        if sheet_data['Class_Summary']:
+            df_class = pd.DataFrame(sheet_data['Class_Summary'])
+            df_class.to_excel(writer, sheet_name='Class_Summary', index=False)
+        
+        # Sheet 4: Positional Occurrence (only if equal length)
+        if 'Positional_Occurrence' in sheet_data and sheet_data['Positional_Occurrence']:
+            df_pos = pd.DataFrame(sheet_data['Positional_Occurrence'])
+            df_pos.to_excel(writer, sheet_name='Positional_Occurrence', index=False)
+    
+    return f"MultiFASTA Excel file exported successfully to {filename}"
+
+
 def export_statistics_to_excel(motifs: List[Dict[str, Any]], sequence_length: int, 
                                filename: str = "statistics.xlsx") -> str:
     """
@@ -3156,18 +3630,100 @@ def export_statistics_to_excel(motifs: List[Dict[str, Any]], sequence_length: in
     
     with pd.ExcelWriter(filename, engine='openpyxl') as writer:
         # Sheet 1: Summary Statistics
+        # Calculate summary values using set-based coverage (no double counting)
+        hybrid_count = len([m for m in motifs if m.get('Class') == 'Hybrid'])
+        cluster_count = len([m for m in motifs if m.get('Class') == 'Non-B_DNA_Clusters'])
+
+        # Set-based coverage for main motifs (no double counting)
+        covered_pos = set()
+        for m in main_motifs:
+            s = m.get('Start', 0) - 1
+            e = m.get('End', 0)
+            if e > s:
+                covered_pos.update(range(s, e))
+        total_covered = len(covered_pos)
+        coverage_pct = (total_covered / sequence_length * 100) if sequence_length > 0 else 0
+        density = (len(main_motifs) / sequence_length * 1000) if sequence_length > 0 else 0
+
+        # Set-based coverage for hybrid and cluster (individually)
+        hybrid_pos = set()
+        for m in motifs:
+            if m.get('Class') == 'Hybrid':
+                s = m.get('Start', 0) - 1
+                e = m.get('End', 0)
+                if e > s:
+                    hybrid_pos.update(range(s, e))
+        hybrid_covered = len(hybrid_pos)
+        hybrid_coverage_pct = (hybrid_covered / sequence_length * 100) if sequence_length > 0 else 0
+
+        cluster_pos = set()
+        for m in motifs:
+            if m.get('Class') == 'Non-B_DNA_Clusters':
+                s = m.get('Start', 0) - 1
+                e = m.get('End', 0)
+                if e > s:
+                    cluster_pos.update(range(s, e))
+        cluster_covered = len(cluster_pos)
+        cluster_coverage_pct = (cluster_covered / sequence_length * 100) if sequence_length > 0 else 0
+
+        # Occupancy metrics
+        raw_occupancy = sum(m.get('Length', 0) for m in main_motifs)
+        normalized_occupancy = (raw_occupancy / sequence_length) if sequence_length > 0 else 0
+        mean_overlap_depth = (raw_occupancy / total_covered) if total_covered > 0 else 0
+
+        # Diversity metrics
+        class_counts = Counter(m.get('Class', 'Unknown') for m in main_motifs)
+        n_main = len(main_motifs)
+        sum_sq = sum((nc / n_main) ** 2 for nc in class_counts.values()) if n_main > 0 else 0
+        simpson_index = 1.0 - sum_sq
+        neff = (1.0 / sum_sq) if sum_sq > 0 else 0.0
+        coverage_fraction = (total_covered / sequence_length) if sequence_length > 0 else 0
+        sci = coverage_fraction * neff
+        dominance = (max(class_counts.values()) / n_main) if n_main > 0 else 0
+
+        # Structural intensity
+        sl_products = [m.get('Score', 0) * m.get('Length', 0) for m in main_motifs
+                       if isinstance(m.get('Score'), (int, float)) and isinstance(m.get('Length'), (int, float))]
+        structural_intensity = (sum(sl_products) / sequence_length) if sequence_length > 0 else 0
+
+        lengths = [m.get('Length', 0) for m in main_motifs]
+        scores = [m.get('Score', 0) for m in main_motifs]
+        
         summary_data = {
             'Metric': [
-                'Total Sequences Analyzed',
+                # I. Basic Genome-Level Metrics
                 'Total Sequence Length (bp)',
-                'Total Motifs Detected',
-                'Non-Overlapping Motifs',
+                'Total Motifs Detected (n)',
+                'Total Motifs Including Hybrid/Cluster',
                 'Hybrid Motifs',
                 'Cluster Motifs',
-                'Unique Motif Classes',
+                'Unique Motif Classes (C)',
                 'Unique Motif Subclasses',
-                'Sequence Coverage (%)',
-                'Overall Motif Density (motifs/kb)',
+                # II. Motif Density
+                'Motif Density (motifs/kb)',
+                # III. Structural Coverage
+                'Total Covered Bases (bp)',
+                'Coverage Fraction',
+                'Coverage Percentage (%)',
+                # IV. Occupancy Metrics
+                'Raw Occupancy (bp)',
+                'Normalized Occupancy (SLI)',
+                'Mean Motif Overlap Depth',
+                # VI. Structural Load
+                'Structural Intensity',
+                # IX. Hybridization Metrics
+                'Hybrid Coverage (bp)',
+                'Hybrid Coverage (%)',
+                'Hybrid Density (regions/bp)',
+                'Cluster Coverage (bp)',
+                'Cluster Coverage (%)',
+                # X. Structural Diversity
+                'Simpson Structural Diversity Index',
+                'Effective Structural Class Number (Neff)',
+                # XI. Genome-Scale Comparative
+                'Structural Complexity Index (SCI)',
+                'Structural Dominance Ratio',
+                # Score / Length summaries
                 'Average Motif Length (bp)',
                 'Min Motif Length (bp)',
                 'Max Motif Length (bp)',
@@ -3177,29 +3733,32 @@ def export_statistics_to_excel(motifs: List[Dict[str, Any]], sequence_length: in
             ],
             'Value': []
         }
-        
-        # Calculate summary values
-        hybrid_count = len([m for m in motifs if m.get('Class') == 'Hybrid'])
-        cluster_count = len([m for m in motifs if m.get('Class') == 'Non-B_DNA_Clusters'])
-        
-        total_coverage = sum(m.get('Length', 0) for m in main_motifs)
-        coverage_pct = (total_coverage / sequence_length * 100) if sequence_length > 0 else 0
-        density = (len(main_motifs) / sequence_length * 1000) if sequence_length > 0 else 0
-        
-        lengths = [m.get('Length', 0) for m in main_motifs]
-        scores = [m.get('Score', 0) for m in main_motifs]
-        
+
         summary_data['Value'] = [
-            1,  # Total sequences
             sequence_length,
+            n_main,
             len(motifs),
-            len(main_motifs),
             hybrid_count,
             cluster_count,
             len(set(m.get('Class', 'Unknown') for m in main_motifs)),
             len(set(m.get('Subclass', 'Unknown') for m in main_motifs)),
-            f"{coverage_pct:.2f}",
             f"{density:.2f}",
+            total_covered,
+            f"{coverage_fraction:.6f}",
+            f"{coverage_pct:.2f}",
+            raw_occupancy,
+            f"{normalized_occupancy:.6f}",
+            f"{mean_overlap_depth:.4f}",
+            f"{structural_intensity:.6f}",
+            hybrid_covered,
+            f"{hybrid_coverage_pct:.4f}",
+            f"{(hybrid_count / sequence_length):.8f}" if sequence_length > 0 else "0",
+            cluster_covered,
+            f"{cluster_coverage_pct:.4f}",
+            f"{simpson_index:.4f}",
+            f"{neff:.4f}",
+            f"{sci:.4f}",
+            f"{dominance:.4f}",
             f"{sum(lengths)/len(lengths):.2f}" if lengths else "0",
             min(lengths) if lengths else 0,
             max(lengths) if lengths else 0,
@@ -3211,78 +3770,83 @@ def export_statistics_to_excel(motifs: List[Dict[str, Any]], sequence_length: in
         df_summary = pd.DataFrame(summary_data)
         df_summary.to_excel(writer, sheet_name='Summary', index=False)
         
-        # Sheet 2: Class-Level Density Analysis
+        # Sheet 2: Class-Level Density Analysis (set-based coverage per class)
         class_stats = {}
         for motif in main_motifs:
             cls = motif.get('Class', 'Unknown')
             if cls not in class_stats:
-                class_stats[cls] = {'count': 0, 'total_length': 0, 'scores': []}
+                class_stats[cls] = {'count': 0, 'positions': set(), 'scores': []}
             class_stats[cls]['count'] += 1
-            class_stats[cls]['total_length'] += motif.get('Length', 0)
+            s = motif.get('Start', 0) - 1
+            e = motif.get('End', 0)
+            if e > s:
+                class_stats[cls]['positions'].update(range(s, e))
             class_stats[cls]['scores'].append(motif.get('Score', 0))
-        
+
         class_data = {
             'Motif Class': [],
             'Count': [],
-            'Total Length (bp)': [],
-            'Genomic Density (%)': [],
+            'Covered Bases (bp)': [],
+            'Coverage (%)': [],
+            'Contribution to Total Coverage': [],
             'Motifs per kb': [],
-            'Average Length (bp)': [],
             'Average Score': []
         }
-        
-        for cls, stats in sorted(class_stats.items()):
+
+        for cls, cstats in sorted(class_stats.items()):
+            cls_covered = len(cstats['positions'])
             class_data['Motif Class'].append(cls)
-            class_data['Count'].append(stats['count'])
-            class_data['Total Length (bp)'].append(stats['total_length'])
-            genomic_density = (stats['total_length'] / sequence_length * 100) if sequence_length > 0 else 0
-            class_data['Genomic Density (%)'].append(f"{genomic_density:.4f}")
-            motifs_per_kb = (stats['count'] / sequence_length * 1000) if sequence_length > 0 else 0
+            class_data['Count'].append(cstats['count'])
+            class_data['Covered Bases (bp)'].append(cls_covered)
+            cls_cov_pct = (cls_covered / sequence_length * 100) if sequence_length > 0 else 0
+            class_data['Coverage (%)'].append(f"{cls_cov_pct:.4f}")
+            contribution = (cls_covered / total_covered) if total_covered > 0 else 0
+            class_data['Contribution to Total Coverage'].append(f"{contribution:.4f}")
+            motifs_per_kb = (cstats['count'] / sequence_length * 1000) if sequence_length > 0 else 0
             class_data['Motifs per kb'].append(f"{motifs_per_kb:.2f}")
-            avg_length = stats['total_length'] / stats['count'] if stats['count'] > 0 else 0
-            class_data['Average Length (bp)'].append(f"{avg_length:.2f}")
-            avg_score = sum(stats['scores']) / len(stats['scores']) if stats['scores'] else 0
+            avg_score = sum(cstats['scores']) / len(cstats['scores']) if cstats['scores'] else 0
             class_data['Average Score'].append(f"{avg_score:.2f}")
         
         df_class = pd.DataFrame(class_data)
         df_class.to_excel(writer, sheet_name='Class_Level_Analysis', index=False)
         
-        # Sheet 3: Subclass-Level Density Analysis
+        # Sheet 3: Subclass-Level Density Analysis (set-based coverage per subclass)
         subclass_stats = {}
         for motif in main_motifs:
             cls = motif.get('Class', 'Unknown')
             subcls = motif.get('Subclass', 'Unknown')
             key = f"{cls}:{subcls}"
             if key not in subclass_stats:
-                subclass_stats[key] = {'count': 0, 'total_length': 0, 'scores': []}
+                subclass_stats[key] = {'count': 0, 'positions': set(), 'scores': []}
             subclass_stats[key]['count'] += 1
-            subclass_stats[key]['total_length'] += motif.get('Length', 0)
+            s = motif.get('Start', 0) - 1
+            e = motif.get('End', 0)
+            if e > s:
+                subclass_stats[key]['positions'].update(range(s, e))
             subclass_stats[key]['scores'].append(motif.get('Score', 0))
-        
+
         subclass_data = {
             'Motif Class': [],
             'Motif Subclass': [],
             'Count': [],
-            'Total Length (bp)': [],
-            'Genomic Density (%)': [],
+            'Covered Bases (bp)': [],
+            'Coverage (%)': [],
             'Motifs per kb': [],
-            'Average Length (bp)': [],
             'Average Score': []
         }
-        
-        for key, stats in sorted(subclass_stats.items()):
+
+        for key, sstats in sorted(subclass_stats.items()):
             cls, subcls = key.split(':', 1)
+            sub_covered = len(sstats['positions'])
             subclass_data['Motif Class'].append(cls)
             subclass_data['Motif Subclass'].append(subcls)
-            subclass_data['Count'].append(stats['count'])
-            subclass_data['Total Length (bp)'].append(stats['total_length'])
-            genomic_density = (stats['total_length'] / sequence_length * 100) if sequence_length > 0 else 0
-            subclass_data['Genomic Density (%)'].append(f"{genomic_density:.4f}")
-            motifs_per_kb = (stats['count'] / sequence_length * 1000) if sequence_length > 0 else 0
+            subclass_data['Count'].append(sstats['count'])
+            subclass_data['Covered Bases (bp)'].append(sub_covered)
+            sub_cov_pct = (sub_covered / sequence_length * 100) if sequence_length > 0 else 0
+            subclass_data['Coverage (%)'].append(f"{sub_cov_pct:.4f}")
+            motifs_per_kb = (sstats['count'] / sequence_length * 1000) if sequence_length > 0 else 0
             subclass_data['Motifs per kb'].append(f"{motifs_per_kb:.2f}")
-            avg_length = stats['total_length'] / stats['count'] if stats['count'] > 0 else 0
-            subclass_data['Average Length (bp)'].append(f"{avg_length:.2f}")
-            avg_score = sum(stats['scores']) / len(stats['scores']) if stats['scores'] else 0
+            avg_score = sum(sstats['scores']) / len(sstats['scores']) if sstats['scores'] else 0
             subclass_data['Average Score'].append(f"{avg_score:.2f}")
         
         df_subclass = pd.DataFrame(subclass_data)
@@ -3830,6 +4394,34 @@ DEFAULT_FOLD_ENRICHMENT_WHEN_ZERO_BACKGROUND = 1.0  # When background is zero
 
 
 
+def _compute_coverage_bp(intervals: List[Tuple[int, int]]) -> int:
+    """
+    Compute total covered base pairs from (start, end) interval tuples using
+    sorted interval merging.  O(n log n) – replaces the former set-based
+    approach which was O(sum of motif lengths) and up to 200× slower for
+    large / long-motif datasets.
+
+    Args:
+        intervals: List of (start_0based, end_exclusive) tuples.
+
+    Returns:
+        Total number of covered base pairs (merged, non-redundant).
+    """
+    if not intervals:
+        return 0
+    sorted_iv = sorted(intervals)
+    covered = 0
+    cur_start, cur_end = sorted_iv[0]
+    for start, end in sorted_iv[1:]:
+        if start <= cur_end:
+            cur_end = max(cur_end, end)
+        else:
+            covered += cur_end - cur_start
+            cur_start, cur_end = start, end
+    covered += cur_end - cur_start
+    return covered
+
+
 def calculate_genomic_density(motifs: List[Dict[str, Any]], 
                                sequence_length: int,
                                by_class: bool = True,
@@ -3873,81 +4465,43 @@ def calculate_genomic_density(motifs: List[Dict[str, Any]],
     if not filtered_motifs:
         return {'Overall': 0.0}
     
-    if not by_class and not by_subclass:
-        # Overall density using set-based coverage (handles overlaps correctly)
-        covered_positions = set()
-        for motif in filtered_motifs:
-            start = motif.get('Start', 0) - 1  # Convert to 0-based
-            end = motif.get('End', 0)
-            covered_positions.update(range(start, end))
-        
-        overall_density = min((len(covered_positions) / sequence_length) * 100, 100.0)
-        return {'Overall': round(overall_density, 4)}
-    
-    # Density per subclass using set-based coverage
-    if by_subclass:
-        density_by_subclass = {}
-        subclass_groups = defaultdict(list)
-        
-        for motif in filtered_motifs:
-            class_name = motif.get('Class', 'Unknown')
-            subclass_name = motif.get('Subclass', 'Unknown')
-            key = f"{class_name}:{subclass_name}"
-            subclass_groups[key].append(motif)
-        
-        # Calculate per-subclass density with overlap handling
-        for subclass_key, subclass_motifs in subclass_groups.items():
-            covered_positions = set()
-            for motif in subclass_motifs:
-                start = motif.get('Start', 0) - 1  # Convert to 0-based
-                end = motif.get('End', 0)
-                covered_positions.update(range(start, end))
-            
-            subclass_density = min((len(covered_positions) / sequence_length) * 100, 100.0)
-            density_by_subclass[subclass_key] = round(subclass_density, 4)
-        
-        # Calculate overall density (all filtered motifs combined)
-        all_covered_positions = set()
-        for motif in filtered_motifs:
-            start = motif.get('Start', 0) - 1  # Convert to 0-based
-            end = motif.get('End', 0)
-            all_covered_positions.update(range(start, end))
-        
-        overall_density = min((len(all_covered_positions) / sequence_length) * 100, 100.0)
-        density_by_subclass['Overall'] = round(overall_density, 4)
-        
-        return density_by_subclass
-    
-    # Density per class using set-based coverage
-    density_by_class = {}
-    class_groups = defaultdict(list)
-    
-    for motif in filtered_motifs:
-        class_name = motif.get('Class', 'Unknown')
-        class_groups[class_name].append(motif)
-    
-    # Calculate per-class density with overlap handling
-    for class_name, class_motifs in class_groups.items():
-        covered_positions = set()
-        for motif in class_motifs:
-            start = motif.get('Start', 0) - 1  # Convert to 0-based
-            end = motif.get('End', 0)
-            covered_positions.update(range(start, end))
-        
-        class_density = min((len(covered_positions) / sequence_length) * 100, 100.0)
-        density_by_class[class_name] = round(class_density, 4)
-    
-    # Calculate overall density (all filtered motifs combined)
-    all_covered_positions = set()
+    # Build a single-pass interval list (0-based, exclusive end) and group keys
+    # simultaneously to avoid multiple iterations over filtered_motifs.
+    all_intervals: List[Tuple[int, int]] = []
+    group_intervals: Dict[str, List[Tuple[int, int]]] = defaultdict(list)
+
     for motif in filtered_motifs:
         start = motif.get('Start', 0) - 1  # Convert to 0-based
         end = motif.get('End', 0)
-        all_covered_positions.update(range(start, end))
-    
-    overall_density = min((len(all_covered_positions) / sequence_length) * 100, 100.0)
-    density_by_class['Overall'] = round(overall_density, 4)
-    
-    return density_by_class
+        if end <= start:
+            continue
+        all_intervals.append((start, end))
+
+        if by_subclass:
+            key = f"{motif.get('Class', 'Unknown')}:{motif.get('Subclass', 'Unknown')}"
+        else:
+            key = motif.get('Class', 'Unknown')
+        group_intervals[key].append((start, end))
+
+    # Overall coverage (shared across all branches)
+    overall_covered = _compute_coverage_bp(all_intervals)
+    overall_density = min((overall_covered / sequence_length) * 100, 100.0)
+
+    if not by_class and not by_subclass:
+        return {'Overall': round(overall_density, 4)}
+
+    # Per-group density using fast interval merging
+    result: Dict[str, float] = {}
+    for group_key, intervals in group_intervals.items():
+        covered_bp = _compute_coverage_bp(intervals)
+        density = min((covered_bp / sequence_length) * 100, 100.0)
+        result[group_key] = round(density, 4)
+
+    result['Overall'] = round(overall_density, 4)
+
+    if by_subclass:
+        return result  # keys are 'Class:Subclass'
+    return result  # keys are class names
 
 
 def calculate_positional_density(motifs: List[Dict[str, Any]], 
@@ -4275,8 +4829,11 @@ FEATURES:
 # - Clean, minimal design with proper spacing
 # - Colorblind-friendly palettes
 
-# Default DPI for publication quality (Nature requires 300 DPI minimum)
-PUBLICATION_DPI = 300
+# Default DPI for visualization (reduced to 72 for screen display)
+# 72 DPI matches standard screen resolution and minimizes rendering time/memory
+# For print/publication quality, Nature journals typically require 300 DPI
+# but we prioritize performance and memory savings for web application display
+PUBLICATION_DPI = 72
 
 # MOTIF_CLASS_COLORS: Centralized visualization color palette
 # Single source of truth: config/colors.py → VISUALIZATION_MOTIF_COLORS
@@ -4318,33 +4875,34 @@ def _format_display_name(name: str) -> str:
 
 # Nature-level scientific styling configuration for publication-quality plots
 # Reference: Nature author guidelines for figure preparation
+# Modified: Fonts set to medium size for better readability
 _NATURE_STYLE_PARAMS = {
-    # Typography - Arial/Helvetica as per Nature guidelines
+    # Typography - Arial/Helvetica as per Nature guidelines - UNIFORM FONTS
     'font.family': 'sans-serif',
     'font.sans-serif': ['Arial', 'Helvetica', 'DejaVu Sans'],
-    'font.size': 8,  # Nature recommends 5-7pt, we use 8pt for readability
+    'font.size': 10,  # UNIFORM: Base font size for all text
     
-    # Title and labels
-    'axes.titlesize': 9,
+    # Title and labels - UNIFORM sizing
+    'axes.titlesize': 12,  # UNIFORM: All plot titles
     'axes.titleweight': 'bold',
-    'axes.labelsize': 8,
-    'axes.labelweight': 'normal',
+    'axes.labelsize': 10,  # UNIFORM: All axis labels
+    'axes.labelweight': 'bold',
     
-    # Tick labels
-    'xtick.labelsize': 7,
-    'ytick.labelsize': 7,
+    # Tick labels - UNIFORM sizing
+    'xtick.labelsize': 9,  # UNIFORM: All x-tick labels
+    'ytick.labelsize': 9,  # UNIFORM: All y-tick labels
     'xtick.major.size': 3,
     'ytick.major.size': 3,
     'xtick.major.width': 0.8,
     'ytick.major.width': 0.8,
     
-    # Legend
-    'legend.fontsize': 7,
-    'legend.frameon': False,
+    # Legend - UNIFORM sizing
+    'legend.fontsize': 9,  # UNIFORM: All legend text
+    'legend.frameon': False,  # Nature style: frameless legends for cleaner figures
     'legend.borderpad': 0.4,
     
-    # Figure
-    'figure.titlesize': 10,
+    # Figure - UNIFORM sizing
+    'figure.titlesize': 14,  # UNIFORM: All figure titles
     'figure.titleweight': 'bold',
     'figure.dpi': PUBLICATION_DPI,
     'figure.facecolor': 'white',
@@ -4353,19 +4911,21 @@ _NATURE_STYLE_PARAMS = {
     'savefig.bbox': 'tight',
     'savefig.pad_inches': 0.05,
     
-    # Axes - minimal, clean design
-    'axes.grid': False,  # Nature typically uses minimal grids
+    # Axes - minimal, clean design (Nature style with optional subtle grid)
+    'axes.grid': False,  # Nature typically uses minimal grids; can be enabled per-plot
+    'grid.alpha': 0.3,  # Subtle grid when enabled
+    'grid.linestyle': '--',
     'axes.spines.top': False,
     'axes.spines.right': False,
     'axes.spines.left': True,
     'axes.spines.bottom': True,
-    'axes.linewidth': 0.8,
-    'axes.edgecolor': 'black',
+    'axes.linewidth': 1.0,
+    'axes.edgecolor': '#334155',
     'axes.facecolor': 'white',
     
     # Lines
-    'lines.linewidth': 1.0,
-    'lines.markersize': 4,
+    'lines.linewidth': 1.5,
+    'lines.markersize': 5,
     
     # PDF/SVG output
     'pdf.fonttype': 42,  # TrueType for editability
@@ -4470,8 +5030,9 @@ def plot_motif_distribution(motifs: List[Dict[str, Any]],
     
     # Use canonical taxonomy - single source of truth from config.motif_taxonomy
     # This ensures consistency across detectors, exports, and visualizations
-    ALL_CLASSES = sorted(VALID_CLASSES)
-    ALL_SUBCLASSES = sorted(VALID_SUBCLASSES)
+    # IMPORTANT: Use taxonomy order instead of alphabetical for proper ordering
+    ALL_CLASSES = get_all_classes_taxonomy_order()
+    ALL_SUBCLASSES = get_all_subclasses_taxonomy_order()
     
     # Count motifs by specified grouping
     counts = Counter(m.get(by, 'Unknown') for m in motifs) if motifs else Counter()
@@ -4480,7 +5041,10 @@ def plot_motif_distribution(motifs: List[Dict[str, Any]],
     if by == 'Class':
         categories = ALL_CLASSES
     else:
-        categories = ALL_SUBCLASSES
+        # For subclass plots, exclude Dynamic overlaps and Dynamic clusters
+        # as they are not meaningful for subclass distribution analysis
+        categories = [sc for sc in ALL_SUBCLASSES 
+                     if sc not in ['Dynamic overlaps', 'Dynamic clusters']]
     
     # Get counts (0 if not present)
     values = [counts.get(cat, 0) for cat in categories]
@@ -4515,14 +5079,14 @@ def plot_motif_distribution(motifs: List[Dict[str, Any]],
     
     # Add count labels on ALL bars (improved visibility)
     # Show numbers for all categories to make distribution clear
-    max_val = max(values) if max(values) > 0 else 1
+    max_val = max(values) if values and max(values) > 0 else 1
     for bar, count in zip(bars, values):
         height = bar.get_height()
         # Position label above bar if count > 0, at baseline if 0
         y_pos = height + max_val * 0.02 if count > 0 else 0.5
-        # Use larger font (8pt) and bold for better readability
+        # Use medium font size for readability
         ax.text(bar.get_x() + bar.get_width()/2., y_pos,
-                str(count), ha='center', va='bottom', fontsize=8, fontweight='bold')
+                str(count), ha='center', va='bottom', fontsize=10, fontweight='bold')
     
     # Apply Nature journal style
     _apply_nature_style(ax)
@@ -4623,150 +5187,33 @@ def plot_class_subclass_sunburst(motifs: List[Dict[str, Any]],
 
 def plot_nested_pie_chart(motifs: List[Dict[str, Any]], 
                          title: str = "Motif Distribution",
-                         figsize: Tuple[float, float] = None) -> plt.Figure:
+                         figsize: Tuple[float, float] = None,
+                         **kwargs) -> plt.Figure:
     """
-    Create nested donut chart with improved text placement to avoid overlapping labels.
+    Create stacked bar chart for Class -> Subclass visualization.
     
-    Publication-quality hierarchical pie chart following Nature guidelines.
+    DEPRECATED: This function now redirects to plot_stacked_bar_class_subclass()
+    for improved clarity and publication-quality visualization.
+    
+    The nested pie chart has been replaced with a stacked bar chart that:
+    - Shows exact counts (easier to read than pie percentages)
+    - Enables direct comparison across classes
+    - Uses biological taxonomy ordering
+    - Provides clearer subclass differentiation via alpha gradients
     
     Args:
-        motifs: List of motif dictionaries
+        motifs: List of motif dictionaries with 'Class' and 'Subclass' keys
         title: Plot title
         figsize: Figure size (width, height) in inches
+        **kwargs: Additional arguments passed to plot_stacked_bar_class_subclass
         
     Returns:
-        Matplotlib figure object (publication-ready)
+        Matplotlib figure object (publication-ready stacked bar chart)
     """
-    plt, sns, patches, PdfPages = _ensure_matplotlib()
-    set_scientific_style('nature')
-    
-    if figsize is None:
-        figsize = FIGURE_SIZES['square']
-    
-    # Count by class and subclass
-    class_counts = Counter(m.get('Class', 'Unknown') for m in motifs)
-    class_subclass_counts = defaultdict(lambda: defaultdict(int))
-    
-    for motif in motifs:
-        class_name = motif.get('Class', 'Unknown')
-        subclass_name = motif.get('Subclass', 'Unknown')
-        class_subclass_counts[class_name][subclass_name] += 1
-    
-    fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
-    
-    # Inner donut (classes)
-    class_names = list(class_counts.keys())
-    class_values = list(class_counts.values())
-    class_colors = [MOTIF_CLASS_COLORS.get(name, '#808080') for name in class_names]
-    
-    # Create inner donut with Nature-style clean design
-    # Use labels=None to manually place labels later for better control
-    wedges1, texts1, autotexts1 = ax.pie(
-        class_values, 
-        labels=None,  # We'll add labels manually
-        colors=class_colors,
-        radius=0.65,
-        autopct=lambda pct: f'{pct:.1f}%' if pct > 3 else '',  # Show more percentage labels with 1 decimal
-        pctdistance=0.80,
-        startangle=90,
-        wedgeprops=dict(width=0.35, edgecolor='white', linewidth=2)  # Thicker edge for better clarity
-    )
-    
-    # Manually add class labels with better positioning (replace underscores with spaces)
-    for i, (wedge, class_name) in enumerate(zip(wedges1, class_names)):
-        angle = (wedge.theta2 + wedge.theta1) / 2
-        x = 0.5 * np.cos(np.radians(angle))
-        y = 0.5 * np.sin(np.radians(angle))
-        # Replace underscores with spaces in labels
-        display_name = class_name.replace('_', ' ')
-        # Add white background box for better readability
-        ax.text(x, y, display_name, ha='center', va='center', fontsize=8, fontweight='bold',
-                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='none', alpha=0.8))
-    
-    # Outer donut (subclasses)
-    all_subclass_counts = []
-    all_subclass_colors = []
-    all_subclass_labels = []
-    
-    for class_name in class_names:
-        subclass_dict = class_subclass_counts[class_name]
-        base_color = MOTIF_CLASS_COLORS.get(class_name, '#808080')
-        
-        for subclass_name, count in subclass_dict.items():
-            all_subclass_counts.append(count)
-            # Truncate long names for clean appearance and replace underscores with spaces
-            # Use consistent truncation length (15 chars max, including ellipsis)
-            display_name = subclass_name.replace('_', ' ')
-            MAX_LABEL_LENGTH = 15
-            label = display_name if len(display_name) <= MAX_LABEL_LENGTH else display_name[:MAX_LABEL_LENGTH-1] + '…'
-            all_subclass_labels.append(label)
-            all_subclass_colors.append(base_color)
-    
-    # Use smarter labeling strategy to avoid overlap
-    # For many subclasses, hide labels and rely on legend instead
-    if len(all_subclass_labels) > 10:
-        # Hide outer ring labels when there are too many
-        wedges2, texts2 = ax.pie(
-            all_subclass_counts,
-            labels=None,  # No labels for cleaner appearance
-            colors=all_subclass_colors,
-            radius=1.0,
-            startangle=90,
-            wedgeprops=dict(width=0.35, edgecolor='white', linewidth=1.5)  # Thicker edge for clarity
-        )
-        
-        # Add a legend for subclasses instead
-        # Note: All subclasses of the same parent class share the same color by design.
-        # This ensures visual grouping in the nested donut chart.
-        # Track first occurrence of each unique label for the legend.
-        seen_labels = {}
-        legend_handles = []
-        legend_labels = []
-        for i, (label, color) in enumerate(zip(all_subclass_labels, all_subclass_colors)):
-            if label not in seen_labels:
-                seen_labels[label] = color
-                legend_handles.append(plt.Rectangle((0,0),1,1, fc=color, ec='white', lw=1))
-                legend_labels.append(label)
-                if len(legend_labels) >= 12:  # Limit to 12 for better display
-                    break
-        
-        ax.legend(legend_handles, legend_labels, loc='center left', bbox_to_anchor=(1, 0.5),
-                 fontsize=7, frameon=True, title='Top Subclasses', title_fontsize=8,
-                 framealpha=0.95, edgecolor='lightgray')
-    else:
-        # For fewer subclasses, show labels with improved spacing
-        wedges2, texts2 = ax.pie(
-            all_subclass_counts,
-            labels=all_subclass_labels,
-            colors=all_subclass_colors,
-            radius=1.0,
-            labeldistance=1.18,  # Push labels further out to avoid overlap
-            startangle=90,
-            wedgeprops=dict(width=0.35, edgecolor='white', linewidth=1.5),  # Thicker edge
-            textprops={'fontsize': 7, 'weight': 'medium'}  # Larger, bolder text
-        )
-        
-        # Adjust label positions to avoid overlap
-        for text in texts2:
-            text.set_fontsize(7)
-            text.set_weight('medium')
-            # Add slight rotation for better readability
-            angle = text.get_rotation()
-            if 90 < angle < 270:
-                text.set_rotation(angle - 180)
-    
-    if title:
-        # Use standardized title formatting
-        display_title = format_plot_title(title)
-        ax.set_title(display_title, fontweight='bold', fontsize=12, pad=15)
-    
-    # Style percentage labels - larger and bolder
-    for autotext in autotexts1:
-        autotext.set_fontsize(7)
-        autotext.set_weight('bold')
-        autotext.set_color('white')
-    
-    return fig
+    from Utilities.visualization.stacked_bar_class_subclass import plot_stacked_bar_class_subclass
+    if figsize is not None:
+        kwargs['figsize'] = figsize
+    return plot_stacked_bar_class_subclass(motifs, title=title, **kwargs)
 
 
 # =============================================================================
@@ -5378,7 +5825,7 @@ def save_all_plots(motifs: List[Dict[str, Any]],
     
     saved_files = {}
     
-    # Use publication DPI if not specified
+    # Use publication DPI if not specified (minimum screen DPI)
     if dpi < PUBLICATION_DPI:
         dpi = PUBLICATION_DPI
     
@@ -5572,18 +6019,27 @@ def plot_subclass_analysis_comprehensive(motifs: List[Dict[str, Any]],
     for motif in motifs:
         class_name = motif.get('Class', 'Unknown')
         subclass_name = motif.get('Subclass', 'Unknown')
-        class_subclass_counts[class_name][subclass_name] += 1
+        # Skip Dynamic overlaps and Dynamic clusters for subclass barplot
+        if subclass_name not in ['Dynamic overlaps', 'Dynamic clusters']:
+            class_subclass_counts[class_name][subclass_name] += 1
     
-    # Prepare data for visualization
+    # Prepare data for visualization using taxonomy order
     all_subclasses = []
     all_counts = []
     all_classes = []
     
-    for class_name in sorted(class_subclass_counts.keys()):
-        for subclass_name, count in sorted(class_subclass_counts[class_name].items()):
-            all_subclasses.append(f"{class_name}:{subclass_name}")
-            all_counts.append(count)
-            all_classes.append(class_name)
+    # Use taxonomy order for classes
+    ordered_classes = get_all_classes_taxonomy_order()
+    for class_name in ordered_classes:
+        if class_name in class_subclass_counts:
+            # Get subclasses for this class from taxonomy
+            class_subclasses_ordered = [sc for sc in get_all_subclasses_taxonomy_order() 
+                                       if sc in class_subclass_counts[class_name]]
+            for subclass_name in class_subclasses_ordered:
+                count = class_subclass_counts[class_name][subclass_name]
+                all_subclasses.append(f"{class_name}:{subclass_name}")
+                all_counts.append(count)
+                all_classes.append(class_name)
     
     # Create figure
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=figsize, 
@@ -5613,11 +6069,12 @@ def plot_subclass_analysis_comprehensive(motifs: List[Dict[str, Any]],
     
     # Create summary text
     summary_lines = ['Subclass Summary by Class:\n']
-    for class_name in sorted(class_subclass_counts.keys()):
-        subclasses = class_subclass_counts[class_name]
-        n_subclasses = len(subclasses)
-        total_count = sum(subclasses.values())
-        summary_lines.append(f'{class_name}: {n_subclasses} subclass(es), {total_count} motifs')
+    for class_name in ordered_classes:
+        if class_name in class_subclass_counts:
+            subclasses = class_subclass_counts[class_name]
+            n_subclasses = len(subclasses)
+            total_count = sum(subclasses.values())
+            summary_lines.append(f'{class_name}: {n_subclasses} subclass(es), {total_count} motifs')
     
     summary_text = '\n'.join(summary_lines)
     ax2.text(0.1, 0.5, summary_text, ha='left', va='center',
@@ -6719,10 +7176,32 @@ def plot_subclass_density_heatmap(motifs: List[Dict[str, Any]],
     for motif in motifs:
         class_name = motif.get('Class', 'Unknown')
         subclass_name = motif.get('Subclass', 'Unknown')
-        key = f"{class_name}:{subclass_name}"
-        subclass_groups[key].append(motif)
+        # Filter out Dynamic overlaps and clusters
+        if subclass_name not in ['Dynamic overlaps', 'Dynamic clusters']:
+            key = f"{class_name}:{subclass_name}"
+            subclass_groups[key].append(motif)
     
-    subclasses = sorted(subclass_groups.keys())
+    # Use taxonomy order for subclasses
+    all_subclasses_ordered = get_all_subclasses_taxonomy_order()
+    # Build ordered list of keys that exist in the data
+    # Optimized to O(n+m) complexity where:
+    #   n = number of keys in subclass_groups
+    #   m = number of subclasses in taxonomy order
+    # Create a reverse lookup: subclass -> keys
+    subclass_to_keys = {}
+    for key in subclass_groups.keys():
+        # Extract subclass from "ClassName:SubclassName" format
+        if ':' in key:
+            subclass_part = key.split(':', 1)[1]
+            if subclass_part not in subclass_to_keys:
+                subclass_to_keys[subclass_part] = []
+            subclass_to_keys[subclass_part].append(key)
+    
+    # Build ordered list by iterating through taxonomy once
+    subclasses = []
+    for sc in all_subclasses_ordered:
+        if sc in subclass_to_keys:
+            subclasses.extend(subclass_to_keys[sc])
     
     # Calculate density matrix
     density_matrix = np.zeros((len(subclasses), num_windows))
@@ -6970,12 +7449,19 @@ def plot_manhattan_subclass_density(motifs: List[Dict[str, Any]],
     
     num_windows = max(1, sequence_length // window_size)
     
-    # Get unique subclasses
-    subclasses = sorted(set(m.get('Subclass', m.get('Class', 'Unknown')) for m in motifs
-                           if m.get('Class') not in CIRCOS_EXCLUDED_CLASSES))
+    # Get unique subclasses using taxonomy order
+    # Filter out excluded classes and Dynamic overlaps/clusters
+    filtered_subclasses = set(m.get('Subclass', m.get('Class', 'Unknown')) for m in motifs
+                              if m.get('Class') not in CIRCOS_EXCLUDED_CLASSES
+                              and m.get('Subclass') not in ['Dynamic overlaps', 'Dynamic clusters'])
     
-    if not subclasses:
-        subclasses = sorted(set(m.get('Subclass', m.get('Class', 'Unknown')) for m in motifs))
+    if not filtered_subclasses:
+        filtered_subclasses = set(m.get('Subclass', m.get('Class', 'Unknown')) for m in motifs
+                                 if m.get('Subclass') not in ['Dynamic overlaps', 'Dynamic clusters'])
+    
+    # Order by taxonomy
+    all_subclasses_ordered = get_all_subclasses_taxonomy_order()
+    subclasses = [sc for sc in all_subclasses_ordered if sc in filtered_subclasses]
     
     # Create figure
     fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
@@ -7144,10 +7630,13 @@ def plot_motif_cooccurrence_matrix(motifs: List[Dict[str, Any]],
                                    figsize: Tuple[int, int] = None,
                                    overlap_threshold: int = 1) -> plt.Figure:
     """
-    Create heatmap showing co-occurrence frequency between motif classes.
+    Enhanced co-occurrence matrix showing which motif classes appear together.
     
-    Shows which motif classes tend to appear together (within overlap_threshold bp).
-    Excellent for publication figures showing motif relationships.
+    Features:
+    - Colorblind-friendly heatmap with consistent class colors
+    - Row/column color coding by motif class
+    - Annotated cells with co-occurrence counts
+    - Publication-quality styling
     
     Args:
         motifs: List of motif dictionaries
@@ -7162,7 +7651,7 @@ def plot_motif_cooccurrence_matrix(motifs: List[Dict[str, Any]],
     set_scientific_style()
     
     if figsize is None:
-        figsize = FIGURE_SIZES['square']
+        figsize = (12, 10)  # Larger for better readability
     
     if not motifs:
         fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
@@ -7207,11 +7696,29 @@ def plot_motif_cooccurrence_matrix(motifs: List[Dict[str, Any]],
             
             cooccurrence_matrix[i, j] = count
     
-    # Create heatmap
+    # Create heatmap with enhanced styling
     fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
     
-    # Use colorblind-friendly colormap
-    im = ax.imshow(cooccurrence_matrix, cmap='YlOrRd', aspect='auto', interpolation='nearest')
+    # Use vibrant colorblind-friendly colormap
+    im = ax.imshow(cooccurrence_matrix, cmap='YlOrRd', aspect='auto', 
+                   interpolation='nearest', vmin=0)
+    
+    # Add colored bars on left and top to indicate class
+    class_colors = [MOTIF_CLASS_COLORS.get(cls, '#808080') for cls in classes]
+    
+    # Left color bar
+    for i, color in enumerate(class_colors):
+        rect = patches.Rectangle((-0.6, i - 0.4), 0.3, 0.8, 
+                                facecolor=color, edgecolor='white', linewidth=1,
+                                clip_on=False, transform=ax.transData)
+        ax.add_patch(rect)
+    
+    # Top color bar
+    for i, color in enumerate(class_colors):
+        rect = patches.Rectangle((i - 0.4, n_classes - 0.4), 0.8, 0.3, 
+                                facecolor=color, edgecolor='white', linewidth=1,
+                                clip_on=False, transform=ax.transData)
+        ax.add_patch(rect)
     
     # Set ticks and labels
     ax.set_xticks(range(n_classes))
@@ -7219,29 +7726,38 @@ def plot_motif_cooccurrence_matrix(motifs: List[Dict[str, Any]],
     
     # Replace underscores with spaces in labels
     display_classes = [c.replace('_', ' ') for c in classes]
-    ax.set_xticklabels(display_classes, rotation=45, ha='right', fontsize=9)
-    ax.set_yticklabels(display_classes, fontsize=9)
+    ax.set_xticklabels(display_classes, rotation=45, ha='right', fontsize=9, fontweight='bold')
+    ax.set_yticklabels(display_classes, fontsize=9, fontweight='bold')
     
-    # Add colorbar
-    cbar = plt.colorbar(im, ax=ax, shrink=0.8)
-    cbar.set_label('Co-occurrence Count', fontsize=10, fontweight='bold')
-    cbar.ax.tick_params(labelsize=8)
+    # Add colorbar with enhanced styling
+    cbar = plt.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
+    cbar.set_label('Co-occurrence Count', fontsize=11, fontweight='bold')
+    cbar.ax.tick_params(labelsize=9)
     
-    # Add values to cells (if not too many)
-    if n_classes <= 10:
+    # Add values to cells with smart coloring
+    if n_classes <= 12:
+        max_val = cooccurrence_matrix.max()
         for i in range(n_classes):
             for j in range(n_classes):
                 value = int(cooccurrence_matrix[i, j])
                 if value > 0:
-                    text_color = 'white' if value > cooccurrence_matrix.max() / 2 else 'black'
+                    # Use white text on dark cells, black on light cells
+                    text_color = 'white' if value > max_val / 2 else 'black'
+                    # Bold for off-diagonal (different classes), normal for diagonal (same class)
+                    fontweight = 'bold' if i != j else 'normal'
                     ax.text(j, i, str(value), ha='center', va='center', 
-                           color=text_color, fontsize=8, fontweight='bold')
+                           color=text_color, fontsize=8, fontweight=fontweight)
     
-    # Title and labels
+    # Enhanced title and labels
     display_title = title.replace('_', ' ')
-    ax.set_title(display_title, fontsize=14, fontweight='bold', pad=10)
-    ax.set_xlabel('Motif Class', fontsize=11, fontweight='bold')
-    ax.set_ylabel('Motif Class', fontsize=11, fontweight='bold')
+    ax.set_title(display_title, fontsize=14, fontweight='bold', pad=20)
+    ax.set_xlabel('Motif Class', fontsize=12, fontweight='bold', labelpad=10)
+    ax.set_ylabel('Motif Class', fontsize=12, fontweight='bold', labelpad=10)
+    
+    # Add grid for better readability
+    ax.set_xticks(np.arange(n_classes) - 0.5, minor=True)
+    ax.set_yticks(np.arange(n_classes) - 0.5, minor=True)
+    ax.grid(which="minor", color="white", linestyle='-', linewidth=2)
     
     plt.tight_layout()
     return fig
@@ -7407,8 +7923,9 @@ def plot_linear_motif_track(motifs: List[Dict[str, Any]],
     # Create figure
     fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
     
-    # Plot each class on a separate track
-    classes = sorted(class_motifs.keys())
+    # Plot each class on a separate track using taxonomy order
+    all_classes_ordered = get_all_classes_taxonomy_order()
+    classes = [cls for cls in all_classes_ordered if cls in class_motifs]
     track_height = 0.6
     track_spacing = 1.0
     
@@ -7509,13 +8026,18 @@ def plot_linear_subclass_track(motifs: List[Dict[str, Any]],
     subclass_motifs = defaultdict(list)
     for motif in region_motifs:
         subclass_name = motif.get('Subclass', motif.get('Class', 'Unknown'))
-        subclass_motifs[subclass_name].append(motif)
+        # Filter out Dynamic overlaps and Dynamic clusters
+        if subclass_name not in ['Dynamic overlaps', 'Dynamic clusters']:
+            subclass_motifs[subclass_name].append(motif)
     
     # Create figure
     fig, ax = plt.subplots(figsize=figsize, dpi=PUBLICATION_DPI)
     
     # Plot each subclass on a separate track
-    subclasses = sorted(subclass_motifs.keys())
+    # Use taxonomy order instead of alphabetical sorting
+    all_subclasses_ordered = get_all_subclasses_taxonomy_order()
+    # Only include subclasses that are present in the data (excluding Dynamic overlaps/clusters)
+    subclasses = [sc for sc in all_subclasses_ordered if sc in subclass_motifs]
     track_height = 0.6
     track_spacing = 1.0
     
@@ -7536,10 +8058,10 @@ def plot_linear_subclass_track(motifs: List[Dict[str, Any]],
             )
             ax.add_patch(rect)
         
-        # Add subclass label on the left
+        # Add subclass label on the left - use medium font size
         display_name = subclass_name.replace('_', ' ')
         ax.text(region_start - (region_end - region_start) * 0.02, y_pos, 
-               display_name, ha='right', va='center', fontsize=8, fontweight='bold')
+               display_name, ha='right', va='center', fontsize=10, fontweight='bold')
     
     # Styling
     ax.set_xlim(region_start, region_end)
@@ -7568,13 +8090,18 @@ def plot_linear_subclass_track(motifs: List[Dict[str, Any]],
 
 
 def plot_cluster_size_distribution(motifs: List[Dict[str, Any]], 
-                                   title: str = "Cluster Size Distribution",
+                                   title: str = "Cluster Statistics",
                                    figsize: Tuple[int, int] = None) -> plt.Figure:
     """
-    Plot distribution of cluster sizes (number of motifs per cluster).
+    Enhanced cluster statistics visualization with multiple panels.
     
-    Shows histogram and statistics of cluster composition.
-    Publication-quality visualization.
+    Shows comprehensive cluster analysis:
+    - Cluster size distribution
+    - Class diversity distribution
+    - Cluster density heatmap
+    - Top cluster classes composition
+    
+    Publication-quality visualization with consistent styling.
     
     Args:
         motifs: List of motif dictionaries (should include cluster motifs)
@@ -7588,7 +8115,7 @@ def plot_cluster_size_distribution(motifs: List[Dict[str, Any]],
     set_scientific_style()
     
     if figsize is None:
-        figsize = FIGURE_SIZES['one_and_half']
+        figsize = (14, 8)  # Larger figure for 2x2 panel layout
     
     # Extract cluster motifs
     cluster_motifs = [m for m in motifs if m.get('Class') == 'Non-B_DNA_Clusters']
@@ -7600,9 +8127,10 @@ def plot_cluster_size_distribution(motifs: List[Dict[str, Any]],
         ax.set_title(title)
         return fig
     
-    # Extract cluster sizes
+    # Extract cluster data
     cluster_sizes = []
     cluster_diversities = []
+    cluster_classes_counts = defaultdict(int)
     
     for motif in cluster_motifs:
         size = motif.get('Motif_Count', 0)
@@ -7610,55 +8138,116 @@ def plot_cluster_size_distribution(motifs: List[Dict[str, Any]],
         if size > 0:
             cluster_sizes.append(size)
             cluster_diversities.append(diversity)
+            # Extract constituent classes if available
+            constituent_classes = motif.get('Constituent_Classes', '').split(',')
+            for cls in constituent_classes:
+                cls = cls.strip()
+                if cls:
+                    cluster_classes_counts[cls] += 1
     
-    # Create figure with subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize, dpi=PUBLICATION_DPI)
+    # Create 2x2 panel layout
+    fig = plt.figure(figsize=figsize, dpi=PUBLICATION_DPI)
+    gs = fig.add_gridspec(2, 2, hspace=0.3, wspace=0.3)
     
-    # 1. Cluster size histogram
+    # Panel 1: Cluster size histogram (top-left)
+    ax1 = fig.add_subplot(gs[0, 0])
     ax1.hist(cluster_sizes, bins=min(20, max(cluster_sizes) if cluster_sizes else 1), 
-            edgecolor='black', linewidth=0.5, color='#4ecdc4', alpha=0.7)
+            edgecolor='white', linewidth=1, color=MOTIF_CLASS_COLORS.get('Non-B_DNA_Clusters', '#334155'), alpha=0.8)
     
-    ax1.set_xlabel('Motifs per Cluster', fontsize=11, fontweight='bold')
-    ax1.set_ylabel('Frequency', fontsize=11, fontweight='bold')
-    ax1.set_title('Cluster Size Distribution', fontsize=12, fontweight='bold')
+    ax1.set_xlabel('Motifs per Cluster', fontsize=10, fontweight='bold')
+    ax1.set_ylabel('Frequency', fontsize=10, fontweight='bold')
+    ax1.set_title('Cluster Size Distribution', fontsize=11, fontweight='bold')
     
-    # Add statistics
+    # Add statistics with vibrant colors
     if cluster_sizes:
         mean_size = np.mean(cluster_sizes)
         median_size = np.median(cluster_sizes)
-        ax1.axvline(mean_size, color='red', linestyle='--', linewidth=1.5, 
+        ax1.axvline(mean_size, color='#FF6D00', linestyle='--', linewidth=2, 
                    label=f'Mean: {mean_size:.1f}')
-        ax1.axvline(median_size, color='orange', linestyle='--', linewidth=1.5, 
+        ax1.axvline(median_size, color='#00E676', linestyle='--', linewidth=2, 
                    label=f'Median: {median_size:.1f}')
-        ax1.legend(fontsize=9, framealpha=0.9)
+        ax1.legend(fontsize=8, framealpha=0.9)
     
-    ax1.grid(axis='y', alpha=0.3)
+    ax1.grid(axis='y', alpha=0.3, linestyle='--')
     _apply_nature_style(ax1)
     
-    # 2. Class diversity histogram
+    # Panel 2: Class diversity histogram (top-right)
+    ax2 = fig.add_subplot(gs[0, 1])
     if cluster_diversities:
         ax2.hist(cluster_diversities, bins=min(10, max(cluster_diversities)), 
-                edgecolor='black', linewidth=0.5, color='#95e1d3', alpha=0.7)
+                edgecolor='white', linewidth=1, color='#8B5CF6', alpha=0.8)
         
-        ax2.set_xlabel('Class Diversity per Cluster', fontsize=11, fontweight='bold')
-        ax2.set_ylabel('Frequency', fontsize=11, fontweight='bold')
-        ax2.set_title('Cluster Diversity Distribution', fontsize=12, fontweight='bold')
+        ax2.set_xlabel('Classes per Cluster', fontsize=10, fontweight='bold')
+        ax2.set_ylabel('Frequency', fontsize=10, fontweight='bold')
+        ax2.set_title('Cluster Diversity', fontsize=11, fontweight='bold')
         
         mean_div = np.mean(cluster_diversities)
-        ax2.axvline(mean_div, color='red', linestyle='--', linewidth=1.5, 
+        ax2.axvline(mean_div, color='#FF1744', linestyle='--', linewidth=2, 
                    label=f'Mean: {mean_div:.1f}')
-        ax2.legend(fontsize=9, framealpha=0.9)
+        ax2.legend(fontsize=8, framealpha=0.9)
         
-        ax2.grid(axis='y', alpha=0.3)
+        ax2.grid(axis='y', alpha=0.3, linestyle='--')  # Subtle grid for diversity plot readability
         _apply_nature_style(ax2)
     else:
         ax2.text(0.5, 0.5, 'No diversity data', ha='center', va='center',
                 transform=ax2.transAxes, fontsize=12)
         ax2.axis('off')
     
+    # Panel 3: Top cluster constituent classes (bottom-left)
+    ax3 = fig.add_subplot(gs[1, 0])
+    if cluster_classes_counts:
+        # Get top 10 classes
+        top_classes = sorted(cluster_classes_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        classes, counts = zip(*top_classes) if top_classes else ([], [])
+        
+        # Use consistent colors
+        colors = [MOTIF_CLASS_COLORS.get(cls, '#808080') for cls in classes]
+        
+        y_pos = np.arange(len(classes))
+        ax3.barh(y_pos, counts, color=colors, edgecolor='white', linewidth=1, alpha=0.8)
+        ax3.set_yticks(y_pos)
+        ax3.set_yticklabels([c.replace('_', ' ') for c in classes], fontsize=9)
+        ax3.set_xlabel('Frequency in Clusters', fontsize=10, fontweight='bold')
+        ax3.set_title('Top Classes in Clusters', fontsize=11, fontweight='bold')
+        ax3.grid(axis='x', alpha=0.3, linestyle='--')  # Subtle grid for class chart readability
+        _apply_nature_style(ax3)
+    else:
+        ax3.text(0.5, 0.5, 'No class data', ha='center', va='center',
+                transform=ax3.transAxes, fontsize=12)
+        ax3.axis('off')
+    
+    # Panel 4: Summary statistics box (bottom-right)
+    ax4 = fig.add_subplot(gs[1, 1])
+    ax4.axis('off')
+    
+    # Create summary text with vibrant colors
+    summary_text = []
+    summary_text.append(('Total Clusters:', f'{len(cluster_motifs):,}', '#0091FF'))
+    if cluster_sizes:
+        summary_text.append(('Mean Size:', f'{np.mean(cluster_sizes):.1f} motifs', '#FF6D00'))
+        summary_text.append(('Max Size:', f'{max(cluster_sizes)} motifs', '#FF1744'))
+    if cluster_diversities:
+        summary_text.append(('Mean Diversity:', f'{np.mean(cluster_diversities):.1f} classes', '#8B5CF6'))
+        summary_text.append(('Max Diversity:', f'{max(cluster_diversities)} classes', '#00E676'))
+    
+    y_offset = 0.85
+    for label, value, color in summary_text:
+        ax4.text(0.1, y_offset, label, fontsize=10, fontweight='bold', color='#334155', 
+                transform=ax4.transAxes)
+        ax4.text(0.6, y_offset, value, fontsize=10, fontweight='bold', color=color, 
+                transform=ax4.transAxes)
+        y_offset -= 0.15
+    
+    # Add box around statistics
+    rect = patches.Rectangle((0.05, 0.1), 0.9, 0.85, linewidth=2, 
+                             edgecolor='#334155', facecolor='#F5F5F5', 
+                             alpha=0.3, transform=ax4.transAxes)
+    ax4.add_patch(rect)
+    ax4.text(0.5, 0.95, 'Summary Statistics', ha='center', fontsize=11, 
+            fontweight='bold', transform=ax4.transAxes)
+    
     display_title = title.replace('_', ' ')
-    plt.suptitle(display_title, fontsize=14, fontweight='bold', y=0.98)
-    plt.tight_layout()
+    fig.suptitle(display_title, fontsize=14, fontweight='bold', y=0.98)
     
     return fig
 
@@ -8635,7 +9224,9 @@ def plot_genome_landscape_track(motifs: List[Dict[str, Any]],
             class_name = motif.get('Class', 'Unknown')
             class_motifs[class_name].append(motif)
     
-    classes = sorted(class_motifs.keys())
+    # Use taxonomy order for classes
+    all_classes_ordered = get_all_classes_taxonomy_order()
+    classes = [cls for cls in all_classes_ordered if cls in class_motifs]
     track_height = 0.5
     track_spacing = 1.0
     
@@ -8834,7 +9425,7 @@ def save_figures_to_pdf(figures: List[plt.Figure], output_path: str) -> None:
     with PdfPages(output_path) as pdf:
         for fig in figures:
             if fig is not None:
-                pdf.savefig(fig, bbox_inches='tight', dpi=300)
+                pdf.savefig(fig, bbox_inches='tight', dpi=PUBLICATION_DPI)
                 plt.close(fig)
 
 
@@ -9043,7 +9634,7 @@ def export_to_pdf(motifs: List[Dict[str, Any]],
         with PdfPages(pdf_buffer) as pdf:
             for fig in figures:
                 if fig is not None:
-                    pdf.savefig(fig, bbox_inches='tight', dpi=300)
+                    pdf.savefig(fig, bbox_inches='tight', dpi=PUBLICATION_DPI)
                     plt.close(fig)
         
         # Get PDF data from buffer

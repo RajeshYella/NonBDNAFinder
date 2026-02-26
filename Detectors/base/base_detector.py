@@ -1,14 +1,5 @@
-"""
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ Base Detector Class - Abstract base for all Non-B DNA motif detectors        │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
-│ O(n) regex matching | Pattern compilation & caching                          │
-└──────────────────────────────────────────────────────────────────────────────┘
-"""
-# ═══════════════════════════════════════════════════════════════════════════════
+"""Abstract base class for all Non-B DNA motif detectors."""
 # IMPORTS
-# ═══════════════════════════════════════════════════════════════════════════════
 import re
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Tuple
@@ -22,24 +13,42 @@ from Utilities.detectors_utils import (
     load_patterns_with_fallback
 )
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # TUNABLE PARAMETERS
-# ═══════════════════════════════════════════════════════════════════════════════
 DEFAULT_MIN_SCORE_THRESHOLD = 0.5
-# ═══════════════════════════════════════════════════════════════════════════════
+
+# Experimentally supported maximum stable lengths per motif class (bp)
+STRUCTURAL_LENGTH_CAPS = {
+    "A-philic_DNA": 300,
+    "Cruciform": 200,
+    "Curved_DNA_local": 50,
+    "Curved_DNA_global": 120,
+    "G-Quadruplex": 120,
+    "Z-DNA": 300,
+    "Slipped_DNA_STR": 1000,
+    "Slipped_DNA_Direct": 500,
+    "Triplex": 150,
+    "R-Loop": 2000,
+    "i-Motif": 60,
+}
+
+# Disease-specific cap overrides (copy-number expansions extend stable length)
+DISEASE_CAP_OVERRIDES = {
+    "Slipped_DNA": {
+        "Huntington": 1000,
+        "Myotonic_Dystrophy": 1500,
+    }
+}
 
 
 class BaseMotifDetector(ABC):
-    """
-    Abstract base class for all Non-B DNA motif detectors.
-    
-    # Motif Output Structure:
-    """
+    """Abstract base class for all Non-B DNA motif detectors."""
+
+    SCORE_REFERENCE = 'Override in subclass'
     
     def __init__(self):
         self.patterns = self.get_patterns()
         self.compiled_patterns = self._compile_patterns()
-        # Detector execution audit - tracks detection pipeline
+        self._last_raw_score = None  # Store raw score for motif dict creation
         self.audit = {
             'invoked': False,
             'windows_scanned': 0,
@@ -52,11 +61,7 @@ class BaseMotifDetector(ABC):
     
     @abstractmethod
     def get_patterns(self) -> Dict[str, List[Tuple]]:
-        """
-        Return patterns specific to this motif class.
-        
-        # Pattern Structure:
-        """
+        """Return patterns specific to this motif class."""
     
     @abstractmethod  
     def get_motif_class_name(self) -> str:
@@ -65,23 +70,11 @@ class BaseMotifDetector(ABC):
     
     @abstractmethod
     def calculate_score(self, sequence: str, pattern_info: Tuple) -> float:
-        """
-        Calculate motif-specific confidence score.
-        
-        Args:
-            sequence: DNA sequence string (uppercase)
-            pattern_info: Pattern tuple with metadata
-            
-        Returns:
-            Score value between 0.0 and 1.0
-        """
+        """Calculate motif-specific confidence score."""
         pass
     
     def _compile_patterns(self) -> Dict[str, List[Tuple]]:
-        """
-        Compile all regex patterns once for performance.
-        Uses re.IGNORECASE | re.ASCII for optimal DNA sequence matching.
-        """
+        """Compile all regex patterns once for performance."""
         compiled_patterns = {}
         
         for pattern_group, patterns in self.patterns.items():
@@ -99,26 +92,7 @@ class BaseMotifDetector(ABC):
         return compiled_patterns
     
     def detect_motifs(self, sequence: str, sequence_name: str = "sequence") -> List[Dict[str, Any]]:
-        """
-        Main detection method - scans sequence for all compiled patterns.
-        
-        # Detection Process:
-        # | Step | Action                              |
-        # |------|-------------------------------------|
-        # | 1    | Normalize sequence to uppercase     |
-        # | 2    | Iterate through compiled patterns   |
-        # | 3    | Find all regex matches              |
-        # | 4    | Calculate motif-specific scores     |
-        # | 5    | Apply quality thresholds            |
-        # | 6    | Return list of motif dictionaries   |
-        
-        Args:
-            sequence: DNA sequence string
-            sequence_name: Identifier for the sequence
-            
-        Returns:
-            List of motif dictionaries with standardized fields
-        """
+        """Scan sequence for all compiled patterns and return motif list."""
         self.audit['invoked'] = True
         self.audit['windows_scanned'] = 1
         self.audit['candidates_seen'] = 0
@@ -149,7 +123,8 @@ class BaseMotifDetector(ABC):
                             'End': end,
                             'Length': len(motif_seq),
                             'Sequence': motif_seq,
-                            'Score': round(score, 3),
+                            'Raw_Score': round(score, 6),
+                            'Score': self.normalize_score(score, len(motif_seq), subclass),
                             'Strand': '+',
                             'Method': f'{self.get_motif_class_name()}_detection',
                             'Pattern_ID': pattern_id
@@ -166,6 +141,74 @@ class BaseMotifDetector(ABC):
             min_threshold = pattern_info[6]
             return score >= min_threshold
         return score >= DEFAULT_MIN_SCORE_THRESHOLD
+
+    def theoretical_min_score(self) -> float:
+        """Return minimum biologically valid raw score. Override in subclass."""
+        raise NotImplementedError
+
+    def theoretical_max_score(self, sequence_length: int = None) -> float:
+        """Return highest possible raw score under model. Override in subclass."""
+        raise NotImplementedError
+
+    def get_length_cap(self, subclass: str = None) -> int:
+        """
+        Return experimentally supported maximum stable length (bp)
+        for this motif class or subclass.
+
+        Each detector overrides this to return the structural upper bound
+        beyond which the length component is capped at 1.0.
+        """
+        raise NotImplementedError
+
+    def normalize_score(self, raw_score: float, motif_length: int,
+                        subclass: str = None) -> float:
+        """
+        Convert raw detector-specific score to universal 1–3 scale using
+        length-aware, structure-bounded normalization.
+
+        Final Score = 1 + 2 × f_raw × f_length
+
+        Where:
+            f_raw    = (RawScore − RawMin) / (RawMax(L) − RawMin)
+            f_length = min(1, L / L_cap)
+
+        Score is clamped to [1.0, 3.0].
+
+        Universal Score Interpretation:
+        ┌────────────┬──────────────────┬─────────────────────────────────────┐
+        │ Score      │ Interpretation   │ Biological Meaning                  │
+        ├────────────┼──────────────────┼─────────────────────────────────────┤
+        │ 1.0 - 1.7  │ Weak/Conditional │ Low confidence, context-dependent   │
+        │ 1.7 - 2.3  │ Moderate         │ Reasonable confidence, likely valid │
+        │ 2.3 - 3.0  │ Strong/High      │ High confidence, well-characterized │
+        └────────────┴──────────────────┴─────────────────────────────────────┘
+
+        Args:
+            raw_score: Raw detector-specific score
+            motif_length: Motif length in base pairs
+            subclass: Optional motif subclass for subclass-specific length caps
+
+        Returns:
+            Normalized score in range [1.0, 3.0]
+        """
+        raw_min = self.theoretical_min_score()
+        raw_max = self.theoretical_max_score(motif_length)
+
+        if raw_max == raw_min:
+            raw_component = 0.0
+        else:
+            raw_component = (raw_score - raw_min) / (raw_max - raw_min)
+
+        raw_component = max(0.0, min(1.0, raw_component))
+
+        length_cap = self.get_length_cap(subclass)
+        length_component = min(1.0, motif_length / float(length_cap))
+
+        combined = raw_component * length_component
+
+        final_score = 1.0 + 2.0 * combined
+
+        return round(min(3.0, final_score), 3)
     
     def get_statistics(self) -> Dict[str, Any]:
         """Get detector statistics"""
@@ -181,7 +224,6 @@ class BaseMotifDetector(ABC):
         """Get detector execution audit information"""
         return self.audit.copy()
     
-    # Shared utility methods
     def _calc_gc(self, seq: str) -> float:
         """Calculate GC content using shared utility"""
         return calc_gc_content(seq)

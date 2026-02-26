@@ -12,9 +12,11 @@ import streamlit as st
 import time
 import os
 import gc
+import hashlib
 import numpy as np
 import pandas as pd
 import logging
+import traceback
 
 from Utilities.config.text import UI_TEXT
 from Utilities.config.typography import FONT_CONFIG
@@ -28,8 +30,11 @@ from Utilities.config.motif_taxonomy import (
 )
 from Utilities.config.colors import CLASS_COLORS, CLASS_COLOR_NAMES
 from UI.css import load_css, get_page_colors
-from UI.formatters import format_time_scientific
+from UI.formatters import format_time_scientific, format_time_human, format_time
 from UI.headers import render_section_heading
+from UI.performance_stats import PerformanceTracker, format_performance_summary, format_motif_distribution
+import io as _io
+
 from Utilities.utilities import (
     parse_fasta_chunked,
     get_file_preview,
@@ -38,12 +43,38 @@ from Utilities.utilities import (
     parse_fasta,
     get_memory_usage_mb,
     calculate_genomic_density,
-    calculate_positional_density
+    calculate_positional_density,
+    _NON_IUPAC_RE,
+    plot_motif_distribution,
+    plot_linear_motif_track,
+    plot_linear_subclass_track,
+    plot_density_comparison,
+    plot_motif_length_kde,
+    plot_score_violin,
+    plot_nested_pie_chart,
+    plot_structural_heatmap,
+    plot_motif_network,
+    plot_motif_cooccurrence_matrix,
+    plot_chromosome_density,
+    plot_motif_clustering_distance,
+    plot_spacer_loop_variation,
+    plot_cluster_size_distribution,
+    plot_structural_competition_upset,
 )
 from Utilities.nonbscanner import analyze_sequence
 from Utilities.job_manager import save_job_results, generate_job_id
 from Utilities.disk_storage import UniversalSequenceStorage, UniversalResultsStorage
 from Utilities.chunk_analyzer import ChunkAnalyzer
+from Utilities.detectors_utils import calc_gc_content, _count_bases
+from Utilities.multifasta_engine import analyze_sequences_parallel
+
+# Import progress tracking for Streamlit UI (optional, graceful degradation)
+try:
+    from Utilities.streamlit_progress import analyze_with_streamlit_progress
+    STREAMLIT_PROGRESS_AVAILABLE = True
+except ImportError:
+    STREAMLIT_PROGRESS_AVAILABLE = False
+    logger.warning("Streamlit progress tracking not available")
 
 try: from Bio import Entrez, SeqIO; BIO_AVAILABLE = True
 except ImportError: BIO_AVAILABLE = False
@@ -55,21 +86,37 @@ logger = logging.getLogger(__name__)
 # ═══════════════════════════════════════════════════════════════════════════════
 CONFIG_AVAILABLE = False
 GRID_COLUMNS = 6; GRID_GAP = "0.10rem"; ROW_GAP = "0.10rem"; DOT_SIZE = 5; GLOW_SIZE = 5
-# Disk storage chunk threshold: sequences larger than this use ChunkAnalyzer with adaptive chunking
-# Updated to use triple adaptive chunking for sequences > 1MB
-CHUNK_ANALYSIS_THRESHOLD_BP = 1_000_000  # 1MB (adaptive chunking threshold)
+# Chunk analysis threshold: always use ChunkAnalyzer for all sequences (0 = no minimum)
+CHUNK_ANALYSIS_THRESHOLD_BP = 0  # Always chunk with 50KB/2KB approach
+# Parallel processing threshold: multi-FASTA with >= this many sequences will use parallel processing
+PARALLEL_PROCESSING_THRESHOLD = 2  # Use parallel processing for 2+ sequences
 SUBMOTIF_ABBREVIATIONS = {
     'Global Curvature': 'Global Curv', 'Local Curvature': 'Local Curv',
     'Direct Repeat': 'DR', 'STR': 'STR', 'Cruciform forming IRs': 'Cruciform',
     'R-loop formation sites': 'R-loop', 'Triplex': 'Triplex', 'Sticky DNA': 'Sticky DNA',
-    'Telomeric G4': 'Telo G4', 'Stacked canonical G4s': 'Stacked G4', 'Stacked G4s with linker': 'Stacked G4 + Linker',
+    'Telomeric G4': 'Telo G4', 'Stacked G4': 'Stacked G4',
     'Canonical intramolecular G4': 'Intra G4', 'Extended-loop canonical': 'Ext. Loop G4',
-    'Higher-order G4 array/G4-wire': 'G4 Array', 'Intramolecular G-triplex': 'G-triplex', 'Two-tetrad weak PQS': 'Weak PQS',
+    'Higher-order G4 array/G4-wire': 'G4 Array', 'Intramolecular G-triplex': 'G-triplex', 'Two-tetrad weak PQS': 'Weak PQS', 'Bulged G4': 'Bulged G4',
     'Canonical i-motif': 'i-Motif', 'Relaxed i-motif': 'Relaxed iM', 'AC-motif': 'AC Motif',
     'Z-DNA': 'Z-DNA', 'eGZ': 'eGZ', 'A-philic DNA': 'A-DNA',
     'Dynamic overlaps': 'Hybrid', 'Dynamic clusters': 'Cluster',
 }
 # ═══════════════════════════════════════════════════════════════════════════════
+
+
+def _fig_to_bytes(fig) -> bytes:
+    """Convert a matplotlib Figure to PNG bytes and close it.
+
+    Used during visualization pre-generation to store rendered figures as
+    compact bytes in session state so the Results tab can display them
+    instantly without re-rendering.
+    """
+    import matplotlib.pyplot as _plt
+    buf = _io.BytesIO()
+    fig.savefig(buf, format='png', dpi=80, bbox_inches='tight')
+    _plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
 
 
 def get_abbreviated_label(subclass: str) -> str:
@@ -122,28 +169,28 @@ def render_sequence_stats_card(idx: int, name: str, length: int, gc_pct: float, 
     
     return f"""
     <div style='background: linear-gradient({gradient_colors}); 
-                border-radius: 8px; padding: 12px; margin: 8px 0; color: white;
+                border-radius: 8px; padding: 16px; margin: 8px 0; color: white;
                 box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);'>
-        <div style='font-weight: 600; font-size: 0.9rem; margin-bottom: 6px;'>
+        <div style='font-weight: 600; font-size: 1.05rem; margin-bottom: 8px;'>
             {idx}. {display_name}
         </div>
-        <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; 
-                    font-size: 0.8rem; margin-top: 8px;'>
-            <div style='background: rgba(255,255,255,0.15); padding: 6px; border-radius: 4px; text-align: center;'>
-                <div style='font-weight: 700; font-size: 1rem;'>{length:,}</div>
-                <div style='opacity: 0.9; font-size: 0.7rem;'>Base Pairs</div>
+        <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; 
+                    font-size: 0.95rem; margin-top: 8px;'>
+            <div style='background: rgba(255,255,255,0.15); padding: 8px; border-radius: 4px; text-align: center;'>
+                <div style='font-weight: 700; font-size: 1.1rem;'>{length:,}</div>
+                <div style='opacity: 0.9; font-size: 0.82rem;'>Base Pairs</div>
             </div>
-            <div style='background: rgba(255,255,255,0.15); padding: 6px; border-radius: 4px; text-align: center;'>
-                <div style='font-weight: 700; font-size: 1rem;'>{gc_pct:.2f}%</div>
-                <div style='opacity: 0.9; font-size: 0.7rem;'>GC Content</div>
+            <div style='background: rgba(255,255,255,0.15); padding: 8px; border-radius: 4px; text-align: center;'>
+                <div style='font-weight: 700; font-size: 1.1rem;'>{gc_pct:.2f}%</div>
+                <div style='opacity: 0.9; font-size: 0.82rem;'>GC Content</div>
             </div>
-            <div style='background: rgba(255,255,255,0.15); padding: 6px; border-radius: 4px; text-align: center;'>
-                <div style='font-weight: 700; font-size: 1rem;'>{at_pct:.2f}%</div>
-                <div style='opacity: 0.9; font-size: 0.7rem;'>AT Content</div>
+            <div style='background: rgba(255,255,255,0.15); padding: 8px; border-radius: 4px; text-align: center;'>
+                <div style='font-weight: 700; font-size: 1.1rem;'>{at_pct:.2f}%</div>
+                <div style='opacity: 0.9; font-size: 0.82rem;'>AT Content</div>
             </div>
-            <div style='background: rgba(255,255,255,0.15); padding: 6px; border-radius: 4px; text-align: center;'>
-                <div style='font-weight: 700; font-size: 1rem;'>{gc_balance}</div>
-                <div style='opacity: 0.9; font-size: 0.7rem;'>GC Balance</div>
+            <div style='background: rgba(255,255,255,0.15); padding: 8px; border-radius: 4px; text-align: center;'>
+                <div style='font-weight: 700; font-size: 1.1rem;'>{gc_balance}</div>
+                <div style='opacity: 0.9; font-size: 0.82rem;'>GC Balance</div>
             </div>
         </div>
     </div>
@@ -172,17 +219,87 @@ def calculate_gc_percentage(sequences: list) -> float:
     """
     Calculate average GC percentage across multiple sequences.
     
+    Delegates to calc_gc_content() from detectors_utils.py to ensure
+    consistency with all other GC calculations in the codebase.
+    
     Args:
         sequences: List of DNA sequence strings
         
     Returns:
         Average GC percentage (0.0 if no sequences/base pairs)
+        
+    Note:
+        Uses standardized calc_gc_content() method for consistency.
+        See: Utilities/detectors_utils.py
     """
-    total_bp = sum(len(s) for s in sequences)
+    if not sequences:
+        return 0.0
+    
+    # Calculate total base pairs and weighted GC in a single pass
+    total_bp = 0
+    total_gc_weighted = 0.0
+    for seq in sequences:
+        seq_len = len(seq)
+        if seq_len > 0:
+            total_bp += seq_len
+            total_gc_weighted += calc_gc_content(seq) * seq_len
+    
     if total_bp == 0:
         return 0.0
-    total_gc_count = sum(s.upper().count('G') + s.upper().count('C') for s in sequences)
-    return (total_gc_count / total_bp) * 100
+    
+    return total_gc_weighted / total_bp
+
+
+def clear_analysis_placeholders(progress_placeholder, status_placeholder,
+                                detailed_progress_placeholder, timer_placeholder):
+    """
+    Helper function to clear all analysis UI placeholders during error handling.
+    
+    Args:
+        progress_placeholder: Streamlit placeholder for progress bar
+        status_placeholder: Streamlit placeholder for status messages
+        detailed_progress_placeholder: Streamlit placeholder for detailed progress info
+        timer_placeholder: Streamlit placeholder for timer/elapsed time display
+    """
+    progress_placeholder.empty()
+    status_placeholder.empty()
+    detailed_progress_placeholder.empty()
+    timer_placeholder.empty()
+
+
+def show_technical_details():
+    """
+    Show technical error details in collapsible expander.
+    
+    Must be called within an exception handler context where traceback.format_exc()
+    can capture the active exception information.
+    
+    Example:
+        try:
+            risky_operation()
+        except Exception:
+            show_technical_details()  # Shows traceback of caught exception
+    """
+    with st.expander("🔧 Technical Details (for debugging)"):
+        st.code(traceback.format_exc())
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EXAMPLE DATA
+# Load from examples/ folder; fall back to inline strings if files are missing
+# ═══════════════════════════════════════════════════════════════════════════════
+_EXAMPLES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "examples")
+
+
+def _load_example_file(filename: str, fallback: str) -> str:
+    """Return file contents from examples/ dir, or fallback string if unavailable."""
+    path = os.path.join(_EXAMPLES_DIR, filename)
+    try:
+        with open(path, "r") as fh:
+            return fh.read()
+    except OSError:
+        logger.warning("Example file not found: %s — using inline fallback", path)
+        return fallback
 
 
 # Example FASTA data
@@ -395,6 +512,7 @@ def render():
                             key="upload_method")
 
         seqs, names = [], []
+        disk_seq_ids = []  # Sequences saved directly to disk during file upload parsing
 
         if input_method == UI_TEXT['upload_method_file']:
             fasta_file = st.file_uploader(UI_TEXT['upload_file_prompt'], 
@@ -410,10 +528,22 @@ def render():
                     # Get preview first (lightweight operation)
                     preview_info = get_file_preview(fasta_file, max_sequences=3)
                 
-                    # Calculate aggregate QC stats for compact summary
-                    total_gc = sum(p['gc_percent'] * p['length'] for p in preview_info['previews'])
-                    total_len = sum(p['length'] for p in preview_info['previews'])
-                    avg_gc = total_gc / total_len if total_len > 0 else 0.0
+                    # Calculate aggregate QC stats for compact summary using ATGC-weighted GC%
+                    # GC% = (G+C)/(A+T+G+C)*100  — only ATGC bases in denominator
+                    total_atgc = sum(
+                        p['a_count'] + p['t_count'] + p['g_count'] + p['c_count']
+                        for p in preview_info['previews']
+                    )
+                    total_gc_bases = sum(
+                        p['g_count'] + p['c_count'] for p in preview_info['previews']
+                    )
+                    avg_gc = (total_gc_bases / total_atgc * 100) if total_atgc > 0 else 0.0
+                    # Aggregate character counts for display
+                    sum_a = sum(p['a_count'] for p in preview_info['previews'])
+                    sum_t = sum(p['t_count'] for p in preview_info['previews'])
+                    sum_g = sum(p['g_count'] for p in preview_info['previews'])
+                    sum_c = sum(p['c_count'] for p in preview_info['previews'])
+                    sum_n = sum(p['n_count'] for p in preview_info['previews'])
                 
                     # Compact QC Summary Strip (replaces individual cards)
                     st.markdown(f"""
@@ -434,6 +564,9 @@ def render():
                                 GC: <strong>{avg_gc:.1f}%</strong>
                             </span>
                             <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                                A:<strong>{sum_a:,}</strong> T:<strong>{sum_t:,}</strong> G:<strong>{sum_g:,}</strong> C:<strong>{sum_c:,}</strong>{f' N:<strong>{sum_n:,}</strong>' if sum_n > 0 else ''}
+                            </span>
+                            <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
                                 ✓ Valid
                             </span>
                         </div>
@@ -443,6 +576,10 @@ def render():
                     # Now parse all sequences using chunked parsing for memory efficiency
                     seqs, names = [], []
                     has_large_sequences = False
+                    use_disk = (
+                        st.session_state.get('use_disk_storage') and
+                        st.session_state.get('seq_storage') is not None
+                    )
                 
                     if preview_info['num_sequences'] > 10:
                         # Show progress bar for files with many sequences
@@ -450,12 +587,17 @@ def render():
                         status_text = st.empty()
                     
                         for idx, (name, seq) in enumerate(parse_fasta_chunked(fasta_file)):
-                            names.append(name)
-                            seqs.append(seq)
-                        
-                            # Track if we have very large sequences
                             if len(seq) > 10_000_000:
                                 has_large_sequences = True
+                            if use_disk:
+                                # Save directly to disk to avoid holding large sequences in RAM
+                                seq_id = st.session_state.seq_storage.save_sequence(seq, name)
+                                disk_seq_ids.append(seq_id)
+                                names.append(name)
+                                del seq  # Free RAM immediately
+                            else:
+                                names.append(name)
+                                seqs.append(seq)
                         
                             # Update progress
                             progress = (idx + 1) / preview_info['num_sequences']
@@ -468,18 +610,23 @@ def render():
                     else:
                         # Fast path for small files
                         for name, seq in parse_fasta_chunked(fasta_file):
-                            names.append(name)
-                            seqs.append(seq)
-                        
-                            # Track if we have very large sequences
                             if len(seq) > 10_000_000:
                                 has_large_sequences = True
+                            if use_disk:
+                                # Save directly to disk to avoid holding large sequences in RAM
+                                seq_id = st.session_state.seq_storage.save_sequence(seq, name)
+                                disk_seq_ids.append(seq_id)
+                                names.append(name)
+                                del seq  # Free RAM immediately
+                            else:
+                                names.append(name)
+                                seqs.append(seq)
                 
                     # Force garbage collection after loading all sequences if we had large ones
                     if has_large_sequences:
                         gc.collect()
                 
-                    if not seqs:
+                    if not seqs and not disk_seq_ids:
                         st.warning(UI_TEXT['upload_no_sequences'])
 
         elif input_method == UI_TEXT['upload_method_paste']:
@@ -498,14 +645,22 @@ def render():
                         cur_name = line.strip().lstrip(">")
                         cur_seq = ""
                     else:
-                        cur_seq += line.strip()
+                        # Uppercase, strip whitespace, then filter non-IUPAC characters
+                        cur_seq += _NON_IUPAC_RE.sub('', line.strip().upper())
                 if cur_seq:
                     seqs.append(cur_seq)
                     names.append(cur_name if cur_name else f"Seq{len(seqs)}")
                 if seqs:
                     # Compact QC summary strip for pasted sequences
+                    # GC% = (G+C)/(A+T+G+C)*100 — only ATGC in denominator
+                    all_a = all_t = all_g = all_c = all_n = 0
+                    for s in seqs:
+                        a, t, g, c = _count_bases(s)
+                        all_a += a; all_t += t; all_g += g; all_c += c
+                        all_n += s.count('N')
+                    total_atgc = all_a + all_t + all_g + all_c
+                    avg_gc = (all_g + all_c) / total_atgc * 100 if total_atgc > 0 else 0.0
                     total_bp = sum(len(s) for s in seqs)
-                    avg_gc = calculate_gc_percentage(seqs)
                     st.markdown(f"""
                     <div style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
                                 border-radius: 8px; padding: 10px 14px; margin: 8px 0; color: white;
@@ -524,6 +679,9 @@ def render():
                                 GC: <strong>{avg_gc:.1f}%</strong>
                             </span>
                             <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                                A:<strong>{all_a:,}</strong> T:<strong>{all_t:,}</strong> G:<strong>{all_g:,}</strong> C:<strong>{all_c:,}</strong>{f' N:<strong>{all_n:,}</strong>' if all_n > 0 else ''}
+                            </span>
+                            <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
                                 ✓ Valid
                             </span>
                         </div>
@@ -539,15 +697,17 @@ def render():
                              help="Load example sequences for testing")
             if ex_type == "Single Example":
                 if st.button("Load Single Example", use_container_width=True):
-                    parsed_fasta = parse_fasta(EXAMPLE_FASTA)
+                    fasta_text = _load_example_file("example_single.fasta", EXAMPLE_FASTA)
+                    parsed_fasta = parse_fasta(fasta_text)
                     seqs = list(parsed_fasta.values())
                     names = list(parsed_fasta.keys())
                     st.success(UI_TEXT['upload_example_single_success'])
             else:
                 if st.button("Load Multi-FASTA Example", use_container_width=True):
+                    fasta_text = _load_example_file("example_multi.fasta", EXAMPLE_MULTI_FASTA)
                     seqs, names = [], []
                     cur_seq, cur_name = "", ""
-                    for line in EXAMPLE_MULTI_FASTA.splitlines():
+                    for line in fasta_text.splitlines():
                         if line.startswith(">"):
                             if cur_seq:
                                 seqs.append(cur_seq)
@@ -583,28 +743,43 @@ def render():
                 else:
                     st.warning(UI_TEXT['upload_ncbi_empty_warning'])
 
-        # Persist sequences to session state if any found from input
-        if seqs:
-            # Support both disk storage and legacy in-memory mode
-            if st.session_state.get('use_disk_storage') and st.session_state.get('seq_storage'):
-                # Use disk-based storage
-                seq_ids = []
-                for seq, name in zip(seqs, names):
-                    seq_id = st.session_state.seq_storage.save_sequence(seq, name)
-                    seq_ids.append(seq_id)
-                
-                st.session_state.seq_ids = seq_ids
+        # Persist sequences to session state if any found from input.
+        # Guard: never overwrite analysis results during Streamlit reruns
+        # (e.g. reruns triggered by download button clicks).  State is only
+        # mutated when no analysis has been completed yet.
+        _analysis_locked = st.session_state.get('analysis_done', False)
+        if disk_seq_ids:
+            if not _analysis_locked:
+                # Sequences were saved directly to disk during file upload parsing
+                st.session_state.seq_ids = disk_seq_ids
                 st.session_state.names = names
                 st.session_state.results_storage = {}
-                
-                # Keep legacy fields for compatibility but with empty lists
+                # Keep legacy fields empty for compatibility
                 st.session_state.seqs = []
                 st.session_state.results = []
+        elif seqs:
+            # Support both disk storage and legacy in-memory mode
+            if st.session_state.get('use_disk_storage') and st.session_state.get('seq_storage'):
+                if not _analysis_locked:
+                    # Use disk-based storage
+                    seq_ids = []
+                    for seq, name in zip(seqs, names):
+                        seq_id = st.session_state.seq_storage.save_sequence(seq, name)
+                        seq_ids.append(seq_id)
+                    
+                    st.session_state.seq_ids = seq_ids
+                    st.session_state.names = names
+                    st.session_state.results_storage = {}
+                    
+                    # Keep legacy fields for compatibility but with empty lists
+                    st.session_state.seqs = []
+                    st.session_state.results = []
             else:
-                # Legacy in-memory mode
-                st.session_state.seqs = seqs
-                st.session_state.names = names
-                st.session_state.results = []
+                if not _analysis_locked:
+                    # Legacy in-memory mode
+                    st.session_state.seqs = seqs
+                    st.session_state.names = names
+                    st.session_state.results = []
 
         # Compact sequence validation summary (single strip, no individual cards)
         # Support both disk storage and legacy in-memory mode
@@ -626,8 +801,18 @@ def render():
             total_bp = sum(len(s) for s in st.session_state.seqs)
         
         if has_sequences:
-            # Cache sequence stats with validation key to handle sequence changes
-            cache_key = f"stats_cache_{num_sequences}"
+            # Build cache key from actual sequence names to prevent stale-cache GC% mismatch
+            # when different genomes with the same sequence count are uploaded in the same session.
+            seq_names = st.session_state.get('names') or []
+            # Include count and all names in hash to prevent collisions
+            names_sig = hashlib.md5(
+                f"{num_sequences}|{'|'.join(seq_names)}".encode()
+            ).hexdigest()[:8]
+            if st.session_state.get('use_disk_storage') and st.session_state.get('seq_ids'):
+                cache_key = f"stats_cache_disk_{names_sig}"
+            else:
+                cache_key = f"stats_cache_mem_{names_sig}"
+
             if cache_key not in st.session_state:
                 # Calculate stats for all sequences
                 stats_list = []
@@ -635,9 +820,15 @@ def render():
                     # Disk storage mode: calculate from metadata
                     for seq_id in st.session_state.seq_ids:
                         metadata = st.session_state.seq_storage.get_metadata(seq_id)
+                        base_counts = metadata.get('base_counts', {})
                         stats_list.append({
                             'Length': metadata['length'],
-                            'GC%': metadata['gc_content']
+                            'GC%': metadata['gc_content'],
+                            'A': base_counts.get('A', 0),
+                            'T': base_counts.get('T', 0),
+                            'G': base_counts.get('G', 0),
+                            'C': base_counts.get('C', 0),
+                            'N': base_counts.get('N', 0),
                         })
                 else:
                     # Legacy mode: calculate from in-memory sequences
@@ -648,7 +839,19 @@ def render():
         
             # Use cached stats - show single compact summary strip
             cached_stats = st.session_state[cache_key]
-            avg_gc = sum(s['GC%'] for s in cached_stats) / len(cached_stats) if cached_stats else 0.0
+            # Length-weighted GC% = (total G+C) / (total A+T+G+C) * 100
+            total_atgc = sum(
+                s.get('A', 0) + s.get('T', 0) + s.get('G', 0) + s.get('C', 0)
+                for s in cached_stats
+            )
+            total_gc_bases = sum(s.get('G', 0) + s.get('C', 0) for s in cached_stats)
+            avg_gc = (total_gc_bases / total_atgc * 100) if total_atgc > 0 else 0.0
+            # Aggregate character counts
+            sum_a = sum(s.get('A', 0) for s in cached_stats)
+            sum_t = sum(s.get('T', 0) for s in cached_stats)
+            sum_g = sum(s.get('G', 0) for s in cached_stats)
+            sum_c = sum(s.get('C', 0) for s in cached_stats)
+            sum_n = sum(s.get('N', 0) for s in cached_stats)
             
             st.markdown(f"""
             <div style='background: linear-gradient(135deg, #059669 0%, #047857 100%); 
@@ -665,7 +868,10 @@ def render():
                         <strong>{total_bp:,}</strong> bp total
                     </span>
                     <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
-                        GC: <strong>{avg_gc:.1f}%</strong> avg
+                        GC: <strong>{avg_gc:.1f}%</strong>
+                    </span>
+                    <span style='background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;'>
+                        A:<strong>{sum_a:,}</strong> T:<strong>{sum_t:,}</strong> G:<strong>{sum_g:,}</strong> C:<strong>{sum_c:,}</strong>{f' N:<strong>{sum_n:,}</strong>' if sum_n > 0 else ''}
                     </span>
                 </div>
             </div>
@@ -677,10 +883,10 @@ def render():
     # ============================================================
     with right_col:
         st.markdown("""
-        <div style='background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); 
+        <div style='background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); 
                     padding: 0.5rem 1rem; border-radius: 6px; margin-bottom: 0.75rem;
-                    border-left: 3px solid #3b82f6;'>
-            <h4 style='margin: 0; color: #1e3a8a; font-size: 0.95rem; font-weight: 600;'>
+                    border-left: 3px solid #8b5cf6;'>
+            <h4 style='margin: 0; color: #5b21b6; font-size: 0.95rem; font-weight: 600;'>
                 Detection Scope: Select Non-B DNA Motifs
             </h4>
         </div>
@@ -876,16 +1082,146 @@ def render():
 
         if enabled_classes:
             st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            <div style='background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
                         padding: 6px 10px; border-radius: 6px; margin-top: 8px;
-                        border: 1px solid #bfdbfe; font-size: 0.78rem;'>
-                <span style='font-weight: 600; color: #1e40af;'>
+                        border: 1px solid #c4b5fd; font-size: 0.78rem;'>
+                <span style='font-weight: 600; color: #6d28d9;'>
                     {len(enabled_classes)} classes · {num_enabled}/{total_submotifs} submotifs
                 </span>
             </div>
             """, unsafe_allow_html=True)
         else:
             st.warning("Select at least one submotif to enable analysis.")
+        
+        # ============================================================
+        # RUN AND RESET BUTTONS - Inside Detection Scope Section
+        # ============================================================
+        # Initialize analysis_done flag if not present (idempotent run button)
+        if "analysis_done" not in st.session_state:
+            st.session_state.analysis_done = False
+        
+        st.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
+        
+        # Check if valid input is present (sequences AND at least one class selected)
+        # Support both disk storage and legacy in-memory mode
+        has_sequences_inner = bool(st.session_state.get('seqs')) or bool(st.session_state.get('seq_ids'))
+        has_valid_input_inner = has_sequences_inner and bool(enabled_classes)
+        
+        # Create two equal columns for Run and Reset buttons (parallel layout)
+        col_run_inner, col_reset_inner = st.columns([1, 1])
+
+        # Vibrant Reset button styling — scoped to the reset column only
+        # NOTE: CSS uses Streamlit's stable data-testid attributes (baseButton-secondary, column, stHorizontalBlock).
+        # These are consistent across Streamlit >=1.28. Re-verify if upgrading to a major Streamlit version.
+        st.markdown("""
+        <style>
+        /* Reset button: vibrant red gradient, scoped to last column in button row */
+        div[data-testid="stHorizontalBlock"] div[data-testid="column"]:last-child button[data-testid="baseButton-secondary"] {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            color: white !important;
+            border: none !important;
+            font-weight: 700 !important;
+            font-size: 1rem !important;
+            letter-spacing: 0.02em !important;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35) !important;
+            transition: all 0.2s ease !important;
+        }
+        div[data-testid="stHorizontalBlock"] div[data-testid="column"]:last-child button[data-testid="baseButton-secondary"]:hover {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%) !important;
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.55) !important;
+            transform: translateY(-1px) !important;
+        }
+        div[data-testid="stHorizontalBlock"] div[data-testid="column"]:last-child button[data-testid="baseButton-secondary"]:active {
+            transform: translateY(0) !important;
+            box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4) !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        with col_run_inner:
+            # Primary action button with clear scientific terminology
+            if has_valid_input_inner and not st.session_state.analysis_done:
+                run_button = st.button(
+                    "🧬 Run Non-B DNA Analysis",
+                    type="primary",
+                    use_container_width=True,
+                    key="run_motif_analysis_main",
+                    help="Start analyzing uploaded sequences for Non-B DNA elements"
+                )
+            elif st.session_state.analysis_done:
+                # Show analysis complete status
+                st.markdown("""
+                <div role="status" aria-label="Analysis Complete"
+                     style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                            color: white; padding: 12px; 
+                            border-radius: 8px; text-align: center; font-weight: 600;
+                            font-size: 0.95rem;'>
+                    ✓ Analysis Complete — View results in 'Results' tab
+                </div>
+                """, unsafe_allow_html=True)
+                run_button = False
+            else:
+                # Disabled button appearance with accessibility
+                st.markdown(f"""
+                <div role="button" aria-disabled="true" aria-label="Run Analysis - Disabled"
+                     style='background: #e5e7eb; color: #9ca3af; padding: 12px; 
+                            border-radius: 8px; text-align: center; font-weight: 600;
+                            font-size: 0.95rem; cursor: not-allowed;'>
+                    🧬 Run Non-B DNA Analysis
+                </div>
+                <p style='text-align: center; color: #9ca3af; font-size: 0.75rem; margin-top: 4px;'>
+                    Upload sequences and select submotifs to enable
+                </p>
+                """, unsafe_allow_html=True)
+                run_button = False
+
+        with col_reset_inner:
+            # Reset button — clears all uploaded data, sequences, and results
+            if st.button("🔄 Reset", use_container_width=True, help="Clear all uploaded files, sequences, results, and analysis state to start over", key="reset_button_inner"):
+                # Clear analysis flags and computed results
+                st.session_state.analysis_done = False
+                st.session_state.results = []
+                st.session_state.performance_metrics = None
+                st.session_state.cached_visualizations = {}
+                st.session_state.analysis_time = None
+                # Clear loaded sequences and associated data
+                st.session_state.seqs = []
+                st.session_state.names = []
+                st.session_state.seq_ids = []
+                st.session_state.results_storage = {}
+                st.session_state.summary_df = pd.DataFrame()
+                st.session_state.analysis_status = "Ready"
+                st.session_state.current_job_id = None
+                st.session_state.selected_classes_used = []
+                st.session_state.selected_subclasses_used = []
+                # Free cached export bytes and per-sequence stats caches
+                st.cache_data.clear()
+                for _k in [k for k in list(st.session_state.keys()) if k.startswith('stats_cache_')]:
+                    st.session_state.pop(_k, None)
+                st.rerun()
+
+        # ============================================================
+        # PROGRESS DISPLAY AREA - Within Detection Scope
+        # ============================================================
+        # Create a vibrant container for progress display below the buttons
+        with st.container():
+            st.markdown("""
+            <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+                        padding: 0.75rem 1rem; border-radius: 8px; margin-top: 1rem;
+                        border-left: 4px solid #0ea5e9;
+                        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.15);'>
+                <div style='color: #0369a1; font-weight: 600; font-size: 0.9rem;'>
+                    📊 Analysis Progress
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Create placeholders for progress tracking within the container
+            progress_placeholder = st.empty()
+            status_placeholder = st.empty()
+            detailed_progress_placeholder = st.empty()
+            timer_placeholder = st.empty()
+
     
         # ============================================================
         # ANALYSIS OPTIONS - Always ON, Hidden from UI
@@ -914,10 +1250,8 @@ def render():
         overlap_option = "Remove overlaps within subclasses"
     
     # ============================================================
-    # ANALYSIS EXECUTION - Full-Width Section Below Two Columns
-    # Clear visual and spatial separation from configuration
+    # ANALYSIS EXECUTION - Variable Setup
     # ============================================================
-    st.markdown("---")
     
     # Initialize analysis_done flag if not present (idempotent run button)
     if "analysis_done" not in st.session_state:
@@ -928,93 +1262,8 @@ def render():
     has_sequences = bool(st.session_state.get('seqs')) or bool(st.session_state.get('seq_ids'))
     has_valid_input = has_sequences and bool(st.session_state.get('selected_classes'))
     
-    # Create a full-width container for the run button
-    run_button_container = st.container()
-    with run_button_container:
-        # Create three columns for Run, Reset buttons and Clock
-        col_run, col_reset, col_clock = st.columns([4, 1, 1])
-        
-        with col_run:
-            # Primary action button with clear scientific terminology
-            if has_valid_input and not st.session_state.analysis_done:
-                run_button = st.button(
-                    "Run Non-B DNA Analysis",
-                    type="primary",
-                    use_container_width=True,
-                    key="run_motif_analysis_main",
-                    help="Start analyzing uploaded sequences for Non-B DNA elements"
-                )
-            elif st.session_state.analysis_done:
-                # Show analysis complete status
-                st.markdown("""
-                <div role="status" aria-label="Analysis Complete"
-                     style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-                            color: white; padding: 14px; 
-                            border-radius: 8px; text-align: center; font-weight: 600;
-                            font-size: 1rem;'>
-                    ✓ Analysis Complete — View results in 'Results' tab
-                </div>
-                """, unsafe_allow_html=True)
-                run_button = False
-            else:
-                # Disabled button appearance with accessibility
-                st.markdown(f"""
-                <div role="button" aria-disabled="true" aria-label="Run Analysis - Disabled"
-                     style='background: #e5e7eb; color: #9ca3af; padding: 14px; 
-                            border-radius: 8px; text-align: center; font-weight: 600;
-                            font-size: 1rem; cursor: not-allowed;'>
-                    Run Non-B DNA Analysis
-                </div>
-                <p style='text-align: center; color: #9ca3af; font-size: 0.8rem; margin-top: 6px;'>
-                    Upload sequences and select submotifs to enable
-                </p>
-                """, unsafe_allow_html=True)
-                run_button = False
-        
-        with col_reset:
-            # Vibrant Reset button styling
-            st.markdown("""
-            <style>
-            div[data-testid="column"]:nth-child(2) button {
-                background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
-                color: white !important;
-                border: none !important;
-                font-weight: 700 !important;
-            }
-            div[data-testid="column"]:nth-child(2) button:hover {
-                background: linear-gradient(135deg, #fb923c 0%, #f97316 100%) !important;
-                box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4) !important;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-            # Reset button to allow re-running analysis
-            if st.button("🔄 Reset", use_container_width=True, help="Clear results and reset"):
-                st.session_state.analysis_done = False
-                st.session_state.results = []
-                st.session_state.performance_metrics = None
-                st.session_state.cached_visualizations = {}
-                st.session_state.analysis_time = None
-                # analysis_mode is always "Submotif Level" (fixed), no reset needed
-                st.rerun()
-        
-        with col_clock:
-            # Display current time (page load time) as a clock
-            from datetime import datetime
-            current_time = datetime.now().strftime("%H:%M:%S")
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); 
-                        color: white; padding: 10px 8px; 
-                        border-radius: 8px; text-align: center; font-weight: 600;
-                        font-size: 0.9rem; height: 100%; display: flex; 
-                        flex-direction: column; justify-content: center;
-                        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);'>
-                <div style='font-size: 0.7rem; opacity: 0.9;'>🕐 Time</div>
-                <div style='font-family: monospace; font-size: 1rem;'>{current_time}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Placeholder for progress area
-        progress_placeholder = st.empty()
+    # Note: Progress placeholders are created in Detection Scope section (right column)
+    # and will be used by the analysis execution logic below
     
     # ========== RUN ANALYSIS BUTTON LOGIC ========== 
     # Only run if button clicked AND not already done (idempotent)
@@ -1042,6 +1291,8 @@ def render():
             # Sequence length limit has been removed - the system now uses automatic chunking
             # (see NonBFinder.py CHUNK_THRESHOLD=10,000 bp) to handle sequences of any size
             st.session_state.analysis_status = "Running"
+            # Clear stale cached export data so fresh results are generated
+            st.cache_data.clear()
             
             # Store analysis parameters in session state for use in download section
             st.session_state.overlap_option_used = overlap_option
@@ -1065,19 +1316,26 @@ def render():
                     if limits:
                         validation_messages.append(f"Valid {class_id}: Length limits {limits}")
             
+            # ============================================================
+            # PERFORMANCE TRACKING: Initialize tracker for statistics
+            # ============================================================
+            perf_tracker = PerformanceTracker()
+            perf_tracker.start()
+            
             # Enhanced progress tracking - timing captured exactly once at start and end
             import time
             
-            # Create placeholder for progress
-            progress_placeholder = st.empty()
-            status_placeholder = st.empty()
-            detailed_progress_placeholder = st.empty()
-            timer_placeholder = st.empty()
+            # Note: progress placeholders are now created within the Detection Scope section
+            # (see lines ~1037-1055) to display progress in the right column
             
             # ============================================================
             # DETERMINISTIC TIMING: Start time captured exactly once
             # ============================================================
             start_time = time.time()
+            
+            # Simple status message instead of toast
+            status_placeholder.info("🧬 Starting Non-B DNA Analysis...")
+
             
             # Define detector processes for display
             DETECTOR_PROCESSES = [
@@ -1194,8 +1452,131 @@ def render():
                 # Ensures identical behavior for single and multi-FASTA inputs.
                 # ============================================================
                 
-                # Support both disk storage and legacy in-memory mode
-                if st.session_state.get('use_disk_storage') and st.session_state.get('seq_ids'):
+                # Check if we should use parallel processing (2+ sequences)
+                use_parallel = num_sequences >= PARALLEL_PROCESSING_THRESHOLD
+                
+                if use_parallel:
+                    # ============================================================
+                    # PARALLEL PROCESSING MODE - Multi-FASTA Optimization
+                    # ============================================================
+                    status_placeholder.info(f"🚀 Using parallel processing for {num_sequences} sequences")
+                    
+                    # Import helper functions
+                    from Utilities.parallel_analysis_helper import (
+                        prepare_parallel_analysis,
+                        get_optimal_workers
+                    )
+                    
+                    # Prepare data for parallel processing
+                    if st.session_state.get('use_disk_storage') and st.session_state.get('seq_ids'):
+                        sequences_data, analysis_params = prepare_parallel_analysis(
+                            num_sequences=num_sequences,
+                            use_disk_storage=True,
+                            seq_ids=st.session_state.seq_ids,
+                            names=st.session_state.names,
+                            seq_storage=st.session_state.seq_storage,
+                            enabled_classes=list(analysis_classes) if analysis_classes else None,
+                            chunk_threshold=CHUNK_ANALYSIS_THRESHOLD_BP
+                        )
+                    else:
+                        sequences_data, analysis_params = prepare_parallel_analysis(
+                            num_sequences=num_sequences,
+                            use_disk_storage=False,
+                            seqs=st.session_state.seqs,
+                            names=st.session_state.names,
+                            enabled_classes=list(analysis_classes) if analysis_classes else None,
+                            chunk_threshold=CHUNK_ANALYSIS_THRESHOLD_BP
+                        )
+                    
+                    # Progress tracking
+                    progress_status = st.empty()
+                    
+                    # Progress callback closure - captures progress_placeholder and pbar from outer scope
+                    # These must be initialized before this function is defined
+                    def parallel_progress_callback(completed, total, seq_name):
+                        """Update progress bar and status. Closure depends on progress_placeholder and pbar."""
+                        progress = completed / total
+                        with progress_placeholder.container():
+                            pbar.progress(progress, text=f"Analyzed {completed}/{total} sequences")
+                        progress_status.info(f"⏳ Completed: {seq_name}")
+                    
+                    # Run parallel analysis
+                    with st.status("🧬 Running parallel sequence analysis...", expanded=True) as parallel_status:
+                        st.write(f"Analyzing {num_sequences} sequences in parallel...")
+                        
+                        parallel_results = analyze_sequences_parallel(
+                            sequences_data=sequences_data,
+                            analysis_params=analysis_params,
+                            max_workers=get_optimal_workers(num_sequences),
+                            progress_callback=parallel_progress_callback,
+                            use_processes=False  # Use threads for I/O-bound operations
+                        )
+                        
+                        parallel_status.update(label="✅ Parallel analysis complete", state="complete")
+                    
+                    progress_status.empty()
+                    
+                    # Process parallel results
+                    for result in parallel_results:
+                        if result['success']:
+                            i = result['index']
+                            name = result['name']
+                            results = result['results']
+                            seq_length = result['seq_length']
+                            
+                            # Store results storage if using disk mode
+                            if result.get('use_disk_storage') and result.get('results_storage'):
+                                seq_id = result['seq_id']
+                                st.session_state.results_storage[seq_id] = result['results_storage']
+                            
+                            # Update performance tracker
+                            perf_tracker.add_sequence_result(name, seq_length, result['elapsed'], len(results))
+                            
+                            # Apply filters (same as sequential mode)
+                            safe_results = []
+                            for idx, motif in enumerate(results):
+                                try:
+                                    safe_results.append(ensure_subclass(motif))
+                                except (KeyError, AttributeError, TypeError) as e:
+                                    logger.error(f"Error processing motif at index {idx}: {e}")
+                                    continue
+                            results = safe_results
+                            
+                            # Filter by selected subclasses
+                            selected_classes_set = set(st.session_state.selected_classes)
+                            selected_subclasses_set = set(st.session_state.selected_subclasses)
+                            
+                            filtered_results = []
+                            for idx, motif in enumerate(results):
+                                try:
+                                    motif_class = motif.get('Class', '')
+                                    motif_subclass = motif.get('Subclass', '')
+                                    
+                                    if motif_class in selected_classes_set:
+                                        if motif_class in ['Hybrid', 'Non-B_DNA_Clusters']:
+                                            component_classes = motif.get('Component_Classes', [])
+                                            if not component_classes or any(c in selected_classes_set for c in component_classes):
+                                                filtered_results.append(motif)
+                                        elif motif_subclass in selected_subclasses_set:
+                                            filtered_results.append(motif)
+                                except (KeyError, AttributeError, TypeError) as e:
+                                    logger.error(f"Error filtering motif at index {idx}: {e}")
+                                    continue
+                            
+                            results = filtered_results
+                            all_results.append(results)
+                            total_bp_processed += seq_length
+                            
+                            # Brief status update without popup
+                            status_placeholder.success(f"✅ {name}: {len(results):,} motifs")
+                        else:
+                            st.error(f"❌ Failed: {result['name']} - {result.get('error')}")
+                            all_results.append([])
+                    
+                    # Memory management
+                    trigger_garbage_collection()
+                    
+                elif st.session_state.get('use_disk_storage') and st.session_state.get('seq_ids'):
                     # === DISK STORAGE MODE: Use ChunkAnalyzer ===
                     seq_ids = st.session_state.seq_ids
                     names = st.session_state.names
@@ -1207,99 +1588,147 @@ def render():
                         metadata = st.session_state.seq_storage.get_metadata(seq_id)
                         seq_length = metadata['length']
                         
-                        # Calculate overall percentage (deterministic, no timing)
+                        # Calculate overall percentage
                         overall_percentage = (total_bp_processed / total_bp_all_sequences * 100) if total_bp_all_sequences > 0 else 0
                         
-                        # Determine status text based on progress state (no timing)
-                        if total_bp_processed == 0:
-                            status_text = "Starting analysis..."
-                            progress_display = "Starting"
-                        else:
-                            status_text = "Analysis in progress..."
-                            progress_display = f"{overall_percentage:.1f}%"
+                        # Use st.status() for real-time disappearing progress
+                        with st.status(f"🧬 Analyzing sequence {i+1}/{num_sequences}: {name} ({seq_length:,} bp)", expanded=True) as status:
+                            seq_start_time = time.time()
+                            
+                            # Step 1: Validation
+                            st.write("✓ Validating sequence...")
+                            
+                            # Determine whether to use chunking based on sequence size
+                            if seq_length > CHUNK_ANALYSIS_THRESHOLD_BP:
+                                # Step 2: Chunking
+                                st.write(f"✓ Using chunk-based analysis (50KB chunks)")
+                                status_placeholder.info(f"📦 Chunking large sequence: {name}")
+                                
+                                # Create chunk progress callback with status updates
+                                chunk_progress = {'current': 0, 'total': 0}
+                                last_update_pct = 0
+                                
+                                def chunk_callback(progress_pct):
+                                    nonlocal last_update_pct
+                                    chunk_progress['current'] = int(progress_pct)
+                                    # Update every 20% to avoid too many updates
+                                    if progress_pct - last_update_pct >= 20:
+                                        st.write(f"  ⏳ Chunk progress: {progress_pct:.0f}%")
+                                        last_update_pct = progress_pct
+                                
+                                # Step 3: Analysis
+                                st.write("⏳ Running detectors on chunks...")
+                                chunk_start = time.time()
+                                
+                                # Analyze using ChunkAnalyzer
+                                analyzer = ChunkAnalyzer(
+                                    st.session_state.seq_storage,
+                                    use_parallel=True,
+                                    max_workers=None,
+                                    use_adaptive=False
+                                )
+                                
+                                results_storage = analyzer.analyze(
+                                    seq_id=seq_id,
+                                    progress_callback=chunk_callback,
+                                    enabled_classes=list(st.session_state.selected_classes) if st.session_state.selected_classes else None
+                                )
+                                
+                                chunk_elapsed = time.time() - chunk_start
+                                perf_tracker.add_chunk_time(chunk_elapsed)
+                                
+                                # Store results storage
+                                st.session_state.results_storage[seq_id] = results_storage
+                                
+                                # Get results for filtering - Load ALL results (no limit)
+                                results = list(results_storage.iter_results())
+                                # Get actual total count from summary stats
+                                total_motifs = results_storage.get_summary_stats()['total_count']
+                                st.write(f"✓ Chunk analysis complete: {total_motifs:,} total motifs found")
+                            else:
+                                # Small sequence: use standard analysis
+                                st.write("⏳ Running detectors...")
+                                
+                                # Get full sequence for standard analysis
+                                seq = st.session_state.seq_storage.get_sequence_chunk(seq_id, 0, seq_length)
+                                
+                                # Validate sequence before analysis
+                                if not seq or len(seq) == 0:
+                                    st.error(f"❌ Empty sequence detected")
+                                    status.update(label=f"❌ Failed: {name}", state="error")
+                                    continue
+                                
+                                # Use standard analysis
+                                analysis_start = time.time()
+                                results = analyze_sequence(
+                                    seq, name,
+                                    enabled_classes=list(st.session_state.selected_classes) if st.session_state.selected_classes else None
+                                )
+                                analysis_elapsed = time.time() - analysis_start
+                                
+                                # Create results storage and save
+                                results_storage = UniversalResultsStorage(
+                                    base_dir=str(st.session_state.seq_storage.base_dir / "results"),
+                                    seq_id=seq_id
+                                )
+                                results_storage.append_batch(results)
+                                st.session_state.results_storage[seq_id] = results_storage
+                                
+                                st.write(f"✓ Analysis complete: {len(results):,} motifs found")
+                            
+                            # Calculate sequence stats
+                            seq_elapsed = time.time() - seq_start_time
+                            throughput = seq_length / seq_elapsed if seq_elapsed > 0 else 0
+                            
+                            # Update performance tracker
+                            perf_tracker.add_sequence_result(name, seq_length, seq_elapsed, len(results))
+                            
+                            # Step 4: Filtering
+                            st.write("⏳ Applying filters...")
                         
-                        # Build status message (no timing information)
-                        status_msg = f"Processing sequence {i+1}/{num_sequences}: {name} ({seq_length:,} bp)"
-                        status_placeholder.info(status_msg)
+                            # Ensure all motifs have required fields - safe iteration with error handling
+                            safe_results = []
+                            for idx, motif in enumerate(results):
+                                try:
+                                    safe_results.append(ensure_subclass(motif))
+                                except (KeyError, AttributeError, TypeError) as e:
+                                    logger.error(f"Error processing motif at index {idx}: {e}")
+                                    continue  # Skip problematic motif instead of crashing
+                            results = safe_results
+                            
+                            # Filter results based on selected subclasses
+                            selected_classes_set = set(st.session_state.selected_classes)
+                            selected_subclasses_set = set(st.session_state.selected_subclasses)
+                            
+                            filtered_results = []
+                            for idx, motif in enumerate(results):
+                                try:
+                                    motif_class = motif.get('Class', '')
+                                    motif_subclass = motif.get('Subclass', '')
+                                    
+                                    if motif_class in selected_classes_set:
+                                        if motif_class in ['Hybrid', 'Non-B_DNA_Clusters']:
+                                            component_classes = motif.get('Component_Classes', [])
+                                            if not component_classes or any(c in selected_classes_set for c in component_classes):
+                                                filtered_results.append(motif)
+                                        elif motif_subclass in selected_subclasses_set:
+                                            filtered_results.append(motif)
+                                except (KeyError, AttributeError, TypeError) as e:
+                                    logger.error(f"Error filtering motif at index {idx}: {e}")
+                                    continue  # Skip problematic motif instead of crashing
+                            
+                            results = filtered_results
+                            st.write(f"✓ Filters applied: {len(results):,} motifs retained")
+                            
+                            # Final summary
+                            st.write(f"⏱️ Time: {format_time(seq_elapsed)} | ⚡ Throughput: {throughput:,.0f} bp/s")
+                            
+                            # Update status to complete
+                            status.update(label=f"✅ Completed: {name} ({len(results):,} motifs)", state="complete")
+                            
+                            # Brief status update without popup
+                            status_placeholder.success(f"✅ {name}: {len(results):,} motifs found")
                         
-                        # Determine whether to use chunking based on sequence size
-                        # Use module-level constant for threshold
-                        
-                        if seq_length > CHUNK_ANALYSIS_THRESHOLD_BP:
-                            # Large sequence: use ChunkAnalyzer with adaptive chunking
-                            status_placeholder.info(f"Using adaptive chunk-based analysis: {name} ({seq_length:,} bp)")
-                            
-                            # Create chunk progress callback
-                            chunk_progress = {'current': 0, 'total': 0}
-                            
-                            def chunk_callback(progress_pct):
-                                chunk_progress['current'] = int(progress_pct)
-                                if progress_pct % 10 == 0:  # Update every 10%
-                                    status_placeholder.info(f"Analyzing chunks: {progress_pct:.0f}% complete")
-                            
-                            # Analyze using ChunkAnalyzer with adaptive chunking enabled
-                            analyzer = ChunkAnalyzer(
-                                st.session_state.seq_storage,
-                                use_parallel=True,  # Enable parallel chunk processing
-                                max_workers=None,  # Auto-detect CPU count
-                                use_adaptive=True  # Enable triple adaptive chunking
-                            )
-                            
-                            results_storage = analyzer.analyze(
-                                seq_id=seq_id,
-                                progress_callback=chunk_callback,
-                                enabled_classes=list(st.session_state.selected_classes) if st.session_state.selected_classes else None
-                            )
-                            
-                            # Store results storage
-                            st.session_state.results_storage[seq_id] = results_storage
-                            
-                            # Get results for filtering (load first 10000 for display)
-                            results = list(results_storage.iter_results(limit=10000))
-                            
-                            status_placeholder.success(f"Chunk analysis complete: {len(results)} motifs (showing first 10000)")
-                        else:
-                            # Small sequence: use standard analysis with sequence loaded into memory
-                            # Get full sequence for standard analysis
-                            seq = st.session_state.seq_storage.get_sequence_chunk(seq_id, 0, seq_length)
-                            
-                            # Use standard analysis
-                            results = analyze_sequence(
-                                seq, name,
-                                enabled_classes=list(st.session_state.selected_classes) if st.session_state.selected_classes else None
-                            )
-                            
-                            # Create results storage and save
-                            results_storage = UniversalResultsStorage(
-                                base_dir=str(st.session_state.seq_storage.base_dir / "results"),
-                                seq_id=seq_id
-                            )
-                            results_storage.append_batch(results)
-                            st.session_state.results_storage[seq_id] = results_storage
-                            
-                            status_placeholder.success(f"{name}: {seq_length:,} bp | {len(results)} motifs detected")
-                        
-                        # Ensure all motifs have required fields
-                        results = [ensure_subclass(motif) for motif in results]
-                        
-                        # Filter results based on selected subclasses
-                        selected_classes_set = set(st.session_state.selected_classes)
-                        selected_subclasses_set = set(st.session_state.selected_subclasses)
-                        
-                        filtered_results = []
-                        for motif in results:
-                            motif_class = motif.get('Class', '')
-                            motif_subclass = motif.get('Subclass', '')
-                            
-                            if motif_class in selected_classes_set:
-                                if motif_class in ['Hybrid', 'Non-B_DNA_Clusters']:
-                                    component_classes = motif.get('Component_Classes', [])
-                                    if not component_classes or any(c in selected_classes_set for c in component_classes):
-                                        filtered_results.append(motif)
-                                elif motif_subclass in selected_subclasses_set:
-                                    filtered_results.append(motif)
-                        
-                        results = filtered_results
                         all_results.append(results)
                         
                         total_bp_processed += seq_length
@@ -1316,137 +1745,100 @@ def render():
                     # === LEGACY IN-MEMORY MODE ===
                     for i, (seq, name) in enumerate(zip(st.session_state.seqs, st.session_state.names)):
                         progress = (i + 1) / num_sequences
-                    
-                        # ============================================================
-                        # DETERMINISTIC EXECUTION: No timing inside loop
-                        # Progress percentage only - elapsed time computed once at end
-                        # ============================================================
                         
-                        # Calculate overall percentage (deterministic, no timing)
+                        # Calculate overall percentage
                         overall_percentage = (total_bp_processed / total_bp_all_sequences * 100) if total_bp_all_sequences > 0 else 0
                         
-                        # Determine status text based on progress state (no timing)
-                        if total_bp_processed == 0:
-                            status_text = "Starting analysis..."
-                            progress_display = "Starting"
-                        else:
-                            status_text = "Analysis in progress..."
-                            progress_display = f"{overall_percentage:.1f}%"
-                        
-                        # Build status message (no timing information)
-                        status_msg = f"Processing sequence {i+1}/{len(st.session_state.seqs)}: {name} ({len(seq):,} bp)"
-                        status_placeholder.info(status_msg)
-                        
-                        # Run the analysis - use parallel scanner for large sequences if enabled
-                        # No per-sequence timing - total time captured once at end
-                        
-                        if use_parallel_scanner and len(seq) > 100000:
-                            # NOTE: scanner_agent.py has been archived - parallel scanning experimental
-                            # Use experimental parallel scanner for large sequences
-                            try:
-                                from Utilities.scanner_agent import ParallelScanner
-                                
-                                # Create chunk progress placeholder
-                                chunk_progress_placeholder = st.empty()
-                                
-                                # Track chunk progress
-                                chunk_counter = {'current': 0, 'total': 0}
-                                
-                                def chunk_progress_callback(current, total):
-                                    """Callback to update chunk progress (ephemeral)"""
-                                    chunk_counter['current'] = current
-                                    chunk_counter['total'] = total
-                                    if show_chunk_progress:
-                                        # Ephemeral progress (replaces previous)
-                                        chunk_progress_placeholder.info(f"Parallel scanner processing chunks: {current}/{total} ({(current / total) * 100:.1f}%)")
-                                
-                                # Run parallel scanner with progress callback
-                                # Use ephemeral status (replaces previous message)
-                                status_placeholder.info(f"Using parallel scanner for {len(seq):,} bp sequence (est. chunks: ~{len(seq)//50000 + 1})")
-                                
-                                scanner = ParallelScanner(seq, hs_db=None)
-                                
-                                # The parallel scanner internally calls analyze_sequence on each chunk
-                                # and returns full motif dictionaries with deduplication
-                                results = scanner.run_scan(progress_callback=chunk_progress_callback)
-                                
-                                # Update sequence names for all motifs
-                                for motif in results:
-                                    motif['Sequence_Name'] = name
-                                
-                                # Clear chunk progress and show ephemeral success (replaces previous message)
-                                if show_chunk_progress:
-                                    chunk_progress_placeholder.success(f"Parallel chunks complete: {len(results)} motifs from {chunk_counter['total']} chunks")
-                                
-                                # Ephemeral success message (replaces previous)
-                                status_placeholder.success(f"Parallel scanner completed: {len(results)} motifs detected")
-                                
-                            except Exception as e:
-                                # Fallback to standard scanner on error (ephemeral warning)
-                                status_placeholder.warning(f"Parallel scanner failed, falling back to standard: {e}")
-                                results = analyze_sequence(seq, name, 
-                                                           enabled_classes=list(st.session_state.selected_classes))
-                        else:
-                            # Use standard consolidated NBDScanner analysis with selective detection
-                            # Pass enabled_classes for performance optimization - only runs selected detectors
-                            results = analyze_sequence(seq, name, 
-                                                       enabled_classes=list(st.session_state.selected_classes))
-                        
-                        # Ensure all motifs have required fields
-                        results = [ensure_subclass(motif) for motif in results]
-                        
-                        # ============================================================
-                        # FILTER RESULTS BASED ON SELECTED SUBCLASSES
-                        # ============================================================
-                        # Note: Class-level filtering is now done at detector level for performance.
-                        # Here we apply the finer-grained subclass filter.
-                        selected_classes_set = set(st.session_state.selected_classes)
-                        selected_subclasses_set = set(st.session_state.selected_subclasses)
-                        
-                        # Filter motifs to only include selected subclasses
-                        filtered_results = []
-                        for motif in results:
-                            motif_class = motif.get('Class', '')
-                            motif_subclass = motif.get('Subclass', '')
+                        # Use st.status() for real-time disappearing progress
+                        with st.status(f"🧬 Analyzing sequence {i+1}/{num_sequences}: {name} ({len(seq):,} bp)", expanded=True) as status:
+                            seq_start_time = time.time()
                             
-                            # Include if class is selected AND (subclass is selected OR subclass matches selected class)
-                            if motif_class in selected_classes_set:
-                                # For Hybrid and Non-B_DNA_Clusters, include if parent class is selected
-                                if motif_class in ['Hybrid', 'Non-B_DNA_Clusters']:
-                                    # Always include these if they were formed from selected classes
-                                    component_classes = motif.get('Component_Classes', [])
-                                    if not component_classes or any(c in selected_classes_set for c in component_classes):
-                                        filtered_results.append(motif)
-                                elif motif_subclass in selected_subclasses_set:
-                                    filtered_results.append(motif)
+                            # Step 1: Validation
+                            st.write("✓ Validating sequence...")
+                            
+                            if not seq or len(seq) == 0:
+                                st.error(f"❌ Empty sequence detected")
+                                status.update(label=f"❌ Failed: {name}", state="error")
+                                continue
+                            
+                            # Step 2: Analysis
+                            st.write("⏳ Running detectors...")
+                            analysis_start = time.time()
+                            
+                            # Use standard consolidated NBDScanner analysis
+                            results = analyze_sequence(
+                                seq, name,
+                                enabled_classes=list(st.session_state.selected_classes) if st.session_state.selected_classes else None
+                            )
+                            
+                            analysis_elapsed = time.time() - analysis_start
+                            st.write(f"✓ Analysis complete: {len(results):,} motifs found")
+                            
+                            # Step 3: Filtering
+                            st.write("⏳ Applying filters...")
+                            
+                            # Ensure all motifs have required fields - safe iteration with error handling
+                            safe_results = []
+                            for idx, motif in enumerate(results):
+                                try:
+                                    safe_results.append(ensure_subclass(motif))
+                                except (KeyError, AttributeError, TypeError) as e:
+                                    logger.error(f"Error processing motif at index {idx}: {e}")
+                                    continue  # Skip problematic motif instead of crashing
+                            results = safe_results
+                            
+                            # Filter results based on selected subclasses
+                            selected_classes_set = set(st.session_state.selected_classes)
+                            selected_subclasses_set = set(st.session_state.selected_subclasses)
+                            
+                            filtered_results = []
+                            for idx, motif in enumerate(results):
+                                try:
+                                    motif_class = motif.get('Class', '')
+                                    motif_subclass = motif.get('Subclass', '')
+                                    
+                                    if motif_class in selected_classes_set:
+                                        if motif_class in ['Hybrid', 'Non-B_DNA_Clusters']:
+                                            component_classes = motif.get('Component_Classes', [])
+                                            if not component_classes or any(c in selected_classes_set for c in component_classes):
+                                                filtered_results.append(motif)
+                                        elif motif_subclass in selected_subclasses_set:
+                                            filtered_results.append(motif)
+                                except (KeyError, AttributeError, TypeError) as e:
+                                    logger.error(f"Error filtering motif at index {idx}: {e}")
+                                    continue  # Skip problematic motif instead of crashing
+                            
+                            results = filtered_results
+                            st.write(f"✓ Filters applied: {len(results):,} motifs retained")
+                            
+                            # Calculate stats
+                            seq_elapsed = time.time() - seq_start_time
+                            throughput = len(seq) / seq_elapsed if seq_elapsed > 0 else 0
+                            
+                            # Update performance tracker
+                            perf_tracker.add_sequence_result(name, len(seq), seq_elapsed, len(results))
+                            
+                            # Final summary
+                            st.write(f"⏱️ Time: {format_time(seq_elapsed)} | ⚡ Throughput: {throughput:,.0f} bp/s")
+                            
+                            # Update status to complete
+                            status.update(label=f"✅ Completed: {name} ({len(results):,} motifs)", state="complete")
+                            
+                            # Brief status update without popup
+                            status_placeholder.success(f"✅ {name}: {len(results):,} motifs found")
                         
-                        results = filtered_results
                         all_results.append(results)
                     
-                    total_bp_processed += len(seq)
-                    
-                    # Memory management: Trigger garbage collection for large sequences
-                    if len(seq) > 1_000_000:  # For sequences > 1 Mb
-                        trigger_garbage_collection()
-                        logger.debug(f"Triggered garbage collection after processing {name} ({len(seq):,} bp)")
-                    
-                    # ============================================================
-                    # DETERMINISTIC TIMING: No intermediate time calculations
-                    # Progress tracking only - elapsed time computed once at end
-                    # ============================================================
-                    
-                    # Calculate actual progress percentage (bp-based, deterministic)
-                    actual_percentage = (total_bp_processed / total_bp_all_sequences * 100) if total_bp_all_sequences > 0 else 0
-                    
-                    # Build progress info without timing (timing computed once at end)
-                    progress_info = f"Progress: {total_bp_processed:,} / {total_bp_all_sequences:,} bp | Motifs: {len(results)} in this sequence"
-                    
-                    # Update progress display (no timing - pure progress tracking)
-                    with progress_placeholder.container():
-                        pbar.progress(progress, text=f"Analyzed {i+1}/{len(st.session_state.seqs)} sequences ({actual_percentage:.1f}%)")
-                    
-                    # Ephemeral success (replaces previous) - no per-sequence timing shown
-                    status_placeholder.success(f"{name}: {len(seq):,} bp | {len(results)} motifs detected")
+                        total_bp_processed += len(seq)
+                        
+                        # Update progress display
+                        actual_percentage = (total_bp_processed / total_bp_all_sequences * 100) if total_bp_all_sequences > 0 else 0
+                        with progress_placeholder.container():
+                            pbar.progress(progress, text=f"Analyzed {i+1}/{len(st.session_state.seqs)} sequences ({actual_percentage:.1f}%)")
+                        
+                        # Memory management
+                        if len(seq) > 1_000_000:
+                            trigger_garbage_collection()
                 
                 # ============================================================
                 # MULTI-FASTA STABILITY: Results stored once atomically
@@ -1527,14 +1919,14 @@ def render():
                 
                 # Display validation results (ephemeral - replaces previous)
                 if validation_issues:
-                    warning_msg = f"Validation found {len(validation_issues)} potential issues:\n"
+                    warning_msg = UI_TEXT['status_validation_issues'].format(count=len(validation_issues)) + "\n"
                     for issue in validation_issues[:5]:  # Show first 5
                         warning_msg += f"\n• {issue}"
                     if len(validation_issues) > 5:
                         warning_msg += f"\n• ... and {len(validation_issues) - 5} more"
                     status_placeholder.warning(warning_msg)
                 else:
-                    status_placeholder.success("Validation passed: No consistency issues found")
+                    status_placeholder.success(UI_TEXT['status_validation_passed'])
                 
                 # ============================================================
                 # MULTI-FASTA STABILITY: Aggregate statistics computed once
@@ -1547,12 +1939,26 @@ def render():
                 # Generate summary
                 summary = []
                 for i, results in enumerate(all_results):
-                    seq = st.session_state.seqs[i]
-                    stats = get_basic_stats(seq, results)
+                    # Support both disk storage and legacy in-memory modes
+                    if st.session_state.get('use_disk_storage') and st.session_state.get('seq_ids'):
+                        # Disk storage mode: get metadata
+                        seq_id = st.session_state.seq_ids[i]
+                        metadata = st.session_state.seq_storage.get_metadata(seq_id)
+                        name = st.session_state.names[i]
+                        seq_length = metadata['length']
+                        gc_content = metadata['gc_content']
+                    else:
+                        # Legacy in-memory mode
+                        seq = st.session_state.seqs[i]
+                        name = st.session_state.names[i]
+                        stats = get_basic_stats(seq, results)
+                        seq_length = stats['Length']
+                        gc_content = stats['GC%']
+                    
                     summary.append({
-                        'Sequence': st.session_state.names[i],
-                        'Length': stats['Length'],
-                        'GC Content': f"{stats['GC%']:.1f}%",
+                        'Sequence': name,
+                        'Length': seq_length,
+                        'GC Content': f"{gc_content:.1f}%",
                         'Motifs Found': len(results),
                         'Unique Types': len(set(m.get('Type', 'Unknown') for m in results)),
                         'Avg Score': f"{np.mean([m.get('Score', 0) for m in results]):.3f}" if results else "0.000"
@@ -1560,6 +1966,15 @@ def render():
                 
                 # ATOMIC STORAGE: Store summary once in session state
                 st.session_state.summary_df = pd.DataFrame(summary)
+                
+                # Display summary statistics to user
+                if not st.session_state.summary_df.empty:
+                    st.subheader("📊 Analysis Summary Statistics")
+                    st.dataframe(
+                        st.session_state.summary_df,
+                        use_container_width=True,
+                        hide_index=True
+                    )
                 
                 # ============================================================
                 # PRE-GENERATE ALL VISUALIZATIONS FOR CLASSES AND SUBCLASSES
@@ -1574,14 +1989,24 @@ def render():
                 total_viz_count = 0
                 
                 # Reduce UI updates by batching - only update every N sequences or at end
-                UPDATE_INTERVAL = max(1, len(st.session_state.seqs) // 5)  # Update 5 times max
+                # Support both storage modes for UPDATE_INTERVAL calculation
+                num_seqs = len(st.session_state.seq_ids) if st.session_state.get('use_disk_storage') and st.session_state.get('seq_ids') else len(st.session_state.seqs)
+                UPDATE_INTERVAL = max(1, num_seqs // 5)  # Update 5 times max
                 
-                for seq_idx, (seq, name, motifs) in enumerate(zip(st.session_state.seqs, st.session_state.names, all_results)):
-                    sequence_length = len(seq)
+                for seq_idx, results in enumerate(all_results):
+                    # Support both storage modes
+                    if st.session_state.get('use_disk_storage') and st.session_state.get('seq_ids'):
+                        seq_id = st.session_state.seq_ids[seq_idx]
+                        metadata = st.session_state.seq_storage.get_metadata(seq_id)
+                        sequence_length = metadata['length']
+                        name = st.session_state.names[seq_idx]
+                    else:
+                        seq = st.session_state.seqs[seq_idx]
+                        sequence_length = len(seq)
+                        name = st.session_state.names[seq_idx]
                     
-                    # Show all motifs including hybrid/cluster motifs
-                    # No filtering is applied - all results are included in visualizations
-                    filtered_motifs = motifs
+                    # Continue with existing motif filtering logic
+                    filtered_motifs = results
                     
                     if not filtered_motifs:
                         continue
@@ -1623,6 +2048,57 @@ def render():
                     except Exception as e:
                         # Log error but continue processing
                         pass
+
+                    # ----------------------------------------------------------
+                    # Pre-generate all matplotlib figures so that:
+                    #   1. viz_total_time accurately includes rendering time.
+                    #   2. The Results tab renders instantly from cached bytes.
+                    # ----------------------------------------------------------
+                    fig_bytes = {}
+                    _has_clusters = any(m.get('Class') == 'Non-B_DNA_Clusters' for m in filtered_motifs)
+                    _has_hybrids  = any(m.get('Class') == 'Hybrid' for m in filtered_motifs)
+                    _sm = [m for m in filtered_motifs if m.get('Class') not in ['Hybrid', 'Non-B_DNA_Clusters']]
+
+                    _plot_tasks = [
+                        ('class_track',       lambda: plot_linear_motif_track(filtered_motifs, sequence_length, title="Class Track")),
+                    ]
+                    if _sm:
+                        _plot_tasks.append(('subclass_track', lambda: plot_linear_subclass_track(_sm, sequence_length, title="Subclass Track")))
+                    _plot_tasks += [
+                        ('class_dist',        lambda: plot_motif_distribution(filtered_motifs, by='Class', title="Class Distribution")),
+                        ('subclass_dist',     lambda: plot_motif_distribution(filtered_motifs, by='Subclass', title="Subclass Distribution")),
+                        ('length_kde',        lambda: plot_motif_length_kde(filtered_motifs, by_class=True, title="Length Distribution")),
+                        ('score_violin',      lambda: plot_score_violin(filtered_motifs, by_class=True, title="Score Distribution")),
+                        ('nested_pie',        lambda: plot_nested_pie_chart(filtered_motifs, title="Class → Subclass")),
+                        ('struct_heatmap',    lambda: plot_structural_heatmap(filtered_motifs, sequence_length, title="Structural Potential Heatmap")),
+                        ('motif_network',     lambda: plot_motif_network(filtered_motifs, title="Motif Co-occurrence Network")),
+                        ('cooccurrence_mat',  lambda: plot_motif_cooccurrence_matrix(filtered_motifs, title="Co-occurrence Matrix")),
+                        ('chrom_density',     lambda: plot_chromosome_density(filtered_motifs, title="Motif Density by Class")),
+                        ('cluster_dist_fig',  lambda: plot_motif_clustering_distance(filtered_motifs, title="Inter-Motif Distance")),
+                        ('spacer_loop',       lambda: plot_spacer_loop_variation(filtered_motifs, title="Structural Features Distribution")),
+                        ('upset_fig',         lambda: plot_structural_competition_upset(filtered_motifs, title="Structural Competition")),
+                    ]
+
+                    # Density comparison uses already-computed density dicts
+                    _gd = st.session_state.cached_visualizations[viz_cache_key].get('densities', {}).get('class_genomic')
+                    _pd = st.session_state.cached_visualizations[viz_cache_key].get('densities', {}).get('class_positional')
+                    if _gd and _pd:
+                        _plot_tasks.append(('density_comparison', lambda: plot_density_comparison(_gd, _pd, title="Density Analysis")))
+
+                    if _has_clusters or _has_hybrids:
+                        _chm = [m for m in filtered_motifs if m.get('Class') in ['Hybrid', 'Non-B_DNA_Clusters']]
+                        _plot_tasks.append(('cluster_track', lambda: plot_linear_motif_track(_chm, sequence_length, title="Hybrid & Cluster Track")))
+                    if _has_clusters:
+                        _plot_tasks.append(('cluster_size', lambda: plot_cluster_size_distribution(filtered_motifs, title="Cluster Statistics")))
+
+                    for fig_key, fig_fn in _plot_tasks:
+                        try:
+                            fig_bytes[fig_key] = _fig_to_bytes(fig_fn())
+                            total_viz_count += 1
+                        except Exception:
+                            pass
+
+                    st.session_state.cached_visualizations[viz_cache_key]['figures'] = fig_bytes
                 
                 viz_total_time = time.time() - viz_start_time
                 
@@ -1742,6 +2218,73 @@ def render():
                     f'</div>'
                 )
                 st.markdown(completion_html, unsafe_allow_html=True)
+                
+                # ============================================================
+                # PERFORMANCE SUMMARY: Display comprehensive statistics
+                # ============================================================
+                perf_tracker.add_task_time('visualization', viz_total_time)
+                perf_tracker.end()
+                
+                # Calculate motif distribution by class
+                motifs_by_class = {}
+                for results in all_results:
+                    for motif in results:
+                        motif_class = motif.get('Class', 'Unknown')
+                        motifs_by_class[motif_class] = motifs_by_class.get(motif_class, 0) + 1
+                
+                # Display performance summary
+                st.subheader("⚡ Performance Report")
+                
+                # Create expandable section with detailed performance stats
+                with st.expander("📊 View Detailed Performance Statistics", expanded=False):
+                    # Format and display comprehensive performance summary
+                    perf_summary_text = format_performance_summary(perf_tracker, format_time_human)
+                    st.markdown(perf_summary_text)
+                    
+                    # Add motif distribution
+                    if motifs_by_class:
+                        st.markdown("---")
+                        motif_dist_text = format_motif_distribution(motifs_by_class)
+                        st.markdown(motif_dist_text)
+                
+                # Display key metrics as cards
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric(
+                        "Total Time",
+                        format_time(total_time),
+                        delta=None,
+                        help="Total analysis time in human-readable format"
+                    )
+                with col2:
+                    st.metric(
+                        "Throughput",
+                        f"{overall_speed:,.0f} bp/s",
+                        delta=None,
+                        help="Average processing speed"
+                    )
+                with col3:
+                    st.metric(
+                        "Total Motifs",
+                        f"{sum(len(r) for r in all_results):,}",
+                        delta=None,
+                        help="Total motifs detected across all sequences"
+                    )
+                with col4:
+                    mem_mb = get_memory_usage_mb()
+                    st.metric(
+                        "Peak Memory",
+                        f"{mem_mb:.0f} MB",
+                        delta=None,
+                        help="Memory usage at completion"
+                    )
+                
+                # Summary at the end (no popup)
+                status_placeholder.empty()  # Clear the status
+                st.success(
+                    f"🎉 Analysis complete! {sum(len(r) for r in all_results):,} motifs found in {format_time(total_time)}"
+                )
+                
                 st.session_state.analysis_status = "Complete"
                 
                 # Set analysis_done flag for idempotent run button
@@ -1781,12 +2324,36 @@ def render():
                 if not save_success:
                     logger.warning(f"Failed to persist results for job {job_id} - results available in session only")
                 
+            except IndexError:
+                # Occurs when accessing empty lists during analysis (e.g., no patterns found, empty results)
+                clear_analysis_placeholders(progress_placeholder, status_placeholder,
+                                            detailed_progress_placeholder, timer_placeholder)
+                
+                # Log with automatic traceback for developer debugging
+                logger.exception("IndexError during analysis")
+                
+                # Error message removed per requirements - no longer displaying to user
+                # The analysis will fail silently and technical details are available in logs
+                
+                # Show technical details in expander for advanced users
+                show_technical_details()
+                
+                st.session_state.analysis_status = "Error"
+                
             except Exception as e:
-                progress_placeholder.empty()
-                status_placeholder.empty()
-                detailed_progress_placeholder.empty()
-                timer_placeholder.empty()
-                st.error(f"Analysis failed: {str(e)}")
+                # Catch-all for other unexpected errors
+                clear_analysis_placeholders(progress_placeholder, status_placeholder,
+                                            detailed_progress_placeholder, timer_placeholder)
+                
+                # Log with automatic traceback for developer debugging
+                logger.exception("Unexpected error during analysis")
+                
+                # Display error to user
+                st.error(f"❌ **Analysis failed:** {str(e)}")
+                
+                # Show traceback in expander for debugging
+                show_technical_details()
+                
                 st.session_state.analysis_status = "Error"
 
     # End of Upload & Analyze tab

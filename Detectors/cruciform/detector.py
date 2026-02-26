@@ -1,15 +1,5 @@
-"""
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ Cruciform DNA Detector - Thermodynamic inverted repeats                      │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
-│ References: Lilley 2000; SantaLucia 1998                                     │
-│ Algorithm: Seed-and-extend indexing                                          │
-└──────────────────────────────────────────────────────────────────────────────┘
-"""
-# ═══════════════════════════════════════════════════════════════════════════════
+"""Cruciform DNA detector using thermodynamic seed-and-extend algorithm."""
 # IMPORTS
-# ═══════════════════════════════════════════════════════════════════════════════
 import math
 from typing import List, Dict, Any, Tuple, Optional
 from collections import defaultdict
@@ -21,19 +11,17 @@ from Utilities.core.motif_normalizer import normalize_class_subclass
 try: from motif_patterns import CRUCIFORM_PATTERNS
 except ImportError: CRUCIFORM_PATTERNS = {}
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TUNABLE PARAMETERS - Literature-Supported Parameters
-# ═══════════════════════════════════════════════════════════════════════════════
+# TUNABLE PARAMETERS
 MIN_ARM = 8; MAX_ARM = 50; MAX_LOOP = 12; MAX_MISMATCHES = 0; MAX_SEQUENCE_LENGTH = 200000; SCORE_THRESHOLD = 0.2
 SEED_SIZE = 6; DELTA_G_THRESHOLD = -5.0  # kcal/mol stability cutoff
-# SantaLucia-like nearest-neighbor ΔG°37 (kcal/mol)
 NN_ENERGY = {"AA": -1.0, "AC": -1.44, "AG": -1.28, "AT": -0.88, "CA": -1.45, "CC": -1.84, "CG": -2.17, "CT": -1.28,
              "GA": -1.30, "GC": -2.24, "GG": -1.84, "GT": -1.44, "TA": -0.58, "TC": -1.30, "TG": -1.45, "TT": -1.0}
-# ═══════════════════════════════════════════════════════════════════════════════
 
 
 class CruciformDetector(BaseMotifDetector):
     """Cruciform (thermodynamic inverted repeat) DNA detector using seed-and-extend indexing."""
+
+    SCORE_REFERENCE = 'Lilley et al. 2000, Sinden et al. 1994'
 
     MIN_ARM = MIN_ARM; MAX_ARM = MAX_ARM; MAX_LOOP = MAX_LOOP; MAX_MISMATCHES = MAX_MISMATCHES
     MAX_SEQUENCE_LENGTH = MAX_SEQUENCE_LENGTH; SCORE_THRESHOLD = SCORE_THRESHOLD
@@ -41,6 +29,26 @@ class CruciformDetector(BaseMotifDetector):
 
     def get_motif_class_name(self) -> str:
         return "Cruciform"
+
+    def get_length_cap(self, subclass: str = None) -> int:
+        """Cruciform structures stable up to ~200 bp (Lilley 2000)."""
+        return 200
+
+    def theoretical_min_score(self) -> float:
+        """Minimum biologically valid cruciform raw score (score threshold)."""
+        return self.SCORE_THRESHOLD
+
+    def theoretical_max_score(self, sequence_length: int = None) -> float:
+        """Highest possible cruciform raw score.
+
+        Score = min(1.0, -ΔG / 20). For a GC-rich stem of MAX_ARM,
+        using most negative NN energy (GC = -2.24 kcal/mol) and minimal loop penalty.
+        """
+        min_nn = min(self.NN_ENERGY.values())  # most negative (e.g., -2.24)
+        max_stem_dG = (self.MAX_ARM - 1) * min_nn
+        loop_penalty = self._loop_penalty(1)
+        max_neg_dG = max_stem_dG + loop_penalty
+        return min(1.0, -max_neg_dG / 20.0)
 
     def get_patterns(self) -> Dict[str, List[Tuple]]:
         return self._load_patterns(CRUCIFORM_PATTERNS, lambda: {
@@ -229,7 +237,6 @@ class CruciformDetector(BaseMotifDetector):
         sequence = sequence.upper().strip()
         motifs = []
 
-        # Forward strand
         self.audit['windows_scanned'] += 1
         inverted_repeats_fwd = self.find_inverted_repeats(sequence)
         self.audit['candidates_seen'] += len(inverted_repeats_fwd)
@@ -269,7 +276,8 @@ class CruciformDetector(BaseMotifDetector):
                 'End': end_pos,
                 'Length': end_pos - start_pos,
                 'Sequence': full_seq,
-                'Score': round(repeat['score'], 3),
+                'Raw_Score': round(repeat['score'], 3),
+                'Score': self.normalize_score(repeat['score'], end_pos - start_pos, canonical_subclass),
                 'Strand': '+',
                 'Method': 'Cruciform_detection',
                 'Pattern_ID': f'CRU_{i+1}',
@@ -310,19 +318,15 @@ class CruciformDetector(BaseMotifDetector):
         """Annotate disease relevance for cruciform structures"""
         disease_notes = []
         
-        # Stable cruciforms - DNA breakage
         if deltaG < -10:
             disease_notes.append(f'Highly stable cruciform (ΔG={deltaG:.1f}) - DNA breakage, genomic instability')
         
-        # Long palindromes - chromosomal rearrangements
         if arm_len >= 30:
             disease_notes.append('Long palindrome - chromosomal translocations, deletions')
         
-        # AT-rich palindromes
         if gc_content < 40:
             disease_notes.append('AT-rich palindrome - replication fork stalling, fragile sites')
         
-        # General associations
         disease_notes.append('Cruciform formation - recombination hotspot, transcription regulation, replication origin')
         
         return '; '.join(disease_notes)

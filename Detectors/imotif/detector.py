@@ -1,14 +1,6 @@
-"""
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ i-Motif DNA Detector - Canonical C-rich structures and HUR AC-motifs         │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
-│ References: Gehring 1993, Hur 2021                                           │
-└──────────────────────────────────────────────────────────────────────────────┘
-"""
-# ═══════════════════════════════════════════════════════════════════════════════
+"""i-Motif DNA detector: canonical C-rich structures and HUR AC-motifs."""
 # IMPORTS
-# ═══════════════════════════════════════════════════════════════════════════════
+import bisect
 import re
 from typing import Dict, List, Tuple, Any
 from ..base.base_detector import BaseMotifDetector
@@ -18,20 +10,34 @@ from Utilities.core.motif_normalizer import normalize_class_subclass
 try: from motif_patterns import IMOTIF_PATTERNS
 except ImportError: IMOTIF_PATTERNS = {}
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # TUNABLE PARAMETERS
-# ═══════════════════════════════════════════════════════════════════════════════
 MIN_REGION_LEN = 10; CLASS_PRIORITIES = {'canonical_imotif': 1, 'hur_ac_motif': 2}
 VALIDATED_SEQS = [("IM_VAL_001", "CCCCTCCCCTCCCCTCCCC", "Validated i-motif 1", "Gehring 1993"),
                   ("IM_VAL_002", "CCCCACCCCACCCCACCCC", "Validated i-motif 2", "Leroy 1995")]
-# ═══════════════════════════════════════════════════════════════════════════════
 
 def _class_prio_idx(class_name: str) -> int: return CLASS_PRIORITIES.get(class_name, 999)
 
 class IMotifDetector(BaseMotifDetector):
     """i-Motif DNA detector: canonical C-rich structures and HUR AC-motifs."""
 
+    SCORE_REFERENCE = 'Gehring et al. 1993, Zeraati et al. 2018'
+
     def get_motif_class_name(self) -> str: return "i-Motif"
+
+    def get_length_cap(self, subclass: str = None) -> int:
+        """i-Motif structures stable up to ~60 bp (Gehring 1993, Zeraati 2018)."""
+        return 60
+
+    def theoretical_min_score(self) -> float:
+        """Minimum biologically valid i-motif raw score."""
+        return 0.4
+
+    def theoretical_max_score(self, sequence_length: int = None) -> float:
+        """Highest possible i-motif raw score.
+
+        C-rich density + tract bonus, capped at 1.0.
+        """
+        return 1.0
 
     def get_patterns(self) -> Dict[str, List[Tuple]]:
         """Return i-motif patterns: canonical 4×C-tracts and HUR AC-motifs."""
@@ -103,10 +109,20 @@ class IMotifDetector(BaseMotifDetector):
     def _resolve_overlaps_greedy(self, scored: List[Dict[str, Any]], merge_gap: int = 0) -> List[Dict[str, Any]]:
         if not scored: return []
         scored_sorted = sorted(scored, key=lambda x: (-x['score'], _class_prio_idx(x.get('class_name','')), -(x['end']-x['start'])))
-        accepted = []; occupied = []
+        accepted: List[Dict[str, Any]] = []
+        # Maintain sorted accepted-interval lists for O(log n) overlap checking.
+        acc_starts: List[int] = []
+        acc_ends: List[int] = []
         for cand in scored_sorted:
-            s, e = cand['start'], cand['end']; conflict = any(not (e <= as_ - merge_gap or s >= ae + merge_gap) for (as_, ae) in occupied)
-            if not conflict: accepted.append(cand); occupied.append((s, e))
+            s, e = cand['start'], cand['end']
+            idx = bisect.bisect_left(acc_starts, e + merge_gap)
+            conflict = (idx > 0 and acc_ends[idx - 1] + merge_gap > s) or \
+                       (idx < len(acc_starts) and acc_starts[idx] - merge_gap < e)
+            if not conflict:
+                accepted.append(cand)
+                ins = bisect.bisect_left(acc_starts, s)
+                acc_starts.insert(ins, s)
+                acc_ends.insert(ins, e)
         accepted.sort(key=lambda x: x['start']); return accepted
 
     def calculate_score(self, sequence: str, pattern_info: Tuple = None) -> float:
@@ -155,7 +171,7 @@ class IMotifDetector(BaseMotifDetector):
             gc_total = self._calc_gc(motif_seq); gc_stems = self._calc_gc(''.join(c_tracts)) if c_tracts else 0
             motif = {'ID': f"{sequence_name}_IMOT_{start_pos+1}", 'Sequence_Name': sequence_name, 'Class': canonical_class,
                      'Subclass': canonical_subclass, 'Start': start_pos + 1, 'End': end_pos, 'Length': end_pos - start_pos,
-                     'Sequence': motif_seq, 'Score': round(score, 3), 'Strand': '+', 'Method': 'i-Motif_detection',
+                     'Sequence': motif_seq, 'Raw_Score': round(score, 3), 'Score': self.normalize_score(score, end_pos - start_pos, canonical_subclass), 'Strand': '+', 'Method': 'i-Motif_detection',
                      'Pattern_ID': f'IMOT_{i+1}', 'Stems': c_tracts, 'Loops': loops, 'Num_Stems': len(c_tracts),
                      'Num_Loops': len(loops), 'Stem_Lengths': [len(s) for s in c_tracts], 'Loop_Lengths': [len(l) for l in loops],
                      'GC_Content': round(gc_total, 2), 'GC_Total': round(gc_total, 2), 'GC_Stems': round(gc_stems, 2),

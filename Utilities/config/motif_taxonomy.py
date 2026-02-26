@@ -61,13 +61,13 @@ MOTIF_CLASSIFICATION: Dict[int, Dict[str, any]] = {
         'class': 'G-Quadruplex',
         'subclasses': [
             'Telomeric G4',
-            'Stacked canonical G4s',
-            'Stacked G4s with linker',
+            'Stacked G4',
             'Canonical intramolecular G4',
             'Extended-loop canonical',
             'Higher-order G4 array/G4-wire',
             'Intramolecular G-triplex',
-            'Two-tetrad weak PQS'
+            'Two-tetrad weak PQS',
+            'Bulged G4'
         ]
     },
     7: {
@@ -217,13 +217,15 @@ SUBCLASS_ALIASES: Dict[str, str] = {
     
     # G-Quadruplex subclasses
     'telomeric g4': 'Telomeric G4',
-    'stacked canonical g4s': 'Stacked canonical G4s',
-    'stacked g4s with linker': 'Stacked G4s with linker',
+    'stacked g4': 'Stacked G4',
+    'stacked canonical g4s': 'Stacked G4',
+    'stacked g4s with linker': 'Stacked G4',
     'canonical intramolecular g4': 'Canonical intramolecular G4',
     'extended-loop canonical': 'Extended-loop canonical',
     'higher-order g4 array/g4-wire': 'Higher-order G4 array/G4-wire',
     'intramolecular g-triplex': 'Intramolecular G-triplex',
     'two-tetrad weak pqs': 'Two-tetrad weak PQS',
+    'bulged g4': 'Bulged G4',
     
     # i-Motif subclasses
     'canonical i-motif': 'Canonical i-motif',
@@ -252,12 +254,44 @@ SUBCLASS_ALIASES: Dict[str, str] = {
 
 def get_all_classes() -> List[str]:
     """
-    Get list of all canonical class names.
+    Get list of all canonical class names in alphabetical order.
+    
+    Note: For visualizations, use get_all_classes_taxonomy_order() instead
+    to maintain biological taxonomy order.
     
     Returns:
-        Sorted list of class names
+        Alphabetically sorted list of class names
     """
     return sorted(VALID_CLASSES)
+
+
+def get_all_classes_taxonomy_order() -> List[str]:
+    """
+    Get list of all canonical class names in taxonomy order.
+    
+    Returns taxonomy order as defined in MOTIF_CLASSIFICATION (by ID).
+    This should be used for visualizations instead of alphabetical sorting.
+    
+    Returns:
+        List of class names in taxonomy order
+    """
+    return [MOTIF_CLASSIFICATION[i]['class'] for i in sorted(MOTIF_CLASSIFICATION.keys())]
+
+
+def get_all_subclasses_taxonomy_order() -> List[str]:
+    """
+    Get list of all canonical subclass names in taxonomy order.
+    
+    Returns subclasses in the order they appear in MOTIF_CLASSIFICATION.
+    Within each class, subclasses are in the order defined in the taxonomy.
+    
+    Returns:
+        List of subclass names in taxonomy order
+    """
+    subclasses = []
+    for i in sorted(MOTIF_CLASSIFICATION.keys()):
+        subclasses.extend(MOTIF_CLASSIFICATION[i]['subclasses'])
+    return subclasses
 
 
 def get_subclasses_for_class(class_name: str) -> List[str]:
@@ -423,6 +457,8 @@ __all__ = [
     'CLASS_ALIASES',
     'SUBCLASS_ALIASES',
     'get_all_classes',
+    'get_all_classes_taxonomy_order',
+    'get_all_subclasses_taxonomy_order',
     'get_subclasses_for_class',
     'get_class_for_subclass',
     'is_valid_class',

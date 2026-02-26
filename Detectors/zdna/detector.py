@@ -1,49 +1,62 @@
-"""
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ Z-DNA Detector - 10-mer scoring (Ho 1986) + eGZ-motifs (Herbert 1997)        │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
-└──────────────────────────────────────────────────────────────────────────────┘
-"""
-# ═══════════════════════════════════════════════════════════════════════════════
+"""Z-DNA detector using 10-mer scoring (Ho 1986) and eGZ-motifs (Herbert 1997)."""
 # IMPORTS
-# ═══════════════════════════════════════════════════════════════════════════════
-import logging; import re
+import logging
+import re
 from typing import Any, Dict, List, Tuple
 
-try: from Detectors.base.base_detector import BaseMotifDetector
-except ImportError:
-    import sys; from pathlib import Path
-    parent_dir = str(Path(__file__).parent.parent.parent)
-    if parent_dir not in sys.path: sys.path.insert(0, parent_dir)
-    from Detectors import BaseMotifDetector
+from Detectors.base.base_detector import BaseMotifDetector
 
 from .tenmer_table import TENMER_SCORE
 from . import hyperscan_backend
 from Utilities.core.motif_normalizer import normalize_class_subclass
 
-try: from motif_patterns import ZDNA_PATTERNS
-except ImportError: ZDNA_PATTERNS = {}
+try:
+    from motif_patterns import ZDNA_PATTERNS
+except ImportError:
+    ZDNA_PATTERNS = {}
 
-try: import numpy as np; _NUMPY_AVAILABLE = True
-except ImportError: _NUMPY_AVAILABLE = False
+try:
+    import numpy as np
+    _NUMPY_AVAILABLE = True
+except ImportError:
+    _NUMPY_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # TUNABLE PARAMETERS
-# ═══════════════════════════════════════════════════════════════════════════════
 MIN_EGZ_REPEATS = 3; EGZ_BASE_SCORE = 0.85; EGZ_MIN_SCORE_THRESHOLD = 0.80; MIN_Z_SCORE = 50.0
-# ═══════════════════════════════════════════════════════════════════════════════
 
 
 class ZDNADetector(BaseMotifDetector):
     """Z-DNA detector: 10-mer scoring (Ho 1986) + eGZ-motifs (Herbert 1997)."""
 
+    SCORE_REFERENCE = 'Ho et al. 1986 (EMBO J) - Z-DNA propensity'
+
     MIN_EGZ_REPEATS = MIN_EGZ_REPEATS; EGZ_BASE_SCORE = EGZ_BASE_SCORE; EGZ_MIN_SCORE_THRESHOLD = EGZ_MIN_SCORE_THRESHOLD
     MIN_Z_SCORE = MIN_Z_SCORE
 
     def get_motif_class_name(self) -> str: return "Z-DNA"
+
+    def get_length_cap(self, subclass: str = None) -> int:
+        """Z-DNA structures stable up to ~300 bp (Ho 1986)."""
+        return 300
+
+    def theoretical_min_score(self) -> float:
+        """Minimum biologically valid Z-DNA cumulative raw score (Ho 1986 10-mer threshold)."""
+        return self.MIN_Z_SCORE
+
+    def theoretical_max_score(self, sequence_length: int = None) -> float:
+        """Highest possible Z-DNA cumulative raw score.
+
+        Per-base max contribution = max(TENMER_SCORE) / 10.
+        For a region of length L: max = (max_tenmer_score / 10) * L.
+        Fallback uses a typical Z-DNA region length of 20 bp (two CpG dinucleotides × 10-mer).
+        """
+        max_tenmer = max(TENMER_SCORE.values())
+        if sequence_length is None:
+            # Fallback: typical short Z-DNA region (20 bp covers two overlapping 10-mers)
+            sequence_length = 20
+        return (max_tenmer / 10.0) * sequence_length
 
     def get_patterns(self) -> Dict[str, List[Tuple]]:
         """Return patterns for Z-DNA detection."""
@@ -74,7 +87,7 @@ class ZDNADetector(BaseMotifDetector):
         seq = sequence.upper(); annotations = []
         matches = self._find_10mer_matches(seq)
         if matches:
-            merged = self._merge_matches(matches); contrib = self._build_per_base_contrib(seq)
+            merged = self._merge_matches(matches); contrib = self._build_per_base_contrib(seq, matches=matches)
             for (s, e, region_matches) in merged:
                 sum_score = sum(contrib[s:e]); n10 = len(region_matches)
                 mean10 = (sum(m[2] for m in region_matches) / n10) if n10 > 0 else 0.0
@@ -101,21 +114,24 @@ class ZDNADetector(BaseMotifDetector):
                 if region.get('sum_score', 0) >= self.EGZ_MIN_SCORE_THRESHOLD:
                     canonical_class, canonical_subclass = normalize_class_subclass(self.get_motif_class_name(), 'eGZ', strict=False, auto_correct=True)
                     
-                    # Enhanced features for eGZ motifs
                     repeat_unit = region.get('repeat_unit', '')
                     repeat_count = region.get('repeat_count', 0)
+                    raw_score = region['sum_score']
+                    normalized_score = self.normalize_score(raw_score, region['length'], canonical_subclass)
                     
                     motifs.append({
                         'ID': f"{sequence_name}_{region['pattern_id']}_{start_pos+1}", 'Sequence_Name': sequence_name,
                         'Class': canonical_class, 'Subclass': canonical_subclass,
                         'Start': start_pos + 1, 'End': end_pos, 'Length': region['length'], 'Sequence': motif_seq,
-                        'Score': round(region['sum_score'], 3), 'Strand': '+', 'Method': 'Z-DNA_detection',
+                        'Raw_Score': round(raw_score, 3),
+                        'Score': normalized_score,
+                        'Strand': '+', 'Method': 'Z-DNA_detection',
                         'Pattern_ID': region['pattern_id'], 
                         'Repeat_Unit': repeat_unit,
                         'Repeat_Count': repeat_count, 
                         'GC_Content': round(gc_content, 2),
-                        'Arm_Length': 'N/A',  # Not applicable for Z-DNA
-                        'Loop_Length': 'N/A',  # Not applicable for Z-DNA
+                        'Arm_Length': 'N/A',
+                        'Loop_Length': 'N/A',
                         'Type_Of_Repeat': f'Trinucleotide eGZ-motif ({repeat_unit})',
                         'Criterion': self._get_egz_criterion(repeat_unit, repeat_count),
                         'Disease_Relevance': self._get_egz_disease_relevance(repeat_unit, repeat_count),
@@ -129,14 +145,17 @@ class ZDNADetector(BaseMotifDetector):
                     
                     canonical_class, canonical_subclass = normalize_class_subclass(self.get_motif_class_name(), 'Z-DNA', strict=False, auto_correct=True)
                     
-                    # Determine Z-DNA type
                     zdna_type = self._classify_zdna_type(motif_seq, alternating_cg, alternating_at)
+                    raw_score = region['sum_score']
+                    normalized_score = self.normalize_score(raw_score, region['length'], canonical_subclass)
                     
                     motifs.append({
                         'ID': f"{sequence_name}_ZDNA_{start_pos+1}", 'Sequence_Name': sequence_name,
                         'Class': canonical_class, 'Subclass': canonical_subclass,
                         'Start': start_pos + 1, 'End': end_pos, 'Length': region['length'], 'Sequence': motif_seq,
-                        'Score': round(region['sum_score'], 3), 'Strand': '+', 'Method': 'Z-DNA_detection',
+                        'Raw_Score': round(raw_score, 3),
+                        'Score': normalized_score,
+                        'Strand': '+', 'Method': 'Z-DNA_detection',
                         'Pattern_ID': f'ZDNA_{i+1}', 
                         'Contributing_10mers': region.get('n_10mers', 0),
                         'Mean_10mer_Score': region.get('mean_score_per10mer', 0), 
@@ -145,8 +164,8 @@ class ZDNADetector(BaseMotifDetector):
                         'Alternating_CG_Regions': alternating_cg,
                         'Alternating_AT_Regions': alternating_at, 
                         'GC_Content': round(gc_content, 2),
-                        'Arm_Length': 'N/A',  # Not applicable for Z-DNA
-                        'Loop_Length': 'N/A',  # Not applicable for Z-DNA
+                        'Arm_Length': 'N/A',
+                        'Loop_Length': 'N/A',
                         'Type_Of_Repeat': zdna_type,
                         'Criterion': self._get_zdna_criterion(region),
                         'Disease_Relevance': self._get_zdna_disease_relevance(motif_seq, gc_content, region['length']),
@@ -195,19 +214,15 @@ class ZDNADetector(BaseMotifDetector):
         """Annotate disease relevance for Z-DNA"""
         disease_notes = []
         
-        # Check for specific disease-associated patterns
         if re.search(r'(CG){5,}', sequence) or re.search(r'(GC){5,}', sequence):
             disease_notes.append('Long CG/GC alternating - potential methylation site, epigenetic regulation')
         
-        # High GC Z-DNA regions
         if gc_content > 75:
             disease_notes.append('High GC Z-DNA - promoter element, gene regulation')
         
-        # Long Z-DNA regions
         if length > 50:
             disease_notes.append('Extended Z-DNA - chromatin structure, recombination hotspot')
         
-        # General associations
         disease_notes.append('Z-DNA formation - immune response (ZBP1 binding), transcription, genome instability')
         
         return '; '.join(disease_notes) if disease_notes else 'Z-DNA formation potential'
@@ -267,15 +282,12 @@ class ZDNADetector(BaseMotifDetector):
         matches = self._find_10mer_matches(seq); merged = self._merge_matches(matches, merge_gap=merge_gap)
         return [(s, e) for (s, e, _) in merged]
 
-    def _build_per_base_contrib(self, seq: str) -> List[float]:
-        """Build per-base contribution array.
-        
-        Uses NumPy vectorization for 2-3x speedup on large sequences when available.
-        """
+    def _build_per_base_contrib(self, seq: str, matches: List[Tuple] = None) -> List[float]:
+        """Build per-base contribution array from 10-mer matches."""
         n = len(seq)
-        matches = self._find_10mer_matches(seq)
+        if matches is None:
+            matches = self._find_10mer_matches(seq)
         
-        # Use vectorized version for large sequences if NumPy is available
         if _NUMPY_AVAILABLE and n > 1000 and len(matches) > 0:
             try:
                 contrib = np.zeros(n, dtype=np.float64)
@@ -288,10 +300,8 @@ class ZDNADetector(BaseMotifDetector):
                 
                 return contrib.tolist()
             except Exception:
-                # Fallback to loop-based implementation on error
                 pass
         
-        # Original loop-based implementation
         contrib = [0.0] * n
         for (start, ten, score) in matches:
             per_base = float(score) / 10.0

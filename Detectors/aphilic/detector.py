@@ -1,50 +1,65 @@
-"""
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ A-philic DNA Detector - 10-mer scoring table with hyperscan acceleration     │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ Author: Dr. Venkata Rajesh Yella | License: MIT | Version: 2024.1            │
-└──────────────────────────────────────────────────────────────────────────────┘
-"""
-# ═══════════════════════════════════════════════════════════════════════════════
+"""A-philic DNA detector using 10-mer propensity scoring."""
 # IMPORTS
-# ═══════════════════════════════════════════════════════════════════════════════
 import logging
 from typing import Any, Dict, List, Tuple
 
-try: from Detectors.base.base_detector import BaseMotifDetector
-except ImportError:
-    import sys; from pathlib import Path
-    parent_dir = str(Path(__file__).parent.parent.parent)
-    if parent_dir not in sys.path: sys.path.insert(0, parent_dir)
-    from Detectors import BaseMotifDetector
+from Detectors.base.base_detector import BaseMotifDetector
 
 from Utilities.core.motif_normalizer import normalize_class_subclass
+from Utilities.detectors_utils import calc_gc_content, calc_at_content
 from .tenmer_table import TENMER_LOG2
 
-try: from Detectors.zdna import hyperscan_backend; _HYPERSCAN_AVAILABLE = hyperscan_backend.is_hyperscan_available()
-except ImportError: _HYPERSCAN_AVAILABLE = False; hyperscan_backend = None
+try:
+    from Detectors.zdna import hyperscan_backend
+    _HYPERSCAN_AVAILABLE = hyperscan_backend.is_hyperscan_available()
+except ImportError:
+    _HYPERSCAN_AVAILABLE = False
+    hyperscan_backend = None
 
-try: import numpy as np; _NUMPY_AVAILABLE = True
-except ImportError: _NUMPY_AVAILABLE = False; np = None
+try:
+    import numpy as np
+    _NUMPY_AVAILABLE = True
+except ImportError:
+    _NUMPY_AVAILABLE = False
+    np = None
 
-try: from motif_patterns import APHILIC_DNA_PATTERNS
+try:
+    from motif_patterns import APHILIC_DNA_PATTERNS
 except ImportError: APHILIC_DNA_PATTERNS = {}
 
 logger = logging.getLogger(__name__)
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # TUNABLE PARAMETERS
-# ═══════════════════════════════════════════════════════════════════════════════
 MIN_SUM_LOG2 = 0.5  # Minimum sum_log2 for A-philic regions
-# ═══════════════════════════════════════════════════════════════════════════════
 
 
 class APhilicDetector(BaseMotifDetector):
     """A-philic DNA detector using 10-mer scoring table."""
 
+    SCORE_REFERENCE = 'Gorin et al. 1995, Vinogradov et al. 2003'
+
     MIN_SUM_LOG2 = MIN_SUM_LOG2
 
     def get_motif_class_name(self) -> str: return "A-philic_DNA"
+
+    def theoretical_min_score(self) -> float:
+        """Minimum biologically valid A-philic raw score (MIN_SUM_LOG2)."""
+        return self.MIN_SUM_LOG2
+
+    def theoretical_max_score(self, sequence_length: int = None) -> float:
+        """Highest possible sum_log2 score based on 10-mer table.
+
+        Each position contributes max(TENMER_LOG2.values()) / 10 per base.
+        """
+        if sequence_length is None:
+            # Fallback: assume a minimal A-philic region of ~10 bp (one 10-mer)
+            sequence_length = 10
+        max_log2 = max(TENMER_LOG2.values())
+        return (max_log2 / 10.0) * sequence_length
+
+    def get_length_cap(self, subclass: str = None) -> int:
+        """A-philic DNA stable up to ~300 bp (Vinogradov 2003)."""
+        return 300
 
     def get_patterns(self) -> Dict[str, List[Tuple]]:
         return {"a_philic_10mers": [(r"", "APH_10MER", "A-philic 10-mer table", "A-philic DNA", 10, "a_philic_10mer_score", 0.9, "A-philic 10mer motif", "user_table")]}
@@ -76,33 +91,29 @@ class APhilicDetector(BaseMotifDetector):
                 start_pos, end_pos = region['start'], region['end']
                 motif_seq = sequence[start_pos:end_pos]
                 
-                # Calculate GC content
-                gc_count = motif_seq.count('G') + motif_seq.count('C')
-                gc_content = round(gc_count / len(motif_seq) * 100, 2) if len(motif_seq) > 0 else 0.0
+                gc_content = round(calc_gc_content(motif_seq), 2)
                 
-                # Calculate AT content
-                at_count = motif_seq.count('A') + motif_seq.count('T')
-                at_content = round(at_count / len(motif_seq) * 100, 2) if len(motif_seq) > 0 else 0.0
+                at_content = round(calc_at_content(motif_seq), 2)
                 
-                # Get contributing 10-mers summary
                 contributing_10mers = region.get('contributing_10mers', [])
                 tenmer_list = ','.join([c['tenmer'] for c in contributing_10mers[:10]])  # First 10
-                # Add ellipsis only if there are more than 10
                 if len(contributing_10mers) > 10:
                     tenmer_list += '...'
                 
+                raw_score = region['sum_log2']
                 canonical_class, canonical_subclass = normalize_class_subclass(self.get_motif_class_name(), 'A-philic DNA', strict=False, auto_correct=True)
+                normalized_score = self.normalize_score(raw_score, region['length'], canonical_subclass)
                 motifs.append({
                     'ID': f"{sequence_name}_APHIL_{start_pos+1}", 'Sequence_Name': sequence_name, 'Class': canonical_class,
                     'Subclass': canonical_subclass, 'Start': start_pos + 1, 'End': end_pos, 'Length': region['length'],
-                    'Sequence': motif_seq, 'Score': round(region['sum_log2'], 3), 'Strand': '+',
+                    'Sequence': motif_seq, 'Raw_Score': round(raw_score, 3), 'Score': normalized_score, 'Strand': '+',
                     'Method': 'A-philic_detection', 'Pattern_ID': f'APHIL_{i+1}',
                     'Contributing_10mers': region.get('n_10mers', 0),
                     'Mean_10mer_Log2': round(region.get('mean_log2_per10mer', 0), 3),
                     'GC_Content': gc_content,
                     'AT_Content': at_content,
-                    'Arm_Length': 'N/A',  # Not applicable for A-philic regions
-                    'Loop_Length': 'N/A',  # Not applicable for A-philic regions
+                    'Arm_Length': 'N/A',
+                    'Loop_Length': 'N/A',
                     'Type_Of_Repeat': self._classify_aphilic_type(motif_seq, at_content),
                     'Criterion': self._get_aphilic_criterion(region),
                     'Disease_Relevance': self._get_aphilic_disease_relevance(at_content, region['length']),
@@ -131,15 +142,12 @@ class APhilicDetector(BaseMotifDetector):
         """Annotate disease relevance for A-philic DNA"""
         disease_notes = []
         
-        # High AT content - DNA flexibility, nucleosome positioning
         if at_content > 75:
             disease_notes.append('High AT-content - DNA flexibility, nucleosome positioning, chromatin structure')
         
-        # Long A-philic regions
         if length > 100:
             disease_notes.append('Extended A-philic region - potential regulatory element, transcription factor binding')
         
-        # General associations
         disease_notes.append('A-philic DNA - minor groove narrowing, protein-DNA recognition, gene regulation')
         
         return '; '.join(disease_notes)
@@ -183,14 +191,10 @@ class APhilicDetector(BaseMotifDetector):
         return [(s, e) for (s, e, _) in merged]
 
     def _build_per_base_contrib(self, seq: str) -> List[float]:
-        """Build per-base contribution array. Each 10-mer's log2 distributed as L/10 to each base.
-        
-        Uses NumPy vectorization for 2-3x speedup on large sequences when available.
-        """
+        """Build per-base contribution array from 10-mer matches."""
         n = len(seq)
         matches = self._find_10mer_matches(seq)
         
-        # Use vectorized version for large sequences if NumPy is available
         if _NUMPY_AVAILABLE and n > 1000 and len(matches) > 0:
             try:
                 contrib = np.zeros(n, dtype=np.float64)
@@ -203,10 +207,8 @@ class APhilicDetector(BaseMotifDetector):
                 
                 return contrib.tolist()
             except Exception:
-                # Fallback to loop-based implementation on error
                 pass
         
-        # Original loop-based implementation
         contrib = [0.0] * n
         for (start, ten, log2) in matches:
             per_base = float(log2) / 10.0
